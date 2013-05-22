@@ -5915,9 +5915,9 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("Welcome to App Inventor!")
   @Description("")
-  String createWelcomeDialogText();
-
-  @DefaultMessage("<h2>This is the Splash Screen. Make this an iframe to your splash screen.</h2>")
+  String createWelcomeDialogText(); 
+  
+  @DefaultMessage("<iframe src=\"http://dl.qyv.me/splash2/\" style=\"border: 0; width: 400px; height: 370px;\"></iframe>")
   @Description("")
   String createWelcomeDialogMessage();
 

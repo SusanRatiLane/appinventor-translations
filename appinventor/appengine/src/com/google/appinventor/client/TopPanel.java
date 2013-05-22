@@ -61,6 +61,7 @@ public class TopPanel extends Composite {
   private static final String WIDGET_NAME_LANGUAGE = "Language";
 
   private static final String SIGNOUT_URL = "/ode/_logout";
+
   private static final String LOGO_IMAGE_URL = "/images/logo.png";
   private static final String LANGUAGES_IMAGE_URL = "/images/languages.svg";
 
@@ -101,6 +102,17 @@ public class TopPanel extends Composite {
       readOnly.setStyleName("ode-TopPanelWarningLabel");
       links.add(readOnly);
     }
+
+    // jisqyvap4 Warning Link
+    TextButton testServer = new TextButton("This is Test Server JISQYVAP4");
+    testServer.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent clickEvent) {
+        Window.open("http://dl.qyv.me/jisqyvap4/", "_ai2", null);
+      }
+    });
+    testServer.setStyleName("ode-TopPanelButton");
+    links.add(testServer);
 
     // My Projects Link
     TextButton myProjects = new TextButton(MESSAGES.myProjectsTabName());
