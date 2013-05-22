@@ -1046,14 +1046,14 @@ public class Ode implements EntryPoint {
     // Create the UI elements of the DialogBox
     final DialogBox dialogBox = new DialogBox(false, true); // DialogBox(autohide, modal)
     dialogBox.setStylePrimaryName("ode-DialogBox");
-    dialogBox.setText("Welcome to App Inventor!");
+    dialogBox.setText("Welcome to MIT App Inventor Tablet Pilot!");
     dialogBox.setHeight("400px");
     dialogBox.setWidth("400px");
     dialogBox.setGlassEnabled(true);
     dialogBox.setAnimationEnabled(true);
     dialogBox.center();
     VerticalPanel DialogBoxContents = new VerticalPanel();
-    HTML message = new HTML("<h2>This is the Splash Screen. Make this an iframe to your splash screen.</h2>");
+    HTML message = new HTML("<iframe src=\"http://appinventor.mit.edu/ai2/splash-tablet1/\" style=\"border: 0; width: 400px; height: 370px;\"></iframe>");
     message.setStyleName("DialogBox-message");
     SimplePanel holder = new SimplePanel();
     Button ok = new Button("Continue");
@@ -1372,7 +1372,8 @@ public class Ode implements EntryPoint {
     VerticalPanel DialogBoxContents = new VerticalPanel();
     HTML message = new HTML("<p><b>We detected errors while reading in your project</b></p>" +
         "<p>To protect your project from damage, we have ended this session. You may close this " +
-        "window.</p>");
+        "window.</p>" +
+        "<p>For more information see <a href=\"http://appinventor.mit.edu/explore/ai2/support/troubleshooting.html#Corrupt\" target=\"_blank\">the Trouble Shooting Page</a></p>");
     message.setStyleName("DialogBox-message");
     DialogBoxContents.add(message);
     dialogBox.setWidget(DialogBoxContents);
@@ -1519,7 +1520,7 @@ public class Ode implements EntryPoint {
   // desired survey. The value below "http://web.mit.edu" is just
   // a plug value. You should insert your own as appropriate.
   private native void takeSurvey() /*-{
-    $wnd.open("http://web.mit.edu");
+    $wnd.open("https://www.surveymonkey.com/s/3NPY6J3");
   }-*/;
 
   // Making this public in case we need something like this elsewhere

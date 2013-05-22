@@ -56,7 +56,7 @@ public final class AppInventorFeatures {
    * @return true to display a splash screen
    */
   public static boolean showSplashScreen() {
-    return false;
+    return true;
   }
 
   /**
@@ -77,7 +77,7 @@ public final class AppInventorFeatures {
    * @return true to display the survey splash screen
    */
   public static boolean showSurveySplashScreen() {
-    return false;
+    return true;
   }
 
   /**
@@ -88,7 +88,7 @@ public final class AppInventorFeatures {
    * @return true to limit account use to one session at a time
    */
   public static boolean requireOneLogin() {
-    return false;
+    return true;
   }
 
 
