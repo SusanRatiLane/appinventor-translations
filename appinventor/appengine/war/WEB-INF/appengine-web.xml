@@ -38,21 +38,21 @@
 
     <!-- set to true if users need to accept a Terms of Service the first time
       they access App Inventor -->
-    <property name="require.tos" value="true" />
+    <property name="require.tos" value="false" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="localhost:9990" />
+    <property name="build.server.host" value="newblocksbuildserver.appinventor.mit.edu:9990" />
 
     <!-- Interval is seconds between checking for a message of the day.
          Set set to 0 to disable checking for a MOTD.  If you do enable
          MOTD checking, make the interval long, because this check is
          resource expensive on App Engine -->
-    <property name="motd.check.interval.secs" value="0" />
+    <property name="motd.check.interval.secs" value="300" />
     
     <!-- Set this to false if we should not send the Git build version with build requests.
          This is useful when testing new servers where we don't want to require the 
          buildserver to match -->
-    <property name="build.send.git.version" value="true" />
+    <property name="build.send.git.version" value="false" />
 
     <!-- Set this to true to enable the use of Wifi connections from the blocks editor to
          the phone. The phone must have an up-to-date copy of the MIT AICompanion App to
