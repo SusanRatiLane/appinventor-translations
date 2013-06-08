@@ -1368,8 +1368,8 @@ public class Ode implements EntryPoint {
     final DialogBox dialogBox = new DialogBox(false, true); // DialogBox(autohide, modal)
     dialogBox.setStylePrimaryName("ode-DialogBox");
     dialogBox.setText(MESSAGES.createWelcomeDialogText());
-    dialogBox.setHeight("400px");
-    dialogBox.setWidth("400px");
+    dialogBox.setHeight("640px");
+    dialogBox.setWidth("640px");
     dialogBox.setGlassEnabled(true);
     dialogBox.setAnimationEnabled(true);
     dialogBox.center();
