@@ -1951,7 +1951,7 @@ public interface OdeMessages extends Messages {
   @Description("Title prefix for the gallery page sidebar that shows list of remixed apps.")
   String galleryAppsRemixesSidebar();
 
-  @DefaultMessage("Please explain why you feel this app is disrespectful or inappropriate, or otherwise breaks the <a href=\"http://google.com\">App Inventor Gallery Community Guidelines.</a> " +
+  @DefaultMessage("Please explain why you feel this app is disrespectful or inappropriate, or otherwise breaks the <a href=\"/about/termsofservice.html#guidelines\" target=\"_blank\">App Inventor Gallery Community Guidelines.</a> " +
       "")
   @Description("Prompt for the gallery app report section.")
   String galleryReportPrompt();
@@ -6292,7 +6292,8 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("<p><b>We detected errors while reading in your project</b></p>" +
                 "<p>To protect your project from damage, we have ended this session. You may close this " +
-                "window.</p>")
+                "window.</p>" +
+                "<p>For more information see <a href=\"http://appinventor.mit.edu/explore/ai2/support/troubleshooting.html#Corrupt\" target=\"_blank\">the Trouble Shooting Page</a></p>")
   @Description("")
   String corruptionDialogMessage();
 
