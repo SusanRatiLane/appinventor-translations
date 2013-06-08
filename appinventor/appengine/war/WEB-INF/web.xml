@@ -51,11 +51,13 @@
       <url-pattern>/ode2/*</url-pattern>
       <url-pattern>/companions/*</url-pattern>
       <url-pattern>/reference/*</url-pattern>
+      <url-pattern>/google740133e6473c0cd1.html</url-pattern>
       <url-pattern>/learn/*</url-pattern>
       <url-pattern>/about/*</url-pattern>
       <url-pattern>/forum/*</url-pattern>
       <url-pattern>/b/*</url-pattern>
       <url-pattern>/rendezvous/*</url-pattern>
+      <url-pattern>/remote_api/*</url-pattern>
     </web-resource-collection>
   </security-constraint>
 
@@ -64,7 +66,6 @@
     <web-resource-collection>
       <url-pattern>/appstats/*</url-pattern>
       <url-pattern>/convert/</url-pattern>
-      <url-pattern>/remote_api/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>admin</role-name>
