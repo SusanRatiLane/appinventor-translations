@@ -111,7 +111,7 @@ public final class AppInventorFeatures {
    * @return true to limit account use to one session at a time
    */
   public static boolean requireOneLogin() {
-    return false;
+    return true;
   }
 
   /**
