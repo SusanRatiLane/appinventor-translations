@@ -496,7 +496,7 @@ Blockly.ReplMgr.putYail = (function() {
                     }
                 });
             } else if (fatal) {
-                dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK, Blockly.Msg.REPL_COMPANION_OUT_OF_DATE1 + top.PREFERRED_COMPANION, Blockly.Msg.REPL_OK, null, 0, function() { dialog.hide();});
+                dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK, Blockly.Msg.REPL_COMPANION_OUT_OF_DATE1 + top.PREFERRED_COMPANION + Blockly.Msg.REPL_COMPANION_OUT_OF_DATE2, Blockly.Msg.REPL_OK, null, 0, function() { dialog.hide();});
                 engine.resetcompanion();
             } else {
                 dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK, Blockly.Msg.REPL_COMPANION_OUT_OF_DATE_IMMEDIATE, Blockly.Msg.REPL_DISMISS, null, 1, function() { dialog.hide();});
@@ -1132,7 +1132,8 @@ Blockly.ReplMgr.makeDialogMessage = function(code) {
         qr.make();
     }
     var img = qr.createImgTag(6);
-    var retval = '<table><tr><td>' + img + '</td><td><font size="+1">' + Blockly.Msg.REPL_YOUR_CODE_IS + ':<br /><br /><font size="+1"><b>' + code + '</b></font></font></td></tr></table>';
+    var retval = '<table>\n' + Blockly.Msg.REPL_CODE_PREAMBLE;
+    retval += '<tr><td>' + img + '</td><td><font size="+1">' + Blockly.Msg.REPL_YOUR_CODE_IS + ':<br /><br /><font size="+1"><b>' + code + '</b></font></font></td></tr></table>';
     return retval;
 };
 
