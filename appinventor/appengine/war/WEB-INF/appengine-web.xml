@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-  <application></application>
-  <version>1</version>
+  <application>ai2-test</application>
+  <version></version>
   <runtime>java8</runtime>
 
   <!-- Configure serving/caching of GWT files -->
@@ -73,7 +73,7 @@
     <property name="use.whitelist" value="false"/>
 
     <!-- Name of storage bucket in Google Cloud Store -->
-    <property name="gcs.bucket" value="" />
+    <property name="gcs.bucket" value="ai2-test.appspot.com" />
     <!-- Whether or not to use GCS for storage -->
     <property name="use.gcs" value="true" />
 
@@ -100,14 +100,14 @@
      -->
 
     <property name="auth.usegoogle" value="true" />
-    <property name="auth.uselocal" value="true" />
+    <property name="auth.uselocal" value="false" />
 
     <!-- Flags associated with localauth code -->
     <property name="localauth.mailserver" value="https://osiris.mit.edu/passmail/" />
     <property name="localauth.mailserver.password" value="changeme" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="localhost:9990" />
+    <property name="build.server.host" value="ai2testbuildserver.appinventor.mit.edu:9990" />
 
     <!-- We provide below for a second buildserver. If this field is
          non-empty then the user is presented a choice of two different
@@ -140,7 +140,7 @@
     <!-- Set this to false if we should not send the Git build version with build requests.
          This is useful when testing new servers where we don't want to require the
          buildserver to match -->
-    <property name="build.send.git.version" value="true" />
+    <property name="build.send.git.version" value="false" />
 
     <!-- Session Management Variables. -->
     <!-- We define three variables here.
@@ -167,8 +167,8 @@
     <property name="wifi.enabled" value="true" />
 
     <!-- Firebase Secret for the shared datastore -->
-    <property name="firebase.secret" value="" />
-    <property name="firebase.url" value="" />
+    <property name="firebase.secret" value="2h4dSWELRgpgSelBdRWUIJVqW1pnx4JfyQcOyBiQ" />
+    <property name="firebase.url" value="https://dazzling-fire-7140.firebaseio.com/" />
 
     <property name="library.url" value="http://appinventor.mit.edu/explore/library" />
     <property name="get_started.url" value="http://appinventor.mit.edu/explore/get-started" />
@@ -176,7 +176,7 @@
     <property name="extensions.url" value="http://appinventor.mit.edu/extensions" />
     <property name="troubleshooting.url" value="http://appinventor.mit.edu/explore/ai2/support/troubleshooting" />
     <property name="forums.url" value="https://groups.google.com/forum/#!forum/mitappinventortest" />
-    <property name="feedback.url" value="http://something.example.com" />
+    <property name="feedback.url" value="http://appinv.us/aifeedback" />
     <property name="release.notes.url" value="http://appinventor.mit.edu/ai2/ReleaseNotes.html" />
     <property name="tos.url" value="/about/termsofservice.html" />
     <property name="logo.url" value="http://appinventor.mit.edu" />
