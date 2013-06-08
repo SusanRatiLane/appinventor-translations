@@ -46,7 +46,12 @@
           depends="init,blocklyeditor_BlocklyCompile">
     <mkdir dir="${build.war.dir}" />
     <copy todir="${build.war.dir}/">
-      <fileset dir="war"/>
+      <fileset dir="war">
+        <exclude name="closure-library-20120710-r2029/**"/>
+      </fileset>
+      <fileset dir="war">
+        <include name="closure-library-20120710-r2029/closure/goog/css/dialog.css"/>
+      </fileset>
       <fileset dir="src/${appinventor.pkg}">
         <!-- canvas is a special case (see MockCanvas.java) -->
         <include name="images/canvas.png" />
@@ -367,7 +372,7 @@
       <jvmarg line="${XstartOnFirstThread}"/>
       <arg line="-war"/>
       <arg value="${build.war.dir}"/>
-      <arg line="-style detailed -logLevel WARN"/>
+      <arg line="-logLevel INFO -localWorkers 4 -optimize 9"/>
       <arg value="com.google.appinventor.YaClient"/>
     </java>
   </target>

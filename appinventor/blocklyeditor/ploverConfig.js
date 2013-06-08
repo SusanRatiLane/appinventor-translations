@@ -94,8 +94,8 @@
   // will be included, so when test-raw.html loads each input in RAW mode,
   // it is important that the proper charset be used.
   "output-charset": "UTF-8",
-  "mode": "RAW",
-//  "mode": "SIMPLE_OPTIMIZATIONS",
+//  "mode": "RAW",
+  "mode": "SIMPLE_OPTIMIZATIONS",
 //  "mode" : "WHITESPACE_ONLY",
   "closure-library" : "../appengine/war/closure-library-20120710-r2029/closure/goog",
   "output-file": "../build/blocklyeditor/blockly-all.js"
