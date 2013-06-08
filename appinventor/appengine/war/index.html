@@ -6,6 +6,19 @@
     <!--meta name="gwt:property" content="locale=en_US"-->
     <!-- Title is set at runtime. -->
     <title> </title>
+	<!-- Google Analytics. -->
+	<script type="text/javascript">
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-28621056-1']);
+	  _gaq.push(['_setDomainName', 'contest.appinventor.mit.edu']);
+	  _gaq.push(['_setAllowLinker', true]);
+	  _gaq.push(['_trackPageview']);
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	</script>
     <link type="text/css" rel="stylesheet" href="gwt.css">
     <link type="text/css" rel="stylesheet" href="Ya.css">
     <noscript>
@@ -14,7 +27,6 @@
       </div>
     </noscript>
   </head>
-
   <!-- ODE scripts -->
   <body>
     <div class="floatingBox" style="display:none" id="unsupported">

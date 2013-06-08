@@ -5213,7 +5213,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String createWelcomeDialogText();
 
-  @DefaultMessage("<h2>This is the Splash Screen. Make this an iframe to your splash screen.</h2>")
+  @DefaultMessage("<iframe src=\"http://appinventor.mit.edu/ai2/splash-nb142/index.en.html\" style=\"border: 0; width: 640px; height: 420px;\"></iframe>")
   @Description("")
   String createWelcomeDialogMessage();
 
@@ -5314,7 +5314,8 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("<p><b>We detected errors while reading in your project</b></p>" +
                 "<p>To protect your project from damage, we have ended this session. You may close this " +
-                "window.</p>")
+                "window.</p>" +
+                "<p>For more information see <a href=\"http://appinventor.mit.edu/explore/ai2/support/troubleshooting.html#Corrupt\" target=\"_blank\">the Trouble Shooting Page</a></p>")
   @Description("")
   String corruptionDialogMessage();
 
