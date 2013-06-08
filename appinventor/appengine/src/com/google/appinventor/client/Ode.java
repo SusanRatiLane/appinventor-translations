@@ -2275,7 +2275,7 @@ public class Ode implements EntryPoint {
   // desired survey. The value below "http://web.mit.edu" is just
   // a plug value. You should insert your own as appropriate.
   private native void takeSurvey() /*-{
-    $wnd.open("http://web.mit.edu");
+    $wnd.open("https://www.surveymonkey.com/s/3NPY6J3");
   }-*/;
 
   // Making this public in case we need something like this elsewhere
