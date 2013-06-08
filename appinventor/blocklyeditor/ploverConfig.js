@@ -169,8 +169,8 @@
   // will be included, so when test-raw.html loads each input in RAW mode,
   // it is important that the proper charset be used.
   "output-charset": "UTF-8",
-  "mode": "RAW",
-//  "mode": "SIMPLE",
+//  "mode": "RAW",
+  "mode": "SIMPLE",
 //  "mode" : "WHITESPACE_ONLY",
   "experimental-compiler-options": {
     "languageIn": "ECMASCRIPT5"
