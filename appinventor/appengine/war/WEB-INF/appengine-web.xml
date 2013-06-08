@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-  <application></application>
+  <application>mit-appinventor-newblocks</application>
   <version>1</version>
   <runtime>java8</runtime>
+  <!-- Performance settings here...-->
+  <instance-class>F2</instance-class>
+  <automatic-scaling>
+    <min-idle-instances>1</min-idle-instances>
+    <max-idle-instances>3</max-idle-instances>
+    <max-pending-latency>260ms</max-pending-latency>
+  </automatic-scaling>
 
   <!-- Configure serving/caching of GWT files -->
   <static-files>
@@ -73,18 +80,17 @@
     <property name="use.whitelist" value="false"/>
 
     <!-- Name of storage bucket in Google Cloud Store -->
-    <property name="gcs.bucket" value="" />
+    <property name="gcs.bucket" value="ai2projects" />
     <!-- Whether or not to use GCS for storage -->
     <property name="use.gcs" value="true" />
 
     <!-- Name of gallery bucket in Google Cloud Store -->
-    <property name="gallery.bucket" value="" />
+    <property name="gallery.bucket" value="mitai2gallery" />
     <!-- Whether or not to use the gallery -->
-    <property name="use.gallery" value="false" />
+    <property name="use.gallery" value="true" />
 
     <!-- Gallery Admin Email -->
-    <property name="gallery.admin.email" value="" />
-
+    <property name="gallery.admin.email" value="gallery@appinventor.mit.edu" />
 
     <!-- set to true if users need to accept a Terms of Service the first time
       they access App Inventor -->
@@ -100,14 +106,14 @@
      -->
 
     <property name="auth.usegoogle" value="true" />
-    <property name="auth.uselocal" value="true" />
+    <property name="auth.uselocal" value="false" />
 
     <!-- Flags associated with localauth code -->
     <property name="localauth.mailserver" value="https://osiris.mit.edu/passmail/" />
     <property name="localauth.mailserver.password" value="changeme" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="localhost:9990" />
+    <property name="build.server.host" value="newblocksbuildserver.appinventor.mit.edu:9990" />
 
     <!-- We provide below for a second buildserver. If this field is
          non-empty then the user is presented a choice of two different
@@ -140,7 +146,7 @@
     <!-- Set this to false if we should not send the Git build version with build requests.
          This is useful when testing new servers where we don't want to require the
          buildserver to match -->
-    <property name="build.send.git.version" value="true" />
+    <property name="build.send.git.version" value="false" />
 
     <!-- Session Management Variables. -->
     <!-- We define three variables here.
@@ -167,8 +173,8 @@
     <property name="wifi.enabled" value="true" />
 
     <!-- Firebase Secret for the shared datastore -->
-    <property name="firebase.secret" value="" />
-    <property name="firebase.url" value="" />
+    <property name="firebase.secret" value="2h4dSWELRgpgSelBdRWUIJVqW1pnx4JfyQcOyBiQ" />
+    <property name="firebase.url" value="https://dazzling-fire-7140.firebaseio.com/" />
 
     <property name="library.url" value="http://appinventor.mit.edu/explore/library" />
     <property name="get_started.url" value="http://appinventor.mit.edu/explore/get-started" />
@@ -176,7 +182,7 @@
     <property name="extensions.url" value="http://appinventor.mit.edu/extensions" />
     <property name="troubleshooting.url" value="http://appinventor.mit.edu/explore/ai2/support/troubleshooting" />
     <property name="forums.url" value="https://groups.google.com/forum/#!forum/mitappinventortest" />
-    <property name="feedback.url" value="http://something.example.com" />
+    <property name="feedback.url" value="http://appinv.us/aifeedback" />
     <property name="release.notes.url" value="http://appinventor.mit.edu/ai2/ReleaseNotes.html" />
     <property name="tos.url" value="/about/termsofservice.html" />
     <property name="logo.url" value="http://appinventor.mit.edu" />
