@@ -42,6 +42,8 @@ import java.io.IOException;
 // TODO: Do more extensive testing of how state is handled here to see
 // if the state restrictions are adequate given the API, and prove that
 // there can't be deadlock or starvation.
+// TODO: Remove writes of state debugging info to the log after we're
+// sure things are working solidly.
 /**
  * Multimedia component that plays audio or video and optionally
  * vibrates.  It is built on top of {@link android.media.MediaPlayer}.
@@ -70,16 +72,11 @@ import java.io.IOException;
 public final class Player extends AndroidNonvisibleComponent
     implements Component, OnCompletionListener, OnDestroyListener, Deleteable {
 
-  private static final boolean DEBUG = false;
-  
   private MediaPlayer mp;
   private final Vibrator vibe;
 
   private int playerState;
   private String sourcePath;
-  
-  // determines if playing should loop
-  private boolean loop;
 
   /*
    * playerState encodes a simplified version of the full MediaPlayer state space, that should be
@@ -107,7 +104,6 @@ public final class Player extends AndroidNonvisibleComponent
     form.registerForOnDestroy(this);
     // Make volume buttons control media, not ringer.
     form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-    loop = false;
   }
 
   /**
@@ -144,9 +140,7 @@ public final class Player extends AndroidNonvisibleComponent
     }
 
     if (sourcePath.length() > 0) {
-      if (DEBUG) {
-        Log.i("Player", "Source path is " + sourcePath);
-      }
+      Log.i("Player", "Source path is " + sourcePath);
       mp = new MediaPlayer();
       mp.setOnCompletionListener(this);
 
@@ -162,9 +156,7 @@ public final class Player extends AndroidNonvisibleComponent
       }
 
       mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-      if (DEBUG) {
-        Log.i("Player", "Successfully loaded source path " + sourcePath);
-      }
+      Log.i("Player", "Successfully loaded source path " + sourcePath);
 
       // The Simple API is set up so that the user never has
       // to call prepare.
@@ -177,7 +169,7 @@ public final class Player extends AndroidNonvisibleComponent
    * Reports whether the media is playing.
    */
   @SimpleProperty(
-      description = "Reports whether the media is playing",
+      description = "Whether the media is playing",
       category = PropertyCategory.BEHAVIOR)
   public boolean IsPlaying() {
     if (playerState == 1 || playerState == 2) {
@@ -187,35 +179,33 @@ public final class Player extends AndroidNonvisibleComponent
   }
 
   /**
-   * Reports whether the playing should loop.
+   * Reports whether the media is looping.
    */
   @SimpleProperty(
-      description = 
-      "If true, the player will loop when it plays. Setting Loop while the player " +
-      "is playing will affect the current playing.",
+      description = "Whether the media is looping",
       category = PropertyCategory.BEHAVIOR)
-  public boolean Loop() {
-    return loop;
+  public boolean IsLooping() {
+    if (playerState == 1 || playerState == 2) {
+      return mp.isLooping();
+    }
+    return false;
   }
 
   /**
    * Sets the looping property to true or false.
    *
-   * @param shouldLoop determines if the playing should loop
+   * @param looping  tells if the media should be looping
    */
   @DesignerProperty(
       editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN,
       defaultValue = "False")
   @SimpleProperty
-  public void Loop(boolean shouldLoop) {
-    // set the desired looping right now if the player is prepared.
+  public void IsLooping(boolean looping) {
     if (playerState == 1 || playerState == 2) {
-       mp.setLooping(shouldLoop);
+      mp.setLooping(looping);
+      Log.i("Player", "Looping is " + String.valueOf(looping));
     }
-    // even if the player is not prepared, it will be set according to
-    // Loop the next time it is started
-    loop = shouldLoop;
-    }
+  }
 
   /**
    * Sets the volume property to a number between 0 and 100.
@@ -233,9 +223,7 @@ public final class Player extends AndroidNonvisibleComponent
         throw new IllegalArgumentError("Volume must be set to a number between 0 and 100");
       }
       mp.setVolume(((float) vol)/100, ((float) vol)/100);
-      if (DEBUG) {
-        Log.i("Player", "Volume is " + String.valueOf(vol));
-      }
+      Log.i("Player", "Volume is " + String.valueOf(vol));
     }
   }
 
@@ -245,11 +233,8 @@ public final class Player extends AndroidNonvisibleComponent
    */
   @SimpleFunction
   public void Start() {
-    if (DEBUG) {
-      Log.i("Player", "Calling Start -- State=" + playerState);
-    }
+    Log.i("Player", "Calling Start -- State=" + playerState);
     if (playerState == 1 || playerState == 2) {
-      mp.setLooping(loop);
       mp.start();
       playerState = 2;
       // Player should now be in state 2
@@ -261,9 +246,7 @@ public final class Player extends AndroidNonvisibleComponent
    */
   @SimpleFunction
   public void Pause() {
-    if (DEBUG) {
-      Log.i("Player", "Calling Pause -- State=" + playerState);
-    }
+    Log.i("Player", "Calling Pause -- State=" + playerState);
     if (playerState == 2) {
       mp.pause();
       playerState = 2;
@@ -276,9 +259,7 @@ public final class Player extends AndroidNonvisibleComponent
    */
   @SimpleFunction
   public void Stop() {
-    if (DEBUG) {
-      Log.i("Player", "Calling Stop -- State=" + playerState);
-    }
+    Log.i("Player", "Calling Stop -- State=" + playerState);
     if (playerState == 1 || playerState == 2) {
       mp.stop();
       prepare();
@@ -308,9 +289,7 @@ public final class Player extends AndroidNonvisibleComponent
     try {
       mp.prepare();
       playerState = 1;
-      if (DEBUG) {
-        Log.i("Player", "Successfully prepared");
-      }
+      Log.i("Player", "Successfully prepared");
 
     } catch (IOException ioe) {
       mp.release();
@@ -333,9 +312,7 @@ public final class Player extends AndroidNonvisibleComponent
    */
   @SimpleEvent
   public void Completed() {
-    if (DEBUG) {
-      Log.i("Player", "Calling Completed -- State=" + playerState);
-    }
+    Log.i("Player", "Calling Completed -- State=" + playerState);
     EventDispatcher.dispatchEvent(this, "Completed");
   }
   

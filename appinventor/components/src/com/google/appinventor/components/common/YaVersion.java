@@ -221,9 +221,7 @@ public class YaVersion {
   // - SLIDER_COMPONENT_VERSION was incremented to 1.
   // For YOUNG_ANDROID_VERSION 75:
   // - WEBVIEWER_COMPONENT_VERSION was incremented to 3
-  // For YOUNG_ANDROID_VERSION 76:
-  // - PLAYER_COMPONENT_VERSION was incremented to 5
-  public static final int YOUNG_ANDROID_VERSION = 76;
+  public static final int YOUNG_ANDROID_VERSION = 75;
 
   // ............................... Blocks Language Version Number ...............................
 
@@ -523,10 +521,8 @@ public class YaVersion {
   // - The IsLooping property was added.
   // - The Volume property was added.
   // - The IsPlaying method was added.
-  // For PLAYER_COMPONENT_VERSION 5:
-  // - The IsLooping property was renamed to Loop.
 
-  public static final int PLAYER_COMPONENT_VERSION = 5;
+  public static final int PLAYER_COMPONENT_VERSION = 4;
 
   // For SOUND_COMPONENT_VERSION 2:
   // - The Sound.SoundError event was added.
