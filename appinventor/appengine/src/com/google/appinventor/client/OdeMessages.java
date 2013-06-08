@@ -1900,7 +1900,7 @@ public interface OdeMessages extends Messages {
   @Description("Title prefix for the gallery page sidebar that shows list of remixed apps.")
   String galleryAppsRemixesSidebar();
 
-  @DefaultMessage("Please explain why you feel this app is disrespectful or inappropriate, or otherwise breaks the <a href=\"http://google.com\">App Inventor Gallery Community Guidelines.</a> " +
+  @DefaultMessage("Please explain why you feel this app is disrespectful or inappropriate, or otherwise breaks the <a href=\"/about/termsofservice.html#guidelines\" target=\"_blank\">App Inventor Gallery Community Guidelines.</a> " +
       "")
   @Description("Prompt for the gallery app report section.")
   String galleryReportPrompt();
@@ -6013,7 +6013,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String createWelcomeDialogText();
 
-  @DefaultMessage("<h2>This is the Splash Screen. Make this an iframe to your splash screen.</h2>")
+  @DefaultMessage("<iframe src=\"http://appinventor.mit.edu/ai2/splash-nb143/index.en.html\" style=\"border: 0; width: 640px; height: 420px;\"></iframe>")
   @Description("")
   String createWelcomeDialogMessage();
 
@@ -6114,7 +6114,8 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("<p><b>We detected errors while reading in your project</b></p>" +
                 "<p>To protect your project from damage, we have ended this session. You may close this " +
-                "window.</p>")
+                "window.</p>" +
+                "<p>For more information see <a href=\"http://appinventor.mit.edu/explore/ai2/support/troubleshooting.html#Corrupt\" target=\"_blank\">the Trouble Shooting Page</a></p>")
   @Description("")
   String corruptionDialogMessage();
 
