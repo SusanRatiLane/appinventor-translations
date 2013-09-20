@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Provides support for Young Android projects.
@@ -492,6 +493,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
       try {
           responseCode = connection.getResponseCode();
       } catch (IOException e) {
+          LOG.log(Level.SEVERE, "I/O Exception contacting buildserver", e);
           throw new CouldNotFetchException();
       }
       if (responseCode != HttpURLConnection.HTTP_OK) {
