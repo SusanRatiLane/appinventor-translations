@@ -90,13 +90,7 @@ public class CDeviceSelector extends JMenuBar {
     } else {
       connectedIcon = new ImageIcon(descriptor);
     }
-
-    if (System.getProperty("wifi.enabled") != null && System.getProperty("wifi.enabled").equals("true")) {
-      addDevice("WiFi");          // Add the WiFi device, so now there will always be at least one
-                                  // which means that the noDevicesPlaceholder can be deprecated when WiFi is enabled.
-    } else {
-      System.out.println("Wifi Disabled");
-    }
+    addDevice("WiFi");          // Add the WiFi device, so now there will always be at least one
   }
 
   public void addCallback(DeviceSelectedCallback callback) {
