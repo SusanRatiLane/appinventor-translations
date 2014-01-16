@@ -121,6 +121,8 @@
       <manifest>
         <attribute name="Main-Class"
                    value="com.google.appinventor.blockseditor.youngandroid.YaHttpServerMain" />
+        <attribute name="Permissions"
+                   value="all-permissions" />
       </manifest>
       <zipfileset src="${local.build.dir}/YoungAndroidLib.jar"/>
       <zipfileset src="${build.dir}/blockslib/OpenBlocks.jar"/>
