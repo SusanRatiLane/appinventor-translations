@@ -39,7 +39,7 @@ public final class AIDirectory {
 
   private static final boolean DEBUG = false;
 
-  private static final String CURRENT_AI_SETUP_VERSION = "1.1";
+  private static final double CURRENT_AI_SETUP_VERSION = 1.1;
 
   private static final String WINDOWS_DIRECTORY =
       "C:\\Program Files\\Appinventor\\commands-for-Appinventor";
@@ -212,8 +212,9 @@ public final class AIDirectory {
           + " ; Codeblocks version = "
           + CURRENT_AI_SETUP_VERSION);
     }
-    if (installedVersion.equals(CURRENT_AI_SETUP_VERSION)) {
-      // versions match.  OK.
+    double installedVersionFloat = Float.valueOf(installedVersion).doubleValue();
+    if (installedVersionFloat >= CURRENT_AI_SETUP_VERSION) {
+      // version is acceptable
       return;
     } else {
       throw new NoAICommandException(
