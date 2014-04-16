@@ -293,7 +293,26 @@ public class MediaUtil {
 
     InputStream is2 = openMedia(form, mediaPath, mediaSource);
     try {
-      return new BitmapDrawable(decodeStream(is2, null, options));
+      BitmapDrawable originalBitmapDrawable = new BitmapDrawable(decodeStream(is2, null, options));
+      // To be able to support different density devices, we might need to scale the bitmap
+      // The steps are:
+      //   1. set the density in the returned bitmap drawable.
+      //   2. calculate scaled width and height
+      //   3. create a scaled bitmap with the scaled measures
+      //   4. create a new bitmap drawable with the scaled bitmap and set the density in this one.
+      originalBitmapDrawable.setTargetDensity(form.getResources().getDisplayMetrics());
+
+      int scaledWidth = (int) ((form.getResources().getDisplayMetrics().density *
+          originalBitmapDrawable.getIntrinsicWidth()) + 0.5f);
+      int scaledHeight = (int) ((form.getResources().getDisplayMetrics().density *
+          originalBitmapDrawable.getIntrinsicHeight()) + 0.5f);
+      Bitmap scaledBitmap = Bitmap.createScaledBitmap(originalBitmapDrawable.getBitmap(), scaledWidth, scaledHeight,
+          false);
+
+      BitmapDrawable scaledBitmapDrawable = new BitmapDrawable(scaledBitmap);
+      scaledBitmapDrawable.setTargetDensity(form.getResources().getDisplayMetrics());
+
+      return scaledBitmapDrawable;
     } finally {
       is2.close();
     }
