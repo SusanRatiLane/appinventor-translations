@@ -16,9 +16,10 @@ import com.google.appinventor.client.TranslationComponentParams;
 import com.google.appinventor.client.TranslationComponentProperty;
 import com.google.appinventor.client.TranslationDesignerPallete;
 import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
+import com.google.appinventor.client.OdeAsyncCallback;
 import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.components.common.YaVersion;
-
+import com.google.appinventor.shared.rpc.project.ProjectServiceAsync;
 import com.google.common.collect.Maps;
 
 import com.google.gwt.core.client.JavaScriptException;
@@ -532,7 +533,18 @@ public class BlocklyPanel extends HTMLPanel {
     } else {
       // in case someone clicks Save before the blocks area is inited
       String blocksContent = pendingBlocksContentMap.get(formName);
-      return (blocksContent != null) ? blocksContent : "";
+      String retval = (blocksContent != null) ? blocksContent : "";
+      if (retval.equals("")) {
+        ProjectServiceAsync projectService = Ode.getInstance().getProjectService();
+        projectService.log("getBlocksContent: blocksInited(" + formName + ") is false",
+          new OdeAsyncCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+              // Nothing to do
+            }
+          });
+      }
+      return retval;
     }
   }
 
