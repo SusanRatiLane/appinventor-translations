@@ -711,6 +711,14 @@ public class Ode implements EntryPoint {
               // forbidden => need tos accept
               Window.open("/" + ServerLayout.YA_TOS_FORM, "_self", null);
               return;
+            case Response.SC_PRECONDITION_FAILED:
+              String locale = Window.Location.getParameter("locale");
+              if (locale == null || locale.equals("")) {
+                Window.Location.replace("/login/");
+              } else {
+                Window.Location.replace("/login/?locale=" + locale);
+              }
+              return;           // likely not reached
           }
         }
         super.onFailure(caught);
