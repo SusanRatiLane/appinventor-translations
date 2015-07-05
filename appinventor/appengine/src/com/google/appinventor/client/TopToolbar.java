@@ -786,7 +786,7 @@ public class TopToolbar extends Composite {
   private static class FeedbackAction implements Command {
     @Override
     public void execute() {
-      Window.open("http://appinv.us/aifeedback", "_blank", "scrollbars=1");
+      Window.open("https://groups.google.com/forum/#!categories/mitappinventortest/auto-scaling-testingsupport", "_blank", "scrollbars=1");
     }
   }
 
