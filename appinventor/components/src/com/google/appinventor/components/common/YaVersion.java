@@ -980,7 +980,9 @@ public class YaVersion {
   public static final String PREFERRED_COMPANION = "2.35 or 2.36";
   public static final String COMPANION_UPDATE_URL = "/companions/MITAI2Companion.asc";
   public static final String COMPANION_UPDATE_URL1 = "/companions/MITAI2Companion.apk";
-  public static final String [] ACCEPTABLE_COMPANIONS = { "2.33", "2.34", "2.35", "2.36" };
+  public static final String [] ACCEPTABLE_COMPANIONS = { "2.33", "2.34", "2.35", "2.36",
+                                                          "2.35m1", "2.35m2", "2.35m3",
+                                                          "2.35m4" };
 
   // Splash Screen Values
   public static final int SPLASH_SURVEY = 1;
