@@ -389,6 +389,16 @@ Blockly.ReplMgr.putYail = (function() {
                         return;
                     } else {
                         var json = goog.json.parse(this.response);
+                        // Starting with version 2.45, the upgrading the companion in the
+                        // emulator caused OOM errors. This is a check to see whether we should
+                        // download a helper app that will perform the upgrade in a way that
+                        // doesn't break users.
+                        top.ReplState.needsUpgradeHelper = json.version.length > 2 &&
+                            json.version[1] === '.' && json.version < '2.46';
+                        if (!Blockly.ReplMgr.acceptableVersion(json.version)) {
+                            engine.checkversionupgrade(false, json.installer, false);
+                            return;
+                        }
                         if (!Blockly.ReplMgr.acceptablePackage(json["package"])) {
                             dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
                                                              Blockly.Msg.REPL_COMPANION_WRONG_PACKAGE,
@@ -396,10 +406,6 @@ Blockly.ReplMgr.putYail = (function() {
                                                                  dialog.hide();
                                                              });
                             engine.resetcompanion();
-                            return;
-                        }
-                        if (!Blockly.ReplMgr.acceptableVersion(json.version)) {
-                            engine.checkversionupgrade(false, json.installer, false);
                             return;
                         }
                         if (!json.fqcn) {
