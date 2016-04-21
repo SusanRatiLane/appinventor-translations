@@ -373,6 +373,10 @@ Blockly.ReplMgr.putYail = (function() {
                         return;
                     } else {
                         var json = goog.json.parse(this.response);
+                        if (!Blockly.ReplMgr.acceptableVersion(json.version)) {
+                            engine.checkversionupgrade(false, json.installer, false);
+                            return;
+                        }
                         if (!Blockly.ReplMgr.acceptablePackage(json["package"])) {
                             dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
                                                              Blockly.Msg.REPL_COMPANION_WRONG_PACKAGE,
@@ -380,10 +384,6 @@ Blockly.ReplMgr.putYail = (function() {
                                                                  dialog.hide();
                                                              });
                             engine.resetcompanion();
-                            return;
-                        }
-                        if (!Blockly.ReplMgr.acceptableVersion(json.version)) {
-                            engine.checkversionupgrade(false, json.installer, false);
                             return;
                         }
                         if (!json.fqcn) {
