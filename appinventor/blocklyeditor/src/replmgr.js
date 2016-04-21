@@ -703,10 +703,6 @@ Blockly.ReplMgr.putYail = (function() {
                             engine.resetcompanion();
                             return;
                         }
-                        if (!Blockly.ReplMgr.acceptableVersion(json.version)) {
-                            engine.checkversionupgrade(false, json.installer, false);
-                            return;
-                        }
                         if (!json.fqcn) {
                             // Set a compatibility flag to indicate that we
                             // should trim package names from Component blocks
