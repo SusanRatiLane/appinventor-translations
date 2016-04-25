@@ -18,7 +18,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Logger;
-import java.util.logging.Level;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -44,8 +43,6 @@ public class OdeAuthFilter implements Filter {
   private final StorageIo storageIo = StorageIoInstanceHolder.INSTANCE;
 
   private static final UserService userService = UserServiceFactory.getUserService();
-
-  private static final IdMap idmap = IdMap.getInstance();
 
   // Whether this server should use a whitelist to determine who can
   // access it. Value is specified in the <system-properties> section
@@ -79,10 +76,8 @@ public class OdeAuthFilter implements Filter {
     LOG.info("isReadOnly = " + isReadOnly);
     if (userid == null) {        // Invalid Login
       LOG.info("userid is null on login.");
-// Temporarily commented out. If we don't have a session cookie, we will
-// fall back to using Google API based authentication (in doMyFilter).
-//      httpResponse.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
-//      return;
+      httpResponse.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
+      return;
     }
     boolean isAdmin = false;
     Object oIsAdmin = httpRequest.getSession().getAttribute("isadmin");
@@ -99,21 +94,9 @@ public class OdeAuthFilter implements Filter {
     throws IOException, ServletException {
 
     // Setup the user object for OdeRemoteServiceServlet
-
-    if (userid != null) {
-      setUserFromUserId(userid, isAdmin, isReadOnly);
-      // Setup the session object for AdminInfoService
-      LocalSession.getInstance().set(request.getSession());
-      LOG.log(Level.WARNING, "userId set from session object! userid = " + userid);
-    } else {
-      LOG.log(Level.WARNING, "userId is null, falling back to legacy auth");
-      if (!legacySetUser(request)) {
-        // login failed completely. Redirect to Google Login Page
-        response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
-        return;
-      }
-      LOG.log(Level.WARNING, "Legacy Auth: email is: " + localUser.getUserEmail());
-    }
+    setUserFromUserId(userid, isAdmin, isReadOnly);
+    // Setup the session object for AdminInfoService
+    LocalSession.getInstance().set(request.getSession());
 
     // If using local login, we *must* have an email address because that is how we
     // find the UserData object.
@@ -176,34 +159,6 @@ public class OdeAuthFilter implements Filter {
     }
     user.setReadOnly(isReadOnly);
     localUser.set(user);
-  }
-
-  /*
-   * Fallback code to set the user from the Google provided api. This
-   * is transition code which we call when we don't have a session. This
-   * may be because the user is running older client code, which used Google
-   * authentication exclusively and therefore never set a session cookie.
-   * We anticipate needing this code for only 72 hours at most!
-   */
-  boolean legacySetUser(HttpServletRequest request) {
-    com.google.appengine.api.users.User apiUser = userService.getCurrentUser();
-    if (apiUser != null) {
-      String userId = apiUser.getUserId();
-      String email = apiUser.getEmail();
-      email = idmap.get(email);	// Map the user.
-      User user = storageIo.getUser(userId, email);
-      user.setIsAdmin(userService.isUserAdmin());
-      if (!email.equals(user.getUserEmail())) {
-        user.setUserEmail(email);
-      }
-      localUser.set(user);
-      // The line below is where we setup the session based
-      // authentication
-      request.getSession().setAttribute("userid", userId);
-      return true;
-    } else {
-      return false;
-    }
   }
 
   /*
