@@ -1065,7 +1065,7 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
    * Update Component Types in Blockly ComponentTypes
    */
   public static native void populateComponentTypes(String formName) /*-{
-      $wnd.Blocklies[formName].ComponentTypes.populateTypes();
+      $wnd.Blocklies[formName].ComponentTypes.populateTypes(top.location.hash.substr(1));
   }-*/;
 
   /*
