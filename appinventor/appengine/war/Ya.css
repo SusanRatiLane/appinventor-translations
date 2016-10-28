@@ -425,6 +425,27 @@ body {
   transition:color .2s ease-out, background .2s ease-in;
 }
 
+.ode-TopPanelFeedbackButton,
+.ActionDropDown-Default,
+.ActionDropDown-Options {
+  display: table-cell;
+  vertical-align: middle;
+  font-size: 12px;
+  cursor: pointer;
+  margin: -12px 0px;
+  padding: 0px 12px;
+  height: 40px;
+  border: transparent;
+  background: transparent;
+  color: red;
+  -o-transition:color .2s ease-out, background .2s ease-in;
+  -ms-transition:color .2s ease-out, background .2s ease-in;
+  -moz-transition:color .2s ease-out, background .2s ease-in;
+  -webkit-transition:color .2s ease-out, background .2s ease-in;
+  /* ...and now override with proper CSS property */
+  transition:color .2s ease-out, background .2s ease-in;
+}
+
 .ode-TopPanelButton:hover,
 .ActionDropDown-Default:hover
 .ActionDropDown-Options:hover {
