@@ -710,7 +710,7 @@ public interface OdeMessages extends Messages {
   @Description("Name of Guide link")
   String guideTabName();
 
-  @DefaultMessage("Report an Issue")
+  @DefaultMessage("Testing Feedback")
   @Description("Link for Report an Issue form")
   String feedbackTabName();
 
