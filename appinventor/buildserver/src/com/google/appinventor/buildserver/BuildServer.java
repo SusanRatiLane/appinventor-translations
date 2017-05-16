@@ -164,8 +164,8 @@ public class BuildServer {
   //                            the number of active jobs is < 1/3 of max
   private enum ShutdownState { UP, SHUTTING, DOWN, DRAINING };
 
-  private boolean draining = false; // We have exceeded 2/3 max load, waiting for
-                                    // the load to become < 1/3 max load
+  private static volatile boolean draining = false; // We have exceeded 2/3 max load, waiting for
+                                                    // the load to become < 1/3 max load
 
   @GET
   @Path("health")
@@ -662,7 +662,8 @@ public class BuildServer {
   private ShutdownState getShutdownState() {
     if (shuttingTime == 0) {
       int max = buildExecutor.getMaxActiveTasks();
-      if (max == 0) {           // Unlimited, so we are up
+      if (max < 10) {           // Only do this scheme if we are not unlimited
+                                // (unlimited == 0) and allow more then 10 max builds
         return ShutdownState.UP;
       }
       int active = buildExecutor.getActiveTaskCount();
