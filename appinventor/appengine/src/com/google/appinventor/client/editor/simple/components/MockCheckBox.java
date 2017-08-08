@@ -166,19 +166,19 @@ public final class MockCheckBox extends MockWrapper {
       setEnabledProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_FONTBOLD)) {
       setFontBoldProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTITALIC)) {
       setFontItalicProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTSIZE)) {
       setFontSizeProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTTYPEFACE)) {
       setFontTypefaceProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXT)) {
       setTextProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXTCOLOR)) {
       setTextColorProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_CHECKED)) {

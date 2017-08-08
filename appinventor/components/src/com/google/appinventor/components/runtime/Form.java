@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
 import org.json.JSONException;
 
 import android.app.Activity;
@@ -104,6 +108,10 @@ public class Form extends Activity
   private static final String RESULT_NAME = "APP_INVENTOR_RESULT";
 
   private static final String ARGUMENT_NAME = "APP_INVENTOR_START";
+
+  public static final String SERVICE_NAME = "SERVICE_NAME";
+
+  public static final String SERVICE_ARG = "SERVICE_START_ARGUMENT";
 
   public static final String APPINVENTOR_URL_SCHEME = "appinventor";
 
@@ -235,6 +243,29 @@ public class Form extends Activity
     }
   }
 
+  protected class FormHandler extends Handler {
+
+    @Override
+    public void handleMessage(Message msg) {
+
+    }
+
+  }
+
+  private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String taskName = intent.getStringExtra("task");
+        String resultString = intent.getStringExtra("message");
+        Log.d(LOG_TAG,"Received from Task: " + taskName + " message: " + resultString);
+        Object resultObject = Form.decodeJSONStringForForm(resultString, "receive from task");
+        ReceivedFromTask(taskName, resultObject);
+
+    }
+  };
+
+  protected FormHandler formHandler;
+
   @Override
   public void onCreate(Bundle icicle) {
     // Called when the activity is first created
@@ -249,6 +280,9 @@ public class Form extends Activity
     activeForm = this;
     Log.i(LOG_TAG, "activeForm is now " + activeForm.formName);
 
+    // Create formHandler for communication
+    formHandler = new FormHandler();
+
     deviceDensity = this.getResources().getDisplayMetrics().density;
     Log.d(LOG_TAG, "deviceDensity = " + deviceDensity);
     compatScalingFactor = ScreenDensityUtil.computeCompatibleScaling(this);
@@ -262,7 +296,7 @@ public class Form extends Activity
       _initialized = true;
       // Note that we always consult ReplApplication even if we are not the Repl (Companion)
       // this is subtle. When ReplApplication isn't directly used, the "installed" property
-      // defaults to ture, which means we can continue. The MultiDexApplication which is
+      // defaults to true, which means we can continue. The MultiDexApplication which is
       // used in a non-Companion context will always do the full install
       if (ReplApplication.installed) {
         Log.d(LOG_TAG, "MultiDex already installed.");
@@ -498,7 +532,7 @@ public class Form extends Activity
 
   // functionName is a string to include in the error message that will be shown
   // if the JSON decoding fails
-  private  static Object decodeJSONStringForForm(String jsonString, String functionName) {
+  public  static Object decodeJSONStringForForm(String jsonString, String functionName) {
     Log.i(LOG_TAG, "decodeJSONStringForForm -- decoding JSON representation:" + jsonString);
     Object valueFromJSON = "";
     try {
@@ -562,6 +596,8 @@ public class Form extends Activity
     Log.i(LOG_TAG, "Form " + formName + " got onResume");
     activeForm = this;
 
+    LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Task.LOCAL_ACTION_SEND_MESSAGE));
+
     // If applicationIsBeingClosed is true, call closeApplication() immediately to continue
     // unwinding through all forms of a multi-screen application.
     if (applicationIsBeingClosed) {
@@ -604,6 +640,7 @@ public class Form extends Activity
   @Override
   protected void onPause() {
     super.onPause();
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     Log.i(LOG_TAG, "Form " + formName + " got onPause");
     for (OnPauseListener onPauseListener : onPauseListeners) {
       onPauseListener.onPause();
@@ -634,7 +671,7 @@ public class Form extends Activity
     Log.i(LOG_TAG, "Form " + formName + " got onDestroy");
 
     // Unregister events for components in this form.
-    EventDispatcher.removeDispatchDelegate(this);
+    EventDispatcher.removeDispatchContext(this.getDispatchContext());
 
     for (OnDestroyListener onDestroyListener : onDestroyListeners) {
       onDestroyListener.onDestroy();
@@ -692,6 +729,7 @@ public class Form extends Activity
     boolean canDispatch = screenInitialized ||
         (component == this && eventName.equals("Initialize"));
 
+    Log.i(LOG_TAG, "canDispatchEvent component=" + component.toString() + " eventName=" + eventName + " screenInitialized=" + screenInitialized + " canDispatch=" + canDispatch); //TODO(remove)
     if (canDispatch) {
       // Set activeForm to this before the event is dispatched.
       // runtime.scm will call getActiveForm() when the event handler executes.
@@ -715,12 +753,18 @@ public class Form extends Activity
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public String getDispatchContext() {
+    return formName;
+  }
+
 
   /**
    * Initialize event handler.
    */
   @SimpleEvent(description = "Screen starting")
   public void Initialize() {
+    Log.i("Form", "Initialize called"); // TODO(remove)
     // Dispatch the Initialize event only after the screen's width and height are no longer zero.
     androidUIHandler.post(new Runnable() {
       public void run() {
@@ -732,6 +776,7 @@ public class Form extends Activity
             Sizing("Responsive");
           }
           screenInitialized = true;
+          Log.i("Form", "Screen Initialized set true"); // TODO(remove)
 
           //  Call all apps registered to be notified when Initialize Event is dispatched
           for (OnInitializeListener onInitializeListener : onInitializeListeners) {
@@ -1587,6 +1632,13 @@ public class Form extends Activity
     EventDispatcher.dispatchEvent(this, "OtherScreenClosed", otherScreenName, result);
   }
 
+  // Task
+  @SimpleEvent(description = "Event raised when a Task sends a message")
+  public void ReceivedFromTask(String task, Object message) {
+    Log.i(LOG_TAG, "Form " + formName + " ReceiveFromTask, task = " + task + ", message = " + message.toString());
+    EventDispatcher.dispatchEvent(this,"ReceivedFromTask", task, message);
+  }
+
 
   // Component implementation
 
@@ -1598,13 +1650,43 @@ public class Form extends Activity
   // ComponentContainer implementation
 
   @Override
-  public Activity $context() {
+  public Context $context() {
     return this;
   }
 
   @Override
   public Form $form() {
     return this;
+  }
+
+  @Override
+  public Task $task() {
+    return null;
+  }
+
+  @Override
+  public boolean isContext() {
+    return true;
+  }
+
+  @Override
+  public boolean isForm() {
+    return true;
+  }
+
+  @Override
+  public boolean isTask() {
+    return false;
+  }
+
+  @Override
+  public boolean inForm() {
+    return isForm();
+  }
+
+  @Override
+  public boolean inTask() {
+    return isTask();
   }
 
   @Override
@@ -1910,6 +1992,10 @@ public class Form extends Activity
     dimChanges.clear();
   }
 
+  public String getFormName() {
+    return formName;
+  }
+
   public void deleteComponent(Object component) {
     if (component instanceof OnStopListener) {
       OnStopListener onStopListener = (OnStopListener) component;
@@ -2073,6 +2159,58 @@ public class Form extends Activity
       imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     } else {
       dispatchErrorOccurredEvent(this, "HideKeyboard", ErrorMessages.ERROR_NO_FOCUSABLE_VIEW_FOUND);
+    }
+  }
+
+  @SimpleFunction(description = "Starts the specified task without a start value")
+  public void StartTask(String taskName) {
+    if (activeForm != null) {
+      activeForm.startNewService(taskName, "");
+    } else {
+      throw new IllegalStateException("activeForm is null");
+    }
+  }
+
+  @SimpleFunction(description = "Starts the specified task with a start value")
+  public void StartTaskWithValue(String taskName, Object startValue) {
+    if (activeForm != null) {
+      activeForm.startNewService(taskName, startValue);
+    } else {
+      throw new IllegalStateException("activeForm is null");
+    }
+  }
+
+  protected void startNewService(String taskName, Object startValue) {
+    Intent serviceIntent = new Intent();
+    // Note that the following is dependent on task generated class names being the same as
+    // their task names and all tasks being in the same package.
+    String packageName = getPackageName();
+    serviceIntent.setClassName(this, packageName + "." + taskName);
+    String functionName = "open another service";
+    String jValue = "";
+    if (startValue != null) {
+      jValue = jsonEncodeForForm(startValue, functionName);
+    }
+    serviceIntent.putExtra(SERVICE_ARG, jValue);
+    try {
+      startService(serviceIntent);
+    } catch (ActivityNotFoundException e) {
+      dispatchErrorOccurredEvent(this, functionName,
+          ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
+    }
+  }
+
+  @SimpleFunction(description = "Stops the specified task")
+  public void StopTask(String taskName) {
+    Intent serviceIntent = new Intent();
+    // Note that the following is dependent on task generated class names being the same as
+    // their task names and all tasks being in the same package.
+    serviceIntent.setClassName(this, getPackageName() + "." + taskName);
+    try {
+      stopService(serviceIntent);
+    } catch (ActivityNotFoundException e) {
+      dispatchErrorOccurredEvent(this, "StopService",
+          ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
     }
   }
 }

@@ -391,15 +391,15 @@ Blockly.WorkspaceSvg.prototype.populateComponentTypes = function(strComponentInf
 /**
  * Loads the contents of a blocks file into the workspace.
  *
- * @param {!string} formJson JSON string containing structure of the Form
+ * @param {!string} contextJson JSON string containing structure of the Context
  * @param {!string} blocksContent XML serialization of the blocks
  * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
-Blockly.WorkspaceSvg.prototype.loadBlocksFile = function(formJson, blocksContent) {
+Blockly.WorkspaceSvg.prototype.loadBlocksFile = function(contextJson, blocksContent) {
   if (blocksContent.length != 0) {
     try {
       Blockly.Block.isRenderingOn = false;
-      Blockly.Versioning.upgrade(formJson, blocksContent, this);
+      Blockly.Versioning.upgrade(contextJson, blocksContent, this);
     } finally {
       Blockly.Block.isRenderingOn = true;
     }
@@ -441,13 +441,18 @@ Blockly.WorkspaceSvg.prototype.saveBlocksFile = function() {
 /**
  * Generate the YAIL for the blocks workspace.
  *
- * @param {string} formJson
+ * @param {string} contextJson
  * @param {string} packageName
  * @param {boolean=false} opt_repl
  * @returns String containing YAIL to be sent to the phone.
  */
-Blockly.WorkspaceSvg.prototype.getFormYail = function(formJson, packageName, opt_repl) {
-  return Blockly.Yail.getFormYail(formJson, packageName, !!opt_repl, this);
+Blockly.WorkspaceSvg.prototype.getContextYail = function(contextJson, packageName, opt_repl) {
+  if (top.BlocklyPanel_isFormBlockly(this.contextName)) {
+    return Blockly.Yail.getFormYail(contextJson, packageName, !!opt_repl, this);
+  } else if (top.BlocklyPanel_isTaskBlockly(this.contextName)) {
+    return Blockly.Yail.getTaskYail(contextJson, packageName, !!opt_repl, this);
+  }
+  return null;
 };
 
 /**

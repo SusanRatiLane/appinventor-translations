@@ -67,7 +67,7 @@ public class ProjectToolbar extends Toolbar {
 
     @Override
     public void execute() {
-      if (Ode.getInstance().screensLocked()) {
+      if (Ode.getInstance().contextsLocked()) {
         return;                 // Refuse to switch if locked (save file happening)
       }
       // Disabled the Start New Project button. We do this because on slow machines people

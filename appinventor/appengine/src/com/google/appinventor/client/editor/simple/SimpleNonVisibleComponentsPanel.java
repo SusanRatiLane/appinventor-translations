@@ -8,6 +8,7 @@ package com.google.appinventor.client.editor.simple;
 
 import static com.google.appinventor.client.Ode.MESSAGES;
 import com.google.appinventor.client.editor.simple.components.MockComponent;
+import com.google.appinventor.client.editor.simple.components.MockContext;
 import com.google.appinventor.client.editor.simple.components.MockForm;
 import com.google.appinventor.client.editor.simple.palette.SimplePaletteItem;
 import com.google.appinventor.client.explorer.project.ComponentDatabaseChangeListener;
@@ -32,8 +33,11 @@ public final class SimpleNonVisibleComponentsPanel extends Composite implements 
   private final Label heading;
   private final FlowPanel componentsPanel;
 
-  // Backing mocked Simple form component
-  private MockForm form;
+  // Backing mocked Simple context component
+  private MockContext context;
+
+  // Control visibility of the panel
+  private boolean showAlways = false;
 
   /**
    * Creates new component design panel for non-visible components.
@@ -57,10 +61,10 @@ public final class SimpleNonVisibleComponentsPanel extends Composite implements 
   /**
    * Associates a Simple form component with this panel.
    *
-   * @param form  backing mocked form component
+   * @param context  backing mocked context component
    */
-  public void setForm(MockForm form) {
-    this.form = form;
+  public void setContext(MockContext context) {
+    this.context = context;
   }
 
   /**
@@ -72,9 +76,7 @@ public final class SimpleNonVisibleComponentsPanel extends Composite implements 
    */
   public void addComponent(MockComponent component) {
     componentsPanel.add(component);
-    if (componentsPanel.getWidgetCount() > 0) {
-      heading.setText(MESSAGES.nonVisibleComponentsHeader());
-    }
+    updateVisibility();
   }
 
   /**
@@ -86,7 +88,22 @@ public final class SimpleNonVisibleComponentsPanel extends Composite implements 
    */
   public void removeComponent(MockComponent component) {
     componentsPanel.remove(component);
-    if (componentsPanel.getWidgetCount() == 0) {
+    updateVisibility();
+  }
+
+  public void setShowAlways(boolean showAlways) {
+    this.showAlways = showAlways;
+    updateVisibility();
+  }
+
+  private void updateVisibility() {
+    if (showAlways) {
+      heading.setText(MESSAGES.nonVisibleComponentsHeader());
+      return;
+    }
+    if (componentsPanel.getWidgetCount() > 0) {
+      heading.setText(MESSAGES.nonVisibleComponentsHeader());
+    } else {
       heading.setText("");
     }
   }
@@ -121,8 +138,8 @@ public final class SimpleNonVisibleComponentsPanel extends Composite implements 
   public void onDrop(DragSource source, int x, int y, int offsetX, int offsetY) {
     MockComponent sourceComponent = ((SimplePaletteItem) source).createMockComponent();
 
-    // Add component to the form
-    form.addComponent(sourceComponent);
+    // Add component to the context
+    context.addComponent(sourceComponent);
 
     // Add component to this panel
     addComponent(sourceComponent);

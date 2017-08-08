@@ -249,7 +249,7 @@ public class ProjectList extends Composite implements ProjectManagerEventListene
         @Override
         public void onClick(ClickEvent event) {
           Ode ode = Ode.getInstance();
-          if (ode.screensLocked()) {
+          if (ode.contextsLocked()) {
             return;             // i/o in progress, ignore request
           }
           ode.openYoungAndroidProjectInDesigner(project);

@@ -7,9 +7,9 @@
 package com.google.appinventor.client.editor.youngandroid.properties;
 
 import static com.google.appinventor.client.Ode.MESSAGES;
-import com.google.appinventor.client.editor.simple.components.FormChangeListener;
+import com.google.appinventor.client.editor.simple.components.ContextChangeListener;
 import com.google.appinventor.client.editor.simple.components.MockComponent;
-import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
+import com.google.appinventor.client.editor.youngandroid.YaContextEditor;
 import com.google.appinventor.client.widgets.properties.AdditionalChoicePropertyEditor;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
@@ -25,14 +25,14 @@ import java.util.Set;
  * @author lizlooney@google.com (Liz Looney)
  */
 public final class YoungAndroidComponentSelectorPropertyEditor
-    extends AdditionalChoicePropertyEditor implements FormChangeListener {
+    extends AdditionalChoicePropertyEditor implements ContextChangeListener {
   // UI elements
   private final ListBox componentsList;
 
   private final ListWithNone choices;
 
-  // The YaFormEditor associated with this property editor.
-  private final YaFormEditor editor;
+  // The YaContextEditor associated with this property editor.
+  private final YaContextEditor editor;
 
   // The types of component that can be chosen
   private final Set<String> componentTypes;
@@ -42,7 +42,7 @@ public final class YoungAndroidComponentSelectorPropertyEditor
    *
    * @param editor the editor that this property editor belongs to
    */
-  public YoungAndroidComponentSelectorPropertyEditor(YaFormEditor editor) {
+  public YoungAndroidComponentSelectorPropertyEditor(YaContextEditor editor) {
     this(editor, null);
   }
 
@@ -54,7 +54,7 @@ public final class YoungAndroidComponentSelectorPropertyEditor
    * @param componentTypes types of component that can be selected, or null if
    *        all types of components can be selected.
    */
-  public YoungAndroidComponentSelectorPropertyEditor(final YaFormEditor editor,
+  public YoungAndroidComponentSelectorPropertyEditor(final YaContextEditor editor,
       Set<String> componentTypes) {
     this.editor = editor;
     this.componentTypes = componentTypes;
@@ -107,7 +107,7 @@ public final class YoungAndroidComponentSelectorPropertyEditor
 
   private void finishInitialization() {
     // Add a FormChangeListener so we'll know when components are added/removed/renamed.
-    editor.getForm().addFormChangeListener(this);
+    editor.getContext().addContextChangeListener(this);
 
     // Fill choices with the components.
     for (MockComponent component : editor.getComponents().values()) {
@@ -127,7 +127,7 @@ public final class YoungAndroidComponentSelectorPropertyEditor
 
   @Override
   public void orphan() {
-    editor.getForm().removeFormChangeListener(this);
+    editor.getContext().removeContextChangeListener(this);
     super.orphan();
   }
 

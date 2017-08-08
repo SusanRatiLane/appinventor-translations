@@ -6,8 +6,10 @@
 
 package com.google.appinventor.components.runtime.util;
 
+import com.google.appinventor.components.runtime.ComponentContainer;
 import com.google.appinventor.components.runtime.Form;
 import com.google.appinventor.components.runtime.ReplForm;
+import com.google.appinventor.components.runtime.ReplTask;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -136,10 +138,10 @@ public class MediaUtil {
    * <p>Otherwise, if <code>mediaPath</code> it is assumed to be the name of
    * an asset.
    *
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  private static MediaSource determineMediaSource(Form form, String mediaPath) {
+  private static MediaSource determineMediaSource(Context context, String mediaPath) {
     if (mediaPath.startsWith("/sdcard/") ||
         mediaPath.startsWith(Environment.getExternalStorageDirectory().getAbsolutePath())) {
       return MediaSource.SDCARD;
@@ -164,11 +166,16 @@ public class MediaUtil {
       // It's not a well formed URL!
     }
 
-    if (form instanceof ReplForm) {
-      if (((ReplForm)form).isAssetsLoaded())
+    if (context instanceof ReplForm) {
+      if (((ReplForm)context).isAssetsLoaded())
         return MediaSource.REPL_ASSET;
       else
         return MediaSource.ASSET;
+    } else if (context instanceof ReplTask) {
+      if (((ReplTask)context).isAssetsLoaded())
+        return MediaSource.REPL_ASSET;
+      else
+          return MediaSource.ASSET;
     }
 
     return MediaSource.ASSET;
@@ -176,10 +183,10 @@ public class MediaUtil {
 
   private static ConcurrentHashMap<String, String> pathCache = new ConcurrentHashMap<String, String>(2);
 
-  private static String findCaseinsensitivePath(Form form, String mediaPath)
+  private static String findCaseinsensitivePath(Context context, String mediaPath)
       throws IOException{
     if( !pathCache.containsKey(mediaPath) ){
-      String newPath = findCaseinsensitivePathWithoutCache(form, mediaPath);
+      String newPath = findCaseinsensitivePathWithoutCache(context, mediaPath);
       if( newPath == null){
         return null;
       }
@@ -191,14 +198,14 @@ public class MediaUtil {
   /**
    * Don't use this directly! Use findCaseinsensitivePath. It has caching.
    * This is the original findCaseinsensitivePath, unchanged.
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media to resolve
    * @return the correct path, adjusted for case errors
    * @throws IOException
    */
-  private static String findCaseinsensitivePathWithoutCache(Form form, String mediaPath)
+  private static String findCaseinsensitivePathWithoutCache(Context context, String mediaPath)
       throws IOException{
-    String[] mediaPathlist = form.getAssets().list("");
+    String[] mediaPathlist = context.getAssets().list("");
     int l = Array.getLength(mediaPathlist);
     for (int i=0; i<l; i++){
       String temp = mediaPathlist[i];
@@ -213,29 +220,29 @@ public class MediaUtil {
    * find path of an asset from a mediaPath using case-insensitive comparison,
    * return type InputStream.
    * Throws IOException if there is no matching path
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  private static InputStream getAssetsIgnoreCaseInputStream(Form form, String mediaPath)
+  private static InputStream getAssetsIgnoreCaseInputStream(Context context, String mediaPath)
       throws IOException{
     try {
-      return form.getAssets().open(mediaPath);
+      return context.getAssets().open(mediaPath);
 
     } catch (IOException e) {
-      String path = findCaseinsensitivePath(form, mediaPath);
+      String path = findCaseinsensitivePath(context, mediaPath);
       if (path == null) {
           throw e;
         } else {
-          return form.getAssets().open(path);
+          return context.getAssets().open(path);
         }
     }
   }
 
-  private static InputStream openMedia(Form form, String mediaPath, MediaSource mediaSource)
+  private static InputStream openMedia(Context context, String mediaPath, MediaSource mediaSource)
       throws IOException {
     switch (mediaSource) {
       case ASSET:
-        return getAssetsIgnoreCaseInputStream(form,mediaPath);
+        return getAssetsIgnoreCaseInputStream(context,mediaPath);
 
       case REPL_ASSET:
         return new FileInputStream(replAssetPath(mediaPath));
@@ -248,16 +255,16 @@ public class MediaUtil {
         return new URL(mediaPath).openStream();
 
       case CONTENT_URI:
-        return form.getContentResolver().openInputStream(Uri.parse(mediaPath));
+        return context.getContentResolver().openInputStream(Uri.parse(mediaPath));
 
       case CONTACT_URI:
         // Open the photo for the contact.
         InputStream is = null;
         if (SdkLevel.getLevel() >= SdkLevel.LEVEL_HONEYCOMB_MR1) {
-          is = HoneycombMR1Util.openContactPhotoInputStreamHelper(form.getContentResolver(),
+          is = HoneycombMR1Util.openContactPhotoInputStreamHelper(context.getContentResolver(),
               Uri.parse(mediaPath));
         } else {
-          is = Contacts.People.openContactPhotoInputStream(form.getContentResolver(),
+          is = Contacts.People.openContactPhotoInputStream(context.getContentResolver(),
               Uri.parse(mediaPath));
         }
         if (is != null) {
@@ -269,26 +276,26 @@ public class MediaUtil {
     throw new IOException("Unable to open media " + mediaPath + ".");
   }
 
-  public static InputStream openMedia(Form form, String mediaPath) throws IOException {
-    return openMedia(form, mediaPath, determineMediaSource(form, mediaPath));
+  public static InputStream openMedia(Context context, String mediaPath) throws IOException {
+    return openMedia(context, mediaPath, determineMediaSource(context, mediaPath));
   }
 
   /**
    * Copies the media specified by mediaPath to a temp file and returns the
    * File.
    *
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  public static File copyMediaToTempFile(Form form, String mediaPath)
+  public static File copyMediaToTempFile(Context context, String mediaPath)
       throws IOException {
-    MediaSource mediaSource = determineMediaSource(form, mediaPath);
-    return copyMediaToTempFile(form, mediaPath, mediaSource);
+    MediaSource mediaSource = determineMediaSource(context, mediaPath);
+    return copyMediaToTempFile(context, mediaPath, mediaSource);
   }
 
-  private static File copyMediaToTempFile(Form form, String mediaPath, MediaSource mediaSource)
+  private static File copyMediaToTempFile(Context context, String mediaPath, MediaSource mediaSource)
       throws IOException {
-    InputStream in = openMedia(form, mediaPath, mediaSource);
+    InputStream in = openMedia(context, mediaPath, mediaSource);
     File file = null;
     try {
       file = File.createTempFile("AI_Media_", null);
@@ -313,14 +320,14 @@ public class MediaUtil {
     }
   }
 
-  private static File cacheMediaTempFile(Form form, String mediaPath, MediaSource mediaSource)
+  private static File cacheMediaTempFile(Context context, String mediaPath, MediaSource mediaSource)
       throws IOException {
     File tempFile = tempFileMap.get(mediaPath);
     // If the map didn't contain an entry for mediaPath, or if the temp file no longer exists,
     // copy the file to a new temp file.
     if (tempFile == null || !tempFile.exists()) {
       Log.i(LOG_TAG, "Copying media " + mediaPath + " to temp file...");
-      tempFile = copyMediaToTempFile(form, mediaPath, mediaSource);
+      tempFile = copyMediaToTempFile(context, mediaPath, mediaSource);
       Log.i(LOG_TAG, "Finished copying media " + mediaPath + " to temp file " +
           tempFile.getAbsolutePath());
       tempFileMap.put(mediaPath, tempFile);
@@ -335,7 +342,7 @@ public class MediaUtil {
    *
    * <p/>If mediaPath is null or empty, null is returned.
    *
-   * @param form the Form
+   * @param container the ComponentContainer
    * @param mediaPath the path to the media
    * @return a Drawable or null
    *
@@ -347,8 +354,8 @@ public class MediaUtil {
    * requested.
    *
    */
-  public static BitmapDrawable getBitmapDrawable(Form form, String mediaPath)
-    throws IOException {
+  public static BitmapDrawable getBitmapDrawable(ComponentContainer container, String mediaPath)
+          throws IOException {
     if (mediaPath == null || mediaPath.length() == 0) {
       return null;
     }
@@ -363,7 +370,7 @@ public class MediaUtil {
           syncer.wakeup(result);
         }
       };
-    getBitmapDrawableAsync(form, mediaPath, continuation);
+    getBitmapDrawableAsync(container, mediaPath, continuation);
     syncer.waitfor();
     BitmapDrawable result = (BitmapDrawable) syncer.getResult();
     if (result == null) {
@@ -379,19 +386,20 @@ public class MediaUtil {
    *
    * <p/>If mediaPath is null or empty, null is returned.
    *
-   * @param form the Form
+   * @param container the ComponentContainer
    * @param mediaPath the path to the media
    * @param continuation An AsyncCallbackPair that will receive a
    * BitmapDrawable on success. On exception or failure the appropriate
    * handler will be triggered.
    */
-  public static void getBitmapDrawableAsync(final Form form, final String mediaPath, final AsyncCallbackPair<BitmapDrawable> continuation) {
+  public static void getBitmapDrawableAsync(final ComponentContainer container, final String mediaPath, final AsyncCallbackPair<BitmapDrawable> continuation) {
     if (mediaPath == null || mediaPath.length() == 0) {
       continuation.onSuccess(null);
       return;
     }
 
-    final MediaSource mediaSource = determineMediaSource(form, mediaPath);
+    final Context context = container.$context();
+    final MediaSource mediaSource = determineMediaSource(context, mediaPath);
 
     Runnable loadImage = new Runnable() {
       @Override
@@ -408,7 +416,7 @@ public class MediaUtil {
         int read;
         try {
           // copy the input stream to an in-memory buffer
-          is = openMedia(form, mediaPath, mediaSource);
+          is = openMedia(context, mediaPath, mediaSource);
           while((read = is.read(buf)) > 0) {
             bos.write(buf, 0, read);
           }
@@ -416,9 +424,9 @@ public class MediaUtil {
         } catch(IOException e) {
           if (mediaSource == MediaSource.CONTACT_URI) {
             // There's no photo for this contact, return a placeholder image.
-            BitmapDrawable drawable = new BitmapDrawable(form.getResources(),
-                BitmapFactory.decodeResource(form.getResources(),
-                android.R.drawable.picture_frame, null));
+            BitmapDrawable drawable = new BitmapDrawable(context.getResources(),
+                    BitmapFactory.decodeResource(context.getResources(),
+                            android.R.drawable.picture_frame, null));
             continuation.onSuccess(drawable);
             return;
           }
@@ -447,9 +455,9 @@ public class MediaUtil {
         buf = null;
         try {
           bis.mark(read);
-          BitmapFactory.Options options = getBitmapOptions(form, bis, mediaPath);
+          BitmapFactory.Options options = getBitmapOptions(container, bis, mediaPath);
           bis.reset();
-          BitmapDrawable originalBitmapDrawable = new BitmapDrawable(form.getResources(), decodeStream(bis, null, options));
+          BitmapDrawable originalBitmapDrawable = new BitmapDrawable(context.getResources(), decodeStream(bis, null, options));
           // If options.inSampleSize == 1, then the image was not unreasonably large and may represent
           // the actual size the user intended for the image. However we still have to scale it by
           // the device density.
@@ -463,20 +471,24 @@ public class MediaUtil {
           //   4. create a new bitmap drawable with the scaled bitmap
           //   5. set the density in the scaled bitmap.
 
-          originalBitmapDrawable.setTargetDensity(form.getResources().getDisplayMetrics());
-          if ((options.inSampleSize != 1) || (form.deviceDensity() == 1.0f)) {
+          originalBitmapDrawable.setTargetDensity(context.getResources().getDisplayMetrics());
+          float deviceDensity = context.getResources().getDisplayMetrics().density;
+          if (container.isForm()) {
+            deviceDensity = container.$form().deviceDensity();
+          }
+          if ((options.inSampleSize != 1) || (deviceDensity == 1.0f)) {
             continuation.onSuccess(originalBitmapDrawable);
             return;
           }
-          int scaledWidth = (int) (form.deviceDensity() * originalBitmapDrawable.getIntrinsicWidth());
-          int scaledHeight = (int) (form.deviceDensity() * originalBitmapDrawable.getIntrinsicHeight());
-          Log.d(LOG_TAG, "form.deviceDensity() = " + form.deviceDensity());
+          int scaledWidth = (int) (deviceDensity * originalBitmapDrawable.getIntrinsicWidth());
+          int scaledHeight = (int) (deviceDensity * originalBitmapDrawable.getIntrinsicHeight());
+          Log.d(LOG_TAG, "deviceDensity = " + deviceDensity);
           Log.d(LOG_TAG, "originalBitmapDrawable.getIntrinsicWidth() = " + originalBitmapDrawable.getIntrinsicWidth());
           Log.d(LOG_TAG, "originalBitmapDrawable.getIntrinsicHeight() = " + originalBitmapDrawable.getIntrinsicHeight());
           Bitmap scaledBitmap = Bitmap.createScaledBitmap(originalBitmapDrawable.getBitmap(),
-              scaledWidth, scaledHeight, false);
-          BitmapDrawable scaledBitmapDrawable = new BitmapDrawable(form.getResources(), scaledBitmap);
-          scaledBitmapDrawable.setTargetDensity(form.getResources().getDisplayMetrics());
+                  scaledWidth, scaledHeight, false);
+          BitmapDrawable scaledBitmapDrawable = new BitmapDrawable(context.getResources(), scaledBitmap);
+          scaledBitmapDrawable.setTargetDensity(context.getResources().getDisplayMetrics());
           originalBitmapDrawable = null; // So it will get GC'd on the next line
           System.gc();                   // We likely used a lot of memory, so gc now.
           continuation.onSuccess(scaledBitmapDrawable);
@@ -531,16 +543,17 @@ public class MediaUtil {
     }
   }
 
-  private static BitmapFactory.Options getBitmapOptions(Form form, InputStream is, String mediaPath) {
+  private static BitmapFactory.Options getBitmapOptions(ComponentContainer container, InputStream is, String mediaPath) {
     // Get the size of the image.
     BitmapFactory.Options options = new BitmapFactory.Options();
     options.inJustDecodeBounds = true;
     decodeStream(is, null, options);
     int imageWidth = options.outWidth;
     int imageHeight = options.outHeight;
+    Context context = container.$context();
 
     // Get the screen size.
-    Display display = ((WindowManager) form.getSystemService(Context.WINDOW_SERVICE)).
+    Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).
         getDefaultDisplay();
 
     // Set the sample size so that we scale down any image that is larger than twice the
@@ -551,12 +564,16 @@ public class MediaUtil {
     // int maxHeight = 2 * display.getHeight();
     int maxWidth;
     int maxHeight;
-    if (form.getCompatibilityMode()) { // Compatibility Mode
+    float deviceDensity = context.getResources().getDisplayMetrics().density;
+    if (container.isForm()) {
+      deviceDensity = container.$form().deviceDensity();
+    }
+    if (Form.getCompatibilityMode()) { // Compatibility Mode
       maxWidth = 360 * 2;     // Originally used 2 times device size, continue to do so here
       maxHeight = 420 * 2;
     } else {                    // Responsive Mode
-      maxWidth = (int) (display.getWidth() / form.deviceDensity());
-      maxHeight = (int) (display.getHeight() / form.deviceDensity());
+      maxWidth = (int) (display.getWidth() / deviceDensity);
+      maxHeight = (int) (display.getHeight() / deviceDensity);
     }
 
     int sampleSize = 1;
@@ -577,20 +594,20 @@ public class MediaUtil {
    * find path of an asset from a mediaPath using case-insensitive comparison,
    * return AssetFileDescriptor of that asset
    * Throws IOException if there is no matching path
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  private static AssetFileDescriptor getAssetsIgnoreCaseAfd(Form form, String mediaPath)
+  private static AssetFileDescriptor getAssetsIgnoreCaseAfd(Context context, String mediaPath)
       throws IOException{
     try {
-      return form.getAssets().openFd(mediaPath);
+      return context.getAssets().openFd(mediaPath);
 
     } catch (IOException e) {
-      String path = findCaseinsensitivePath(form, mediaPath);
+      String path = findCaseinsensitivePath(context, mediaPath);
       if (path == null){
         throw e;
       } else {
-      return form.getAssets().openFd(path);
+      return context.getAssets().openFd(path);
       }
     }
   }
@@ -604,15 +621,15 @@ public class MediaUtil {
    * performance implications.
    *
    * @param soundPool the SoundPool
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  public static int loadSoundPool(SoundPool soundPool, Form form, String mediaPath)
+  public static int loadSoundPool(SoundPool soundPool, Context context, String mediaPath)
       throws IOException {
-    MediaSource mediaSource = determineMediaSource(form, mediaPath);
+    MediaSource mediaSource = determineMediaSource(context, mediaPath);
     switch (mediaSource) {
       case ASSET:
-        return soundPool.load(getAssetsIgnoreCaseAfd(form,mediaPath), 1);
+        return soundPool.load(getAssetsIgnoreCaseAfd(context,mediaPath), 1);
 
       case REPL_ASSET:
         return soundPool.load(replAssetPath(mediaPath), 1);
@@ -625,7 +642,7 @@ public class MediaUtil {
 
       case CONTENT_URI:
       case URL:
-        File tempFile = cacheMediaTempFile(form, mediaPath, mediaSource);
+        File tempFile = cacheMediaTempFile(context, mediaPath, mediaSource);
         return soundPool.load(tempFile.getAbsolutePath(), 1);
 
       case CONTACT_URI:
@@ -642,15 +659,16 @@ public class MediaUtil {
    * MediaPlayer.
    *
    * @param mediaPlayer the MediaPlayer
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  public static void loadMediaPlayer(MediaPlayer mediaPlayer, Form form, String mediaPath)
+  public static void loadMediaPlayer(MediaPlayer mediaPlayer, Context context, String mediaPath)
       throws IOException {
-    MediaSource mediaSource = determineMediaSource(form, mediaPath);
+    MediaSource mediaSource = determineMediaSource(context, mediaPath);
+    Log.d(LOG_TAG, "media Source" + mediaSource.toString());
     switch (mediaSource) {
       case ASSET:
-        AssetFileDescriptor afd = getAssetsIgnoreCaseAfd(form,mediaPath);
+        AssetFileDescriptor afd = getAssetsIgnoreCaseAfd(context,mediaPath);
         try {
           FileDescriptor fd = afd.getFileDescriptor();
           long offset = afd.getStartOffset();
@@ -682,7 +700,7 @@ public class MediaUtil {
         return;
 
       case CONTENT_URI:
-        mediaPlayer.setDataSource(form, Uri.parse(mediaPath));
+        mediaPlayer.setDataSource(context, Uri.parse(mediaPath));
         return;
 
       case CONTACT_URI:
@@ -701,16 +719,16 @@ public class MediaUtil {
    * implications.
    *
    * @param videoView the VideoView
-   * @param form the Form
+   * @param context the Context
    * @param mediaPath the path to the media
    */
-  public static void loadVideoView(VideoView videoView, Form form, String mediaPath)
+  public static void loadVideoView(VideoView videoView, Context context, String mediaPath)
       throws IOException {
-    MediaSource mediaSource = determineMediaSource(form, mediaPath);
+    MediaSource mediaSource = determineMediaSource(context, mediaPath);
     switch (mediaSource) {
       case ASSET:
       case URL:
-        File tempFile = cacheMediaTempFile(form, mediaPath, mediaSource);
+        File tempFile = cacheMediaTempFile(context, mediaPath, mediaSource);
         videoView.setVideoPath(tempFile.getAbsolutePath());
         return;
 

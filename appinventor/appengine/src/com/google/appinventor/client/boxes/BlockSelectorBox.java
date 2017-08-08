@@ -5,7 +5,7 @@ package com.google.appinventor.client.boxes;
 import com.google.appinventor.client.ComponentsTranslation;
 import com.google.appinventor.client.Images;
 import com.google.appinventor.client.Ode;
-import com.google.appinventor.client.editor.simple.components.MockForm;
+import com.google.appinventor.client.editor.simple.components.MockContext;
 import com.google.appinventor.client.editor.youngandroid.BlockDrawerSelectionListener;
 import com.google.appinventor.client.explorer.SourceStructureExplorer;
 import com.google.appinventor.client.explorer.SourceStructureExplorerItem;
@@ -26,7 +26,7 @@ import static com.google.appinventor.client.Ode.MESSAGES;
 
 /**
  * Box implementation for block selector. Shows a tree containing the built-in
- * blocks as well as the components for the current form. Clicking on an item
+ * blocks as well as the components for the current context. Clicking on an item
  * opens the blocks drawer for the item (or closes it if it was already open).
  * This box shares screen real estate with the SourceStructureBox. It uses a
  * SourceStructureExplorer to handle the components part of the tree.
@@ -183,15 +183,15 @@ public final class BlockSelectorBox extends Box {
 
   /**
    * Constructs a tree item for generic ("Advanced") component blocks for
-   * component types that appear in form.
+   * component types that appear in context.
    *
-   * @param form
-   *          only component types that appear in this Form will be included
-   * @return tree item for this form
+   * @param context
+   *          only component types that appear in this Context will be included
+   * @return tree item for this context
    */
-  public TreeItem getGenericComponentsTree(MockForm form) {
+  public TreeItem getGenericComponentsTree(MockContext context) {
     Map<String, String> typesAndIcons = Maps.newHashMap();
-    form.collectTypesAndIcons(typesAndIcons);
+    context.collectTypesAndIcons(typesAndIcons);
     TreeItem advanced = new TreeItem(new HTML("<span>" + MESSAGES.anyComponentLabel() + "</span>"));
     List<String> typeList = new ArrayList<String>(typesAndIcons.keySet());
     Collections.sort(typeList);

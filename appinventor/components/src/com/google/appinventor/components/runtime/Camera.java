@@ -139,7 +139,7 @@ public class Camera extends AndroidNonvisibleComponent
         intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
       }
 
-      container.$context().startActivityForResult(intent, requestCode);
+      container.$form().startActivityForResult(intent, requestCode);
     } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
       form.dispatchErrorOccurredEvent(this, "TakePicture",
           ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_READONLY);

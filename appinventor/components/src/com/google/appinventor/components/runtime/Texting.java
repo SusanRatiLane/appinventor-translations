@@ -216,7 +216,7 @@ public class Texting extends AndroidNonvisibleComponent
     Log.d(TAG, "Texting constructor");
     this.container = container;
     Texting.component = (Texting)this;
-    activity = container.$context();
+    activity = container.$form();
 
     SharedPreferences prefs = activity.getSharedPreferences(PREF_FILE, Activity.MODE_PRIVATE);
     if (prefs != null) {

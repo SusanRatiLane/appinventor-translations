@@ -169,7 +169,7 @@ public final class MockCanvas extends MockContainer {
     sortSprites();
 
     // Redraw.
-    refreshForm();
+    refreshContext();
   }
 
   private static double getZProperty(MockComponent sprite) {
@@ -192,7 +192,7 @@ public final class MockCanvas extends MockContainer {
       setBackgroundColorProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_BACKGROUNDIMAGE)) {
       setBackgroundImageProperty(newValue);
-      refreshForm();
+      refreshContext();
     }
   }
 }

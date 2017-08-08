@@ -153,4 +153,11 @@ public interface Component {
   static final String DEFAULT_VALUE_TEXT_TO_SPEECH_COUNTRY = "";
   static final String DEFAULT_VALUE_TEXT_TO_SPEECH_LANGUAGE = "";
 
+  /*
+   * Task Types.
+   */
+  static final int TASK_TYPE_QUICK = 0;
+  static final int TASK_TYPE_PERSISTENT = 1;
+  static final int TASK_TYPE_REPEATING = 2;
+
 }

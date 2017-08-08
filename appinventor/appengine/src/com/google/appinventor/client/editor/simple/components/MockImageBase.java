@@ -45,13 +45,13 @@ abstract class MockImageBase extends MockVisibleComponent {
         if (picturePropValue != null && !picturePropValue.isEmpty()) {
           OdeLog.elog("Error occurred while loading image " + picturePropValue);
         }
-        refreshForm(true);
+        refreshContext(true);
       }
     });
     image.addLoadHandler(new LoadHandler() {
       @Override
       public void onLoad(LoadEvent event) {
-        refreshForm(true);
+        refreshContext(true);
         resizeImage();  // resize after the new image occupies the form
       }
     });
@@ -155,14 +155,14 @@ abstract class MockImageBase extends MockVisibleComponent {
       setPictureProperty(newValue); // setUrl() triggers onLoad
     } else if (propertyName.equals(PROPERTY_NAME_WIDTH)) {
       resizeImage();
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_HEIGHT)) {
       resizeImage();
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_SCALING)) {
       scalingMode = newValue;
       resizeImage();
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_SCALE_PICTURE_TO_FIT)) {
       boolean scaleIt = Boolean.parseBoolean(newValue);
       if (scaleIt) {
@@ -171,7 +171,7 @@ abstract class MockImageBase extends MockVisibleComponent {
         scalingMode = "0";
       }
       resizeImage();
-      refreshForm();
+      refreshContext();
     }
   }
 }

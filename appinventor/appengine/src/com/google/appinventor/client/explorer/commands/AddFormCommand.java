@@ -21,6 +21,7 @@ import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidBlocks
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidFormNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidPackageNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidProjectNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceNode;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -75,7 +76,7 @@ public final class AddFormCommand extends ChainableCommand {
     // UI elements
     private final LabeledTextBox newNameTextBox;
 
-    private final Set<String> otherFormNames;
+    private final Set<String> otherContextNames;
 
     NewFormDialog(final YoungAndroidProjectNode projectRootNode) {
       super(false, true);
@@ -87,19 +88,22 @@ public final class AddFormCommand extends ChainableCommand {
       final String prefix = "Screen";
       final int prefixLength = prefix.length();
       int highIndex = 0;
+      int formCount = 0;
       // Collect the existing form names so we can prevent duplicate form names.
-      otherFormNames = new HashSet<String>();
+      otherContextNames = new HashSet<String>();
 
       for (ProjectNode source : projectRootNode.getAllSourceNodes()) {
-        if (source instanceof YoungAndroidFormNode) {
-          String formName = ((YoungAndroidFormNode) source).getFormName();
-          otherFormNames.add(formName);
-
-          if (formName.startsWith(prefix)) {
-            try {
-              highIndex = Math.max(highIndex, Integer.parseInt(formName.substring(prefixLength)));
-            } catch (NumberFormatException e) {
-              continue;
+        if (source instanceof YoungAndroidSourceNode) {
+          String contextName = ((YoungAndroidSourceNode) source).getContextName();
+          otherContextNames.add(contextName);
+          if (source instanceof YoungAndroidFormNode) {
+            formCount++;
+            if (contextName.startsWith(prefix)) {
+              try {
+                highIndex = Math.max(highIndex, Integer.parseInt(contextName.substring(prefixLength)));
+              } catch (NumberFormatException e) {
+                continue;
+              }
             }
           }
         }
@@ -127,7 +131,7 @@ public final class AddFormCommand extends ChainableCommand {
       String okText = MESSAGES.okButton();
 
       // Keeps track of the total number of screens.
-      int formCount = otherFormNames.size() + 1;
+      formCount = formCount + 1;
       if (formCount > MAX_FORM_COUNT) {
         HorizontalPanel errorPanel = new HorizontalPanel();
         HTML tooManyScreensLabel = new HTML(MESSAGES.formCountErrorLabel());
@@ -185,7 +189,7 @@ public final class AddFormCommand extends ChainableCommand {
       }
 
       // Check that it's unique.
-      if (otherFormNames.contains(newFormName)) {
+      if (otherContextNames.contains(newFormName)) {
         Window.alert(MESSAGES.duplicateFormNameError());
         return false;
       }
@@ -234,12 +238,12 @@ public final class AddFormCommand extends ChainableCommand {
                   ode.getEditorManager().getOpenProjectEditor(project.getProjectId());
               FileEditor formEditor = projectEditor.getFileEditor(formFileId);
               FileEditor blocksEditor = projectEditor.getFileEditor(blocksFileId);
-              if (formEditor != null && blocksEditor != null && !ode.screensLocked()) {
+              if (formEditor != null && blocksEditor != null && !ode.contextsLocked()) {
                 DesignToolbar designToolbar = Ode.getInstance().getDesignToolbar();
                 long projectId = formEditor.getProjectId();
                 designToolbar.addScreen(projectId, formName, formEditor, 
                     blocksEditor);
-                designToolbar.switchToScreen(projectId, formName, DesignToolbar.View.FORM);
+                designToolbar.switchToContext(projectId, formName, DesignToolbar.View.CONTEXT);
                 executeNextCommand(projectRootNode);
               } else {
                 // The form editor and/or blocks editor is still not there. Try again later.

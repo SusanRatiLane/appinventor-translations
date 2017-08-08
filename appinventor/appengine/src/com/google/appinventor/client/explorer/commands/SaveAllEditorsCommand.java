@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2012 MIT, All rights reserved
+// Copyright 2011-2017 MIT, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -40,11 +40,11 @@ public class SaveAllEditorsCommand extends ChainableCommand {
   public void execute(final ProjectNode node) {
     // Ode.getInstance().getEditorManager().saveDirtyEditors(new Command() {
     final Ode ode = Ode.getInstance();
-    ode.lockScreens(true);      // Lock out screen switching
+    ode.lockContexts(true);      // Lock out screen switching
     ode.getEditorManager().saveDirtyEditors(new Command() {
       @Override
       public void execute() {
-        ode.lockScreens(false); // Screen switch OK now
+        ode.lockContexts(false); // Screen switch OK now
         ErrorReporter.reportInfo(MESSAGES.savedProject(
             DateTimeFormat.getMediumDateTimeFormat().format(new Date())));
         executeNextCommand(node);

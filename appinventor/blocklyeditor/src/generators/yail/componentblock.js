@@ -35,6 +35,7 @@ Blockly.Yail.component_event = function() {
 
 
   var code = Blockly.Yail.YAIL_DEFINE_EVENT
+    + this.workspace.contextName + Blockly.Yail.YAIL_SPACER
     + this.getFieldValue("COMPONENT_SELECTOR")
     + Blockly.Yail.YAIL_SPACER
     + this.eventName
@@ -156,11 +157,13 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
   if (generic) {
     name = componentDb.getType(name).type;
     callPrefix = Blockly.Yail.YAIL_CALL_COMPONENT_TYPE_METHOD
+        + Blockly.Yail.YAIL_QUOTE + methodBlock.workspace.contextName + Blockly.Yail.YAIL_SPACER
         // TODO(hal, andrew): check for empty socket and generate error if necessary
         + Blockly.Yail.valueToCode(methodBlock, 'COMPONENT', Blockly.Yail.ORDER_NONE)
         + Blockly.Yail.YAIL_SPACER;
   } else {
-    callPrefix = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD;
+    callPrefix = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD
+        + Blockly.Yail.YAIL_QUOTE + methodBlock.workspace.contextName + Blockly.Yail.YAIL_SPACER;
     name = methodBlock.getFieldValue("COMPONENT_SELECTOR");
     // special case for handling Clock.Add
     var timeUnit = methodBlock.getFieldValue("TIME_UNIT");
@@ -318,6 +321,7 @@ Blockly.Yail.genericGetproperty = function(typeName) {
  * @returns {Function} component getter code generation function with instanceName bound in
  */
 Blockly.Yail.component_component_block = function() {
-  return [Blockly.Yail.YAIL_GET_COMPONENT + this.getFieldValue("COMPONENT_SELECTOR") + Blockly.Yail.YAIL_CLOSE_COMBINATION,
+  return [Blockly.Yail.YAIL_GET_COMPONENT + this.workspace.contextName + Blockly.Yail.YAIL_SPACER +
+            this.getFieldValue("COMPONENT_SELECTOR") + Blockly.Yail.YAIL_CLOSE_COMBINATION,
           Blockly.Yail.ORDER_ATOMIC];
 };

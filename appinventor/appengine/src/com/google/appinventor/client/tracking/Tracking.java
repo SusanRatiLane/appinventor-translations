@@ -49,6 +49,10 @@ public class Tracking {
       "AddForm-YA";
   public static final String PROJECT_ACTION_REMOVEFORM_YA = PROJECT_ACTION_PREFIX +
       "RemoveForm-YA";
+  public static final String PROJECT_ACTION_ADDTASK_YA = PROJECT_ACTION_PREFIX +
+      "AddTask-YA";
+  public static final String PROJECT_ACTION_REMOVETASK_YA = PROJECT_ACTION_PREFIX +
+      "RemoveTask-YA";
   public static final String PROJECT_SUBACTION_BUILD_YA = PROJECT_ACTION_PREFIX +
       "Build-Subcommand-YA";
 

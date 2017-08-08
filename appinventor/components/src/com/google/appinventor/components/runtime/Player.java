@@ -87,7 +87,7 @@ public final class Player extends AndroidNonvisibleComponent
   // status of audio focus
   private boolean focusOn;
   private AudioManager am;
-  private final Activity activity;
+  private final Context context;
   // Flag if SDK level >= 8
   private static final boolean audioFocusSupported;
   private Object afChangeListener;
@@ -124,20 +124,22 @@ public final class Player extends AndroidNonvisibleComponent
    * @param container
    */
   public Player(ComponentContainer container) {
-    super(container.$form());
-    activity = container.$context();
+    super(container);
+    context = container.$context();
     sourcePath = "";
-    vibe = (Vibrator) form.getSystemService(Context.VIBRATOR_SERVICE);
-    form.registerForOnDestroy(this);
-    form.registerForOnResume(this);
-    form.registerForOnPause(this);
-    form.registerForOnStop(this);
-    // Make volume buttons control media, not ringer.
-    form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    vibe = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+    if (container.inForm()) {
+      form.registerForOnDestroy(this);
+      form.registerForOnResume(this);
+      form.registerForOnPause(this);
+      form.registerForOnStop(this);
+      // Make volume buttons control media, not ringer.
+      form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    }
     loop = false;
     playOnlyInForeground = false;
     focusOn = false;
-    am = (audioFocusSupported) ? FroyoUtil.setAudioManager(activity) : null;
+    am = (audioFocusSupported) ? FroyoUtil.setAudioManager(context) : null;
     afChangeListener = (audioFocusSupported) ? FroyoUtil.setAudioFocusChangeListener(this) : null;
   }
 
@@ -179,12 +181,12 @@ public final class Player extends AndroidNonvisibleComponent
       player.setOnCompletionListener(this);
 
       try {
-        MediaUtil.loadMediaPlayer(player, form, sourcePath);
+        MediaUtil.loadMediaPlayer(player, context, sourcePath);
 
       } catch (IOException e) {
         player.release();
         player = null;
-        form.dispatchErrorOccurredEvent(this, "Source",
+        container.dispatchErrorOccurredEvent(this, "Source",
             ErrorMessages.ERROR_UNABLE_TO_LOAD_MEDIA, sourcePath);
         return;
       }

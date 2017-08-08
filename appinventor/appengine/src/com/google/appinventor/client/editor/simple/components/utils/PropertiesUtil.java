@@ -9,7 +9,7 @@ package com.google.appinventor.client.editor.simple.components.utils;
 import com.google.appinventor.client.ComponentsTranslation;
 import com.google.appinventor.client.editor.simple.components.MockForm;
 import com.google.appinventor.client.editor.simple.components.MockComponent;
-import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
+import com.google.appinventor.client.editor.youngandroid.YaContextEditor;
 import com.google.appinventor.client.editor.youngandroid.palette.YoungAndroidPalettePanel;
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidAccelerometerSensitivityChoicePropertyEditor;
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidAlignmentChoicePropertyEditor;
@@ -32,6 +32,7 @@ import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroid
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidSensorDistIntervalChoicePropertyEditor;
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidSensorTimeIntervalChoicePropertyEditor;
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidSizingChoicePropertyEditor;
+import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidTaskTypeChoicePropertyEditor;
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidTextReceivingPropertyEditor;
 import com.google.appinventor.client.editor.youngandroid.properties.YoungAndroidToastLengthChoicePropertyEditor;
 import com.google.appinventor.client.editor.youngandroid.properties.
@@ -84,7 +85,7 @@ public class PropertiesUtil {
    * @param propertyDefintions
    */
   public static void populateProperties(MockComponent mockComponent, List<ComponentDatabaseInterface.PropertyDefinition> propertyDefintions,
-                                        YaFormEditor editor) {
+                                        YaContextEditor editor) {
 
     String componentType = mockComponent.getType();
     // Configure properties
@@ -166,7 +167,7 @@ public class PropertiesUtil {
   /*
    * Creates a new property editor.
    */
-  public static PropertyEditor createPropertyEditor(String editorType, YaFormEditor editor) {
+  public static PropertyEditor createPropertyEditor(String editorType, YaContextEditor editor) {
     if (editorType.equals(PropertyTypeConstants.PROPERTY_TYPE_HORIZONTAL_ALIGNMENT)) {
       return new YoungAndroidHorizontalAlignmentChoicePropertyEditor();
     } else if (editorType.equals(PropertyTypeConstants.PROPERTY_TYPE_VERTICAL_ALIGNMENT)) {
@@ -241,6 +242,8 @@ public class PropertiesUtil {
       return new ScalingChoicePropertyEditor();
     } else if (editorType.equals(PropertyTypeConstants.PROPERTY_TYPE_FIREBASE_URL)) {
       return new YoungAndroidDefaultURLPropertyEditor("DEFAULT");
+    } else if (editorType.equals(PropertyTypeConstants.PROPERTY_TYPE_TASK_TYPE)) {
+      return new YoungAndroidTaskTypeChoicePropertyEditor();
     } else if (editorType.startsWith(PropertyTypeConstants.PROPERTY_TYPE_COMPONENT + ":")) {
       String type = editorType.substring(PropertyTypeConstants.PROPERTY_TYPE_COMPONENT.length() + 2);
       type = type.substring(type.lastIndexOf('.') + 1);

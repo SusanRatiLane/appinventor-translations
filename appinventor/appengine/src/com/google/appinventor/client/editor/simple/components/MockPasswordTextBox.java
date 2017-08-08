@@ -157,16 +157,16 @@ public final class MockPasswordTextBox extends MockWrapper {
       setEnabledProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_FONTBOLD)) {
       setFontBoldProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTITALIC)) {
       setFontItalicProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTSIZE)) {
       setFontSizeProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTTYPEFACE)) {
       setFontTypefaceProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_HINT)) {
       setHintProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_TEXTCOLOR)) {

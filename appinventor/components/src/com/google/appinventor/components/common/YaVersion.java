@@ -904,6 +904,10 @@ public class YaVersion {
 
   public static final int TABLEARRANGEMENT_COMPONENT_VERSION = 1;
 
+  // For TASK_COMPONENT_VERSION 1:
+  // Initial Task (Services) Implementation
+  public static final int TASK_COMPONENT_VERSION = 1;
+
   // For TEXTBOX_COMPONENT_VERSION 2:
   // - The TextBox.NumbersOnly property was added.
   // For TEXTBOX_COMPONENT_VERSION 3:

@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2012 MIT, All rights reserved
+// Copyright 2011-2017 MIT, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -185,7 +185,7 @@ public class Ode implements EntryPoint {
   // Collection of editors
   private EditorManager editorManager;
 
-  // Currently active file editor, could be a YaFormEditor or a YaBlocksEditor or null.
+  // Currently active file editor, could be a YaFormEditor or YaTaskEditor or a YaBlocksEditor or null.
   private FileEditor currentFileEditor;
 
   private AssetManager assetManager;
@@ -267,7 +267,7 @@ public class Ode implements EntryPoint {
 
   private boolean windowClosing;
 
-  private boolean screensLocked;
+  private boolean contextsLocked;
 
   private boolean galleryInitialized = false;
 
@@ -2175,24 +2175,24 @@ public class Ode implements EntryPoint {
     isReadOnly = true;
   }
 
-  // Code to lock out certain screen and project switching code
+  // Code to lock out certain contexts and project switching code
   // These are locked out while files are being saved
-  // lockScreens(true) is called from EditorManager when it
+  // lockContexts(true) is called from EditorManager when it
   // is about to call saveDirtyEditors() and then cleared
   // in the afterSaving command called when saveDirtyEditors
   // is finished.
 
-  public boolean screensLocked() {
-    return screensLocked;
+  public boolean contextsLocked() {
+    return contextsLocked;
   }
 
-  public void lockScreens(boolean value) {
+  public void lockContexts(boolean value) {
     if (value) {
-      OdeLog.log("Locking Screens");
+      OdeLog.log("Locking Contexts");
     } else {
-      OdeLog.log("Unlocking Screens");
+      OdeLog.log("Unlocking Contexts");
     }
-    screensLocked = value;
+    contextsLocked = value;
   }
 
   /**

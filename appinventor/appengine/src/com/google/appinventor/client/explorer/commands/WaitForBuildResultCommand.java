@@ -135,12 +135,12 @@ public class WaitForBuildResultCommand extends ChainableCommand {
   }
 
   private static YoungAndroidBlocksNode findBlocksNode(YoungAndroidProjectNode projectRootNode,
-      String formName) {
+      String contextName) {
     // Iterate over the YoungAndroidBlocksNodes in this project.
     for (ProjectNode source : projectRootNode.getAllSourceNodes()) {
       if (source instanceof YoungAndroidBlocksNode) {
         YoungAndroidBlocksNode blocksNode = (YoungAndroidBlocksNode) source;
-        if (formName.equals(blocksNode.getFormName())) {
+        if (contextName.equals(blocksNode.getContextName())) {
           return blocksNode;
         }
       }

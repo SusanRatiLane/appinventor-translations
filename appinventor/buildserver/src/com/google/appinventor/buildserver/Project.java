@@ -7,12 +7,14 @@ package com.google.appinventor.buildserver;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -36,9 +38,18 @@ public final class Project {
     // File descriptor for the source
     private final File file;
 
-    private SourceDescriptor(String qualifiedName, File file) {
+    // Source type
+    public enum SourceType {
+      FORM,
+      TASK
+    }
+
+    private final SourceType sourceType;
+
+    private SourceDescriptor(String qualifiedName, File file, SourceType sourceType) {
       this.qualifiedName = qualifiedName;
       this.file = file;
+      this.sourceType = sourceType;
     }
 
     /**
@@ -57,6 +68,15 @@ public final class Project {
      */
     public File getFile() {
       return file;
+    }
+
+    /**
+     * Returns the source type of the file
+     *
+     * @return
+     */
+    public SourceType getSourceType() {
+      return sourceType;
     }
   }
 
@@ -94,6 +114,15 @@ public final class Project {
 
   // List of source files
   private List<SourceDescriptor> sources;
+
+  // List of screen file names
+  private List<String> screens;
+
+  // List of task file names
+  private List<String> tasks;
+
+  // List of yail file names;
+  private Map<String, File> yails;
 
   // Logging support
   private static final Logger LOG = Logger.getLogger(Project.class.getName());
@@ -310,11 +339,21 @@ public final class Project {
       }
     } else {
       // Add Young Android source files to the source file list
-      if (file.getName().endsWith(YoungAndroidConstants.YAIL_EXTENSION)) {
+      if (file.getName().endsWith(YoungAndroidConstants.FORM_PROPERTIES_EXTENSION)) {
+        String absName = file.getAbsolutePath();
+        String name = absName.substring(root.length() + 1, absName.length() -
+            YoungAndroidConstants.FORM_PROPERTIES_EXTENSION.length());
+        screens.add(name.replace(File.separatorChar, '.'));
+      } else if (file.getName().endsWith(YoungAndroidConstants.TASK_PROPERTIES_EXTENSION)) {
+        String absName = file.getAbsolutePath();
+        String name = absName.substring(root.length() + 1, absName.length() -
+            YoungAndroidConstants.TASK_PROPERTIES_EXTENSION.length());
+        tasks.add(name.replace(File.separatorChar, '.'));
+      } else if (file.getName().endsWith(YoungAndroidConstants.YAIL_EXTENSION)) {
         String absName = file.getAbsolutePath();
         String name = absName.substring(root.length() + 1, absName.length() -
             YoungAndroidConstants.YAIL_EXTENSION.length());
-        sources.add(new SourceDescriptor(name.replace(File.separatorChar, '.'), file));
+        yails.put(name.replace(File.separatorChar, '.'), file);
       }
     }
   }
@@ -328,10 +367,20 @@ public final class Project {
     // Lazily discover source files
     if (sources == null) {
       sources = Lists.newArrayList();
+      screens = Lists.newArrayList();
+      tasks = Lists.newArrayList();
+      yails = Maps.newHashMap();
       String sourceTag = properties.getProperty(SOURCETAG);
       for (String sourceDir : sourceTag.split(",")) {
         File dir = new File(projectDir + File.separatorChar + sourceDir);
         visitSourceDirectories(dir.getAbsolutePath(), dir);
+      }
+      for (String name : yails.keySet()) {
+        if (screens.contains(name)) {
+          sources.add(new SourceDescriptor(name, yails.get(name), SourceDescriptor.SourceType.FORM));
+        } else if (tasks.contains(name)) {
+          sources.add(new SourceDescriptor(name, yails.get(name), SourceDescriptor.SourceType.TASK));
+        }
       }
     }
     return sources;

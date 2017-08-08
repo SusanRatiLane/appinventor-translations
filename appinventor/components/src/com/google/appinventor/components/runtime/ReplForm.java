@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.os.Looper;
 import com.google.appinventor.components.runtime.util.AppInvHTTPD;
@@ -41,6 +42,7 @@ public class ReplForm extends Form {
 
   private AppInvHTTPD httpdServer = null;
   public static ReplForm topform;
+  private static final String LOG_TAG = "ReplForm";
   private static final String REPL_ASSET_DIR =
     Environment.getExternalStorageDirectory().getAbsolutePath() +
     "/AppInventor/assets/";
@@ -60,10 +62,11 @@ public class ReplForm extends Form {
   @Override
   public void onCreate(Bundle icicle) {
     super.onCreate(icicle);
-    Log.d("ReplForm", "onCreate");
+    Log.d(LOG_TAG,"onCreate");
     loadedExternalDexs = new ArrayList<String>();
     Intent intent = getIntent();
     processExtras(intent, false);
+    this.startReplService();
   }
 
   @Override
@@ -83,6 +86,7 @@ public class ReplForm extends Form {
         httpdServer.stop();
         httpdServer = null;
     }
+    this.stopReplService();
     finish();                   // Must really exit here, so if you hits the back button we terminate completely.
     System.exit(0);
   }
@@ -92,21 +96,21 @@ public class ReplForm extends Form {
     if (startupValue != null) {
       this.startupValue = jsonEncodeForForm(startupValue, "open another screen with start value");
     }
-    RetValManager.pushScreen(nextFormName, startupValue);
+    RetValManager.pushScreen(this.formName, RetValManager.CONTEXT_TYPE_FORM, nextFormName, startupValue);
   }
 
   public void setFormName(String formName) {
     this.formName = formName;
-    Log.d("ReplForm", "formName is now " + formName);
+    Log.d(LOG_TAG, "formName is now " + formName);
   }
 
   @Override
   protected void closeForm(Intent resultIntent) {
-    RetValManager.popScreen("Not Yet");
+    RetValManager.popScreen(this.formName, RetValManager.CONTEXT_TYPE_FORM,"Not Yet");
   }
 
   protected void setResult(Object result) {
-    Log.d("ReplForm", "setResult: " + result);
+    Log.d(LOG_TAG, "setResult: " + result);
     replResult = result;
     replResultFormName = formName;
   }
@@ -168,15 +172,15 @@ public class ReplForm extends Form {
   @Override
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
-    Log.d("ReplForm", "onNewIntent Called");
+    Log.d(LOG_TAG, "onNewIntent Called");
     processExtras(intent, true);
   }
 
   void HandleReturnValues() {
-    Log.d("ReplForm", "HandleReturnValues() Called, replResult = " + replResult);
+    Log.d(LOG_TAG, "HandleReturnValues() Called, replResult = " + replResult);
     if (replResult != null) {   // Act as if it was returned
       OtherScreenClosed(replResultFormName, replResult);
-      Log.d("ReplForm", "Called OtherScreenClosed");
+      Log.d(LOG_TAG, "Called OtherScreenClosed");
       replResult = null;
     }
   }
@@ -184,14 +188,14 @@ public class ReplForm extends Form {
   protected void processExtras(Intent intent, boolean restart) {
     Bundle extras = intent.getExtras();
     if (extras != null) {
-      Log.d("ReplForm", "extras: " + extras);
+      Log.d(LOG_TAG, "extras: " + extras);
       Iterator<String> keys = extras.keySet().iterator();
       while (keys.hasNext()) {
-        Log.d("ReplForm", "Extra Key: " + keys.next());
+        Log.d(LOG_TAG, "Extra Key: " + keys.next());
       }
     }
     if ((extras != null) && extras.getBoolean("rundirect")) {
-      Log.d("ReplForm", "processExtras rundirect is true and restart is " + restart);
+      Log.d(LOG_TAG, "processExtras rundirect is true and restart is " + restart);
       isDirect = true;
       assetsLoaded = true;
       if (restart) {
@@ -220,10 +224,10 @@ public class ReplForm extends Form {
         if (httpdServer == null) {
             checkAssetDir();
             httpdServer = new AppInvHTTPD(8001, new File(REPL_ASSET_DIR), secure, this); // Probably should make the port variable
-            Log.i("ReplForm", "started AppInvHTTPD");
+            Log.i(LOG_TAG, "started AppInvHTTPD");
         }
     } catch (IOException ex) {
-      Log.e("ReplForm", "Setting up NanoHTTPD: " + ex.toString());
+      Log.e(LOG_TAG, "Setting up NanoHTTPD: " + ex.toString());
     }
   }
 
@@ -265,7 +269,7 @@ public class ReplForm extends Form {
     File dexOutput = activeForm.$context().getDir("componentDexs", Context.MODE_PRIVATE);
     File componentFolder = new File(REPL_COMP_DIR );
     if (!checkComponentDir()) {
-      Log.d("ReplForm", "Unable to create components directory");
+      Log.d(LOG_TAG, "Unable to create components directory");
       dispatchErrorOccurredEventDialog(this, "loadComponents", ErrorMessages.ERROR_EXTENSION_ERROR,
           1, "App Inventor", "Unable to create component directory.");
       return;
@@ -281,7 +285,7 @@ public class ReplForm extends Form {
         File loadComponent = new File(compFolder.getPath() + File.separator + compFolder.getName() + ".jar");
         component.renameTo(loadComponent);
         if (loadComponent.exists() && !loadedExternalDexs.contains(loadComponent.getName())) {
-          Log.d("ReplForm", "Loading component dex " + loadComponent.getAbsolutePath());
+          Log.d(LOG_TAG, "Loading component dex " + loadComponent.getAbsolutePath());
           loadedExternalDexs.add(loadComponent.getName());
           sb.append(File.pathSeparatorChar);
           sb.append(loadComponent.getAbsolutePath());
@@ -291,10 +295,54 @@ public class ReplForm extends Form {
     DexClassLoader dexCloader = new DexClassLoader(sb.substring(1), dexOutput.getAbsolutePath(),
         null, parentClassLoader);
     Thread.currentThread().setContextClassLoader(dexCloader);
-    Log.d("ReplForm", Thread.currentThread().toString());
-    Log.d("ReplForm", Looper.getMainLooper().getThread().toString());
+    Log.d(LOG_TAG, Thread.currentThread().toString());
+    Log.d(LOG_TAG, Looper.getMainLooper().getThread().toString());
     Looper.getMainLooper().getThread().setContextClassLoader(dexCloader);
   }
+
+  @Override
+  protected void startNewService(String taskName, Object startValue) {
+    Intent serviceIntent = new Intent();
+    // Note that the following is dependent on task generated class names being the same as
+    // their task names and all tasks being in the same package.
+    String packageName = getPackageName();
+    serviceIntent.setClassName(this, packageName + "." + "Task1");
+    Log.d(LOG_TAG, "serviceClass=" + packageName + "." + "Task1");
+    String functionName = "open another service";
+    String jValue = "";
+    if (startValue != null) {
+      jValue = jsonEncodeForForm(startValue, functionName);
+    }
+    serviceIntent.putExtra(SERVICE_NAME, taskName);
+    serviceIntent.putExtra(SERVICE_ARG, jValue);
+    try {
+      Log.d(LOG_TAG, "Starting in Repl Task : " );
+      Log.d(LOG_TAG, "Task : " + taskName);
+      startService(serviceIntent);
+    } catch (ActivityNotFoundException e) {
+      dispatchErrorOccurredEvent(this, functionName,
+              ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
+    }
+  }
+
+  @Override
+  public void StopTask(String taskName) {
+  }
+
+  private void startReplService() {
+    this.startNewService(null, null);
+  }
+
+  private void stopReplService() {
+    Intent serviceIntent = new Intent();
+    // Note that the following is dependent on task generated class names being the same as
+    // their task names and all tasks being in the same package.
+    String packageName = getPackageName();
+    serviceIntent.setClassName(this, packageName + "." + "Task1");
+    Log.d(LOG_TAG, "stopping ReplService : serviceClass=" + packageName + "." + "Task1");
+    this.stopService(serviceIntent);
+  }
+
 
   private String genReportId() {
     String [] words = { "A","ABE","ACE","ACT","AD","ADA","ADD",

@@ -109,7 +109,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
    */
   public Notifier (ComponentContainer container) {
     super(container.$form());
-    activity = container.$context();
+    activity = container.$form();
     handler = new Handler();
     progressDialog = null;
   }

@@ -9,11 +9,7 @@ package com.google.appinventor.components.runtime.util;
 import android.os.Looper;
 import com.google.appinventor.components.runtime.ReplForm;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Formatter;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
@@ -122,17 +118,15 @@ public class AppInvHTTPD extends NanoHTTPD {
       adoptMainThreadClassLoader();
       String inSeq = parms.getProperty("seq", "0");
       int iseq = Integer.parseInt(inSeq);
-      String blockid = parms.getProperty("blockid");
-      String code = parms.getProperty("code");
+      String repl_input = parms.getProperty("repl_input");
       String inMac = parms.getProperty("mac", "no key provided");
       String compMac = "";
-      String input_code = code;
       if (hmacKey != null) {
         try {
           Mac hmacSha1 = Mac.getInstance("HmacSHA1");
           SecretKeySpec key = new SecretKeySpec(hmacKey, "RAW");
           hmacSha1.init(key);
-          byte [] tmpMac = hmacSha1.doFinal((code + inSeq + blockid).getBytes());
+          byte[] tmpMac = hmacSha1.doFinal((repl_input + inSeq).getBytes());
           StringBuffer sb = new StringBuffer(tmpMac.length * 2);
           Formatter formatter = new Formatter(sb);
           for (byte b : tmpMac)
@@ -141,66 +135,100 @@ public class AppInvHTTPD extends NanoHTTPD {
         } catch (Exception e) {
           Log.e(LOG_TAG, "Error working with hmac", e);
           form.dispatchErrorOccurredEvent(form, "AppInvHTTPD",
-            ErrorMessages.ERROR_REPL_SECURITY_ERROR, "Exception working on HMAC");
+                  ErrorMessages.ERROR_REPL_SECURITY_ERROR, "Exception working on HMAC");
           Response res = new Response(HTTP_OK, MIME_PLAINTEXT, "NOT");
-          return(res);
+          return (res);
         }
         Log.d(LOG_TAG, "Incoming Mac = " + inMac);
         Log.d(LOG_TAG, "Computed Mac = " + compMac);
         Log.d(LOG_TAG, "Incoming seq = " + inSeq);
         Log.d(LOG_TAG, "Computed seq = " + seq);
-        Log.d(LOG_TAG, "blockid = " + blockid);
         if (!inMac.equals(compMac)) {
           Log.e(LOG_TAG, "Hmac does not match");
           form.dispatchErrorOccurredEvent(form, "AppInvHTTPD",
-            ErrorMessages.ERROR_REPL_SECURITY_ERROR, "Invalid HMAC");
+                  ErrorMessages.ERROR_REPL_SECURITY_ERROR, "Invalid HMAC");
           Response res = new Response(HTTP_OK, MIME_JSON, "{\"status\" : \"BAD\", \"message\" : \"Security Error: Invalid MAC\"}");
-          return(res);
+          return (res);
         }
-        if ((seq != iseq) && (seq != (iseq+1))) {
+        if ((seq != iseq) && (seq != (iseq + 1))) {
           Log.e(LOG_TAG, "Seq does not match");
           form.dispatchErrorOccurredEvent(form, "AppInvHTTPD",
-            ErrorMessages.ERROR_REPL_SECURITY_ERROR, "Invalid Seq");
+                  ErrorMessages.ERROR_REPL_SECURITY_ERROR, "Invalid Seq");
           Response res = new Response(HTTP_OK, MIME_JSON, "{\"status\" : \"BAD\", \"message\" : \"Security Error: Invalid Seq\"}");
-          return(res);
+          return (res);
         }
         // Seq Fixup: Sometimes the Companion doesn't increment it's seq if it is in the middle of a project switch
         // so we tolerate an off-by-one here.
-        if (seq == (iseq+1))
+        if (seq == (iseq + 1))
           Log.e(LOG_TAG, "Seq Fixup Invoked");
         seq = iseq + 1;
       } else {                  // No hmacKey
         Log.e(LOG_TAG, "No HMAC Key");
         form.dispatchErrorOccurredEvent(form, "AppInvHTTPD",
-          ErrorMessages.ERROR_REPL_SECURITY_ERROR, "No HMAC Key");
+                ErrorMessages.ERROR_REPL_SECURITY_ERROR, "No HMAC Key");
         Response res = new Response(HTTP_OK, MIME_JSON, "{\"status\" : \"BAD\", \"message\" : \"Security Error: No HMAC Key\"}");
-        return(res);
+        return (res);
       }
-
-      code = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " + blockid + " (begin " +
-        code + " )))";
-
-      Log.d(LOG_TAG, "To Eval: " + code);
-
-      Response res;
       try {
-        // Don't evaluate a simple "#f" which is used by the poller
-        if (input_code.equals("#f")) {
-          Log.e(LOG_TAG, "Skipping evaluation of #f");
-        } else {
-          scheme.eval(code);
+        JSONObject replInput = new JSONObject(repl_input);
+        Log.d(LOG_TAG, "ReplInput : " + repl_input);
+        JSONObject _tasks = replInput.getJSONObject("tasks");
+        JSONObject _form = replInput.getJSONObject("form");
+        Iterator<String> taskNames = _tasks.keys();
+        String contextName;
+        String contextCode;
+        String contextBlockId;
+        String evalCode = "";
+        while(taskNames.hasNext()) {
+          String _taskName = taskNames.next();
+          JSONObject _task = _tasks.getJSONObject(_taskName);
+          contextName = _task.getString("name");
+          contextCode = _task.getString("code");
+          contextBlockId = _task.getString("blockid");
+          evalCode =  "(begin (require <com.google.youngandroid.runtime>) (process-repl-task-input \"" + contextName + "\" " + contextBlockId +
+                  " (begin " + contextCode + " )))";
+          Log.d(LOG_TAG, "To Eval Task[" + contextName + "]: " + evalCode);
+          try {
+            // Don't evaluate a simple "#f" which is used by the poller
+            if (contextCode.equals("#f")) {
+              Log.e(LOG_TAG, "Skipping evaluation of #f for task :  " + contextName);
+            } else {
+              scheme.eval(evalCode);
+            }
+          } catch (Throwable ex) {
+            Log.e(LOG_TAG, "newblocks: Scheme Failure for task : " + contextName, ex);
+            RetValManager.appendReturnValue(contextName, RetValManager.CONTEXT_TYPE_TASK, contextBlockId, "BAD", ex.toString());
+          }
         }
-        res = new Response(HTTP_OK, MIME_JSON, RetValManager.fetch(false));
-      } catch (Throwable ex) {
-        Log.e(LOG_TAG, "newblocks: Scheme Failure", ex);
-        RetValManager.appendReturnValue(blockid, "BAD", ex.toString());
-        res = new Response(HTTP_OK, MIME_JSON, RetValManager.fetch(false));
+        contextName = _form.getString("name");
+        contextCode = _form.getString("code");
+        contextBlockId = _form.getString("blockid");
+        evalCode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-form-input \"" + contextName + "\" " + contextBlockId +
+                " (begin " +  contextCode + " )))";
+        Log.d(LOG_TAG, "To Eval Form[" + contextName + "]: " + evalCode);
+        try {
+
+          // Don't evaluate a simple "#f" which is used by the poller
+          if (contextCode.equals("#f")) {
+            Log.e(LOG_TAG, "Skipping evaluation of #f for form : " + contextName);
+          } else {
+            scheme.eval(evalCode);
+          }
+        } catch (Throwable ex) {
+          Log.e(LOG_TAG, "newblocks: Scheme Failure for form : " + contextName, ex);
+          RetValManager.appendReturnValue(contextName, RetValManager.CONTEXT_TYPE_FORM, contextBlockId, "BAD", ex.toString());
+        }
+
+      } catch (JSONException e) {
+        e.printStackTrace();
       }
+      Response res;
+      res = new Response(HTTP_OK, MIME_JSON, RetValManager.fetch(false));
       res.addHeader("Access-Control-Allow-Origin", "*");
       res.addHeader("Access-Control-Allow-Headers", "origin, content-type");
       res.addHeader("Access-Control-Allow-Methods", "POST,OPTIONS,GET,HEAD,PUT");
       res.addHeader("Allow", "POST,OPTIONS,GET,HEAD,PUT");
-      return(res);
+      return (res);
     } else if (uri.equals("/_values")) {
       Response res = new Response(HTTP_OK, MIME_JSON, RetValManager.fetch(true)); // Blocking Fetch
       res.addHeader("Access-Control-Allow-Origin", "*");

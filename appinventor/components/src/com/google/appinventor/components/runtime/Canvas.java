@@ -685,7 +685,7 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
 
   public Canvas(ComponentContainer container) {
     super(container);
-    context = container.$context();
+    context = container.$form();
 
     // Create view and add it to its designated container.
     view = new CanvasView(context);
@@ -787,13 +787,43 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
   }
 
   @Override
-  public Activity $context() {
-    return context;
+  public Context $context() {
+    return container.$context();
   }
 
   @Override
   public Form $form() {
     return container.$form();
+  }
+
+  @Override
+  public Task $task() {
+    return container.$task();
+  }
+
+  @Override
+  public boolean isContext() {
+    return false;
+  }
+
+  @Override
+  public boolean isForm() {
+    return false;
+  }
+
+  @Override
+  public boolean isTask() {
+    return false;
+  }
+
+  @Override
+  public boolean inForm() {
+    return ($form() != null);
+  }
+
+  @Override
+  public boolean inTask() {
+    return ($task() != null);
   }
 
   @Override
@@ -809,6 +839,13 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
   @Override
   public void setChildHeight(AndroidViewComponent component, int height) {
     throw new UnsupportedOperationException("Canvas.setChildHeight() called");
+  }
+
+  @Override
+  public void dispatchErrorOccurredEvent(Component component, String functionName, int errorNumber, Object... messageArgs) {
+    if (inForm()) {
+      $form().dispatchErrorOccurredEvent(component,functionName, errorNumber, messageArgs);
+    }
   }
 
   // Methods executed when a child sprite has changed its location or appearance

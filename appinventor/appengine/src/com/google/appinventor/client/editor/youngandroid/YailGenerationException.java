@@ -9,18 +9,18 @@ package com.google.appinventor.client.editor.youngandroid;
  */
 public class YailGenerationException extends Exception {
   // The name of the form being built when an error occurred
-  private final String formName;
+  private final String contextName;
 
-  YailGenerationException(String message, String formName) {
+  YailGenerationException(String message, String contextName) {
     super(message);
-    this.formName = formName;
+    this.contextName = contextName;
   }
 
   /**
    * Return the name of the form that Yail generation failed on.
    */
-  public String getFormName() {
-    return formName;
+  public String getContextName() {
+    return contextName;
   }
 
 }

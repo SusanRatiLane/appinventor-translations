@@ -37,6 +37,13 @@ public final class AppInventorFeatures {
     return true;
   }
 
+
+  public static boolean allowTasks() {
+    // Set this to true if you want users to be able to create tasks
+    // project.
+    return true;
+  }
+
   public static boolean showInternalComponentsCategory() {
     // Set this to true if you want to show the "For internal use only" section of the components
     // palette in the designer.

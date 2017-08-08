@@ -19,7 +19,7 @@
 ;;;
 
 ;;; also see *debug-form* below
-(define *debug* #f)
+(define *debug* #t)
 
 (define *this-is-the-repl* #f)
 
@@ -31,8 +31,200 @@
 (define (android-log message)
   (when *debug* (android.util.Log:i "YAIL" message)))
 
-;;;; add-component
-(define-constant simple-component-package-name "com.google.appinventor.components.runtime")
+;; environment helper functions
+;; generic functions that do a boolean and null check on any environment passed
+(define (add-to-environment env :: gnu.mapping.Environment symbol :: gnu.mapping.Symbol object)
+  (android-log (format #f "Add to Environment called : env ~A | symbol : ~A | value : ~A" env symbol object))
+    (if (not (eq? env #!null))
+        (gnu.mapping.Environment:put env symbol object)
+        #f))
+
+(define (remove-from-environment env :: gnu.mapping.Environment symbol :: gnu.mapping.Symbol)
+    (android-log (format #f "Remove from Environment called : env ~A | symbol : ~A | value : ~A" env symbol object))
+    (if (not (eq? env #!null))
+        (gnu.mapping.Environment:remove env symbol)
+        #f))
+
+(define (is-bound-in-environment env :: gnu.mapping.Environment symbol :: gnu.mapping.Symbol)
+    (android-log (format #f "is Boud in Environment called : env ~A | symbol : ~A | value : ~A = ~A" env symbol object (gnu.mapping.Environment:isBound env symbol)))
+    (if (not (eq? env #!null))
+        (gnu.mapping.Environment:isBound env symbol)
+        #f))
+
+(define (get-from-environment env :: gnu.mapping.Environment symbol :: gnu.mapping.Symbol)
+  (android-log (format #f "Get from Environment called : env ~A | symbol : ~A" env symbol))
+    (if (and (not (eq? env #!null))
+             (gnu.mapping.Environment:isBound env symbol))
+        (begin (android-log (format #f "Get from Environment result : env ~A | symbol : ~A = ~A" env symbol (gnu.mapping.Environment:get env symbol))) (gnu.mapping.Environment:get env symbol))
+        #!null))
+
+(define (lookup-in-environment env :: gnu.mapping.Environment symbol :: gnu.mapping.Symbol #!optional (default-value #f))
+    (android-log (format #f "Lookup in Environment called : env ~A | symbol : ~A" env symbol))
+    (if (and (not (eq? env #!null))
+             (gnu.mapping.Environment:isBound env symbol))
+        (begin (android-log (format #f "Lookup in Environment result : env ~A | symbol : ~A = ~A" env symbol (gnu.mapping.Environment:get env symbol))) (gnu.mapping.Environment:get env symbol))
+        default-value))
+
+
+
+;;; These are environments which map to environments
+;;; We need this because we will need multiple environments concurrently
+;;; YoungAndroid context (form or task) needs three distinct environment to survive
+;;; 1. context-environment : contains component instances, event definitions
+;;; 2. context-global-var-environment : contains global variables and procedures
+;;; 3. context-init-thunk-environment : contains component initialization thunk
+
+;;; TODO : think of a more 'macroish' way to write this
+
+;;; context-environments
+(define context-environments :: gnu.mapping.Environment
+  (gnu.mapping.Environment:make (symbol->string 'context-environments)))
+
+(define (add-to-context-environments context-name :: gnu.mapping.Symbol context-env :: gnu.mapping.Environment)
+  (android-log (format #f "adding to context-environments ~A as ~A" context-name context-env))
+  (add-to-environment context-environments context-name context-env))
+
+(define (remove-from-context-environments context-name :: gnu.mapping.Symbol)
+  (android-log (format #f "removing from context-environments ~A" context-name))
+  (remove-from-environment context-environments context-name))
+
+(define (get-context-environment context-name :: gnu.mapping.Symbol) :: <gnu.mapping.Environment>
+  (let ((env (lookup-in-environment context-environments context-name)))
+    (if env
+        env
+        (let ((new-env (gnu.mapping.Environment:make (symbol->string context-name))))
+            (add-to-context-environments context-name new-env)
+            new-env))))
+
+(define (clear-context-environments)
+  (set! context-environments (gnu.mapping.Environment:make (symbol->string 'context-environments))))
+
+(define (add-to-context-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol object)
+    (let ((env (get-context-environment context)))
+        (add-to-environment env name object)))
+
+(define (remove-from-context-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-environment context)))
+        (remove-from-environment env name)))
+
+(define (is-bound-in-context-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-environment context)))
+        (is-bound-in-environment env name)))
+
+(define (get-from-context-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-environment context)))
+        (get-from-environment env name)))
+
+(define (lookup-in-context-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol #!optional (default-value #f))
+    (let ((env (get-context-environment context)))
+        (lookup-in-environment env name default-value)))
+
+(define (clear-context-environment context :: gnu.mapping.Symbol)
+    (let ((new-env (gnu.mapping.Environment:make (symbol->string context))))
+        (add-to-context-environments context new-env)
+        new-env))
+
+;;; context-global-var-environments
+(define context-global-var-environments :: gnu.mapping.Environment
+  (gnu.mapping.Environment:make (symbol->string 'context-global-var-environments)))
+
+(define (add-to-context-global-var-environments context-name :: gnu.mapping.Symbol context-global-var-env :: gnu.mapping.Environment)
+  (android-log (format #f "adding to context-global-var-environments ~A as ~A" context-name context-global-var-env))
+  (add-to-environment context-global-var-environments context-name context-global-var-env))
+
+(define (remove-from-context-global-var-environments context-name :: gnu.mapping.Symbol)
+  (android-log (format #f "removing from context-global-var-environments ~A" context-name))
+  (remove-from-environment context-global-var-environments context-name))
+
+(define (get-context-global-var-environment context-name :: gnu.mapping.Symbol) :: <gnu.mapping.Environment>
+    (let ((env (lookup-in-environment context-global-var-environments context-name)))
+        (if env
+            env
+            (let ((new-env (gnu.mapping.Environment:make (string-append (symbol->string context-name) "-global-vars"))))
+                (add-to-context-global-var-environments context-name new-env)
+                new-env))))
+
+(define (clear-context-global-var-environments)
+  (set! context-global-var-environments (gnu.mapping.Environment:make (symbol->string 'context-global-var-environments))))
+
+(define (add-to-context-global-var-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol object)
+    (let ((env (get-context-global-var-environment context)))
+        (add-to-environment env name object)))
+
+(define (remove-from-context-global-var-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-global-var-environment context)))
+        (remove-from-environment env name)))
+
+(define (is-bound-in-context-global-var-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-global-var-environment context)))
+        (is-bound-in-environment env name)))
+
+(define (get-from-context-global-var-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-global-var-environment context)))
+        (get-from-environment env name)))
+
+(define (lookup-in-context-global-var-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol #!optional (default-value #f))
+    (let ((env (get-context-global-var-environment context)))
+        (lookup-in-environment env name default-value)))
+
+(define (clear-context-global-var-environment context :: gnu.mapping.Symbol)
+    (let ((new-env (gnu.mapping.Environment:make (string-append (symbol->string context) "-global-vars"))))
+        (add-to-context-global-var-environments context new-env)
+        new-env))
+
+
+;;; context-init-thunk-environments
+(define context-init-thunk-environments :: gnu.mapping.Environment
+  (gnu.mapping.Environment:make (symbol->string 'context-init-thunk-environments)))
+
+(define (add-to-context-init-thunk-environments context-name :: gnu.mapping.Symbol context-init-thunk-env :: gnu.mapping.Environment)
+  (android-log (format #f "adding to context-init-thunk-environments ~A as ~A" context-name context-init-thunk-env))
+  (add-to-environment context-init-thunk-environments context-name context-init-thunk-env))
+
+(define (remove-from-context-init-thunk-environments context-name :: gnu.mapping.Symbol)
+  (android-log (format #f "removing from context-init-thunk-environments ~A" context-name))
+  (remove-from-environment context-init-thunk-environments context-name))
+
+(define (get-context-init-thunk-environment context-name :: gnu.mapping.Symbol) :: <gnu.mapping.Environment>
+  (let ((env (lookup-in-environment context-init-thunk-environments context-name)))
+       (if env
+           env
+           (let ((new-env (gnu.mapping.Environment:make (string-append (symbol->string context-name) "-init-thunks"))))
+               (add-to-context-init-thunk-environments context-name new-env)
+               new-env))))
+
+(define (clear-context-init-thunk-environments)
+    (set! context-init-thunk-environments (gnu.mapping.Environment:make (symbol->string 'context-init-thunk-environments))))
+
+(define (add-to-context-init-thunk-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol object)
+    (let ((env (get-context-init-thunk-environment context)))
+        (add-to-environment env name object)))
+
+(define (remove-from-context-init-thunk-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-init-thunk-environment context)))
+        (remove-from-environment env name)))
+
+(define (is-bound-in-context-init-thunk-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-init-thunk-environment context)))
+        (is-bound-in-environment env name)))
+
+(define (get-from-context-init-thunk-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol)
+    (let ((env (get-context-init-thunk-environment context)))
+        (get-from-environment env name)))
+
+(define (lookup-in-context-init-thunk-environment context :: gnu.mapping.Symbol name :: gnu.mapping.Symbol #!optional (default-value #f))
+    (let ((env (get-context-init-thunk-environment context)))
+        (lookup-in-environment env name default-value)))
+
+(define (clear-context-init-thunk-environment context :: gnu.mapping.Symbol)
+    (let ((new-env (gnu.mapping.Environment:make (string-append (symbol->string context) "-init-thunks"))))
+        (add-to-context-init-thunk-environments context new-env)
+        new-env))
+
+;;; get-context-instance
+(define (get-context-instance context :: gnu.mapping.Symbol)
+    (get-from-context-environment context context))
+
 
 ;;; (gen-simple-component-type Label)
 ;;; ==> "com.google.appinventor.components.runtime.Label"
@@ -54,11 +246,12 @@
   ;; then I think that add-component can just become a regular procedure rather than a macro if we
   ;; call it with an init-property lambda rather than just an init-property form
   (syntax-rules ()
-    ((_ container component-type component-name)
+    ((_ context container component-type component-name)
      (begin
        (define component-name :: (gen-simple-component-type component-type) #!null)
        (if *this-is-the-repl*
-           (add-component-within-repl 'container
+           (add-component-within-repl 'context
+                                      'container
                                       (gen-simple-component-type component-type)
                                       'component-name
                                       #f)
@@ -66,11 +259,12 @@
                               (gen-simple-component-type component-type)
                               'component-name
                               #f))))
-    ((_ container component-type component-name init-property-form ...)
+    ((_ context container component-type component-name init-property-form ...)
      (begin
        (define component-name :: (gen-simple-component-type component-type) #!null)
        (if *this-is-the-repl*
-           (add-component-within-repl 'container
+           (add-component-within-repl 'context
+                                      'container
                                       (gen-simple-component-type component-type)
                                       'component-name
                                       (lambda () init-property-form ...))
@@ -88,14 +282,14 @@
 ;; call-Initialize-of-components is called, which is done by the code
 ;; sent from the the blocks editor
 
-(define (add-component-within-repl container-name component-type component-name init-props-thunk)
+(define (add-component-within-repl context container-name component-type component-name init-props-thunk)
   (define-alias SimpleContainer <com.google.appinventor.components.runtime.ComponentContainer>)
   (define-alias SimplePropertyUtil <com.google.appinventor.components.runtime.util.PropertyUtil>)
-  (let* ((container :: SimpleContainer (lookup-in-current-form-environment container-name))
-         (existing-component (lookup-in-current-form-environment component-name))
+  (let* ((container :: SimpleContainer (get-from-context-environment context container-name))
+         (existing-component (lookup-in-context-environment context component-name))
          (component-to-add (make component-type container)))
-    (add-to-current-form-environment component-name component-to-add)
-    (add-init-thunk component-name
+    (add-to-context-environment context component-name component-to-add)
+    (add-to-context-init-thunk-environment context component-name
      (lambda ()
        (when init-props-thunk (init-props-thunk))
        (when existing-component
@@ -103,37 +297,27 @@
          (SimplePropertyUtil:copyComponentProperties existing-component component-to-add))))))
 
 (define-alias SimpleForm <com.google.appinventor.components.runtime.Form>)
+(define-alias SimpleTask <com.google.appinventor.components.runtime.Task>)
+(define-alias SimpleReplTask <com.google.appinventor.components.runtime.ReplTask>)
 
-(define (call-Initialize-of-components . component-names)
+(define (call-Initialize-of-components context . component-names)
   ;; Do any inherent/implied initializations
   (for-each (lambda (component-name)
-              (let ((init-thunk (get-init-thunk component-name)))
+              (let ((init-thunk (lookup-in-context-init-thunk-environment context component-name)))
                 (when init-thunk (init-thunk))))
             component-names)
   ;; Do the explicit component initialization methods and events
   (for-each (lambda (component-name)
-              (*:callInitialize (as SimpleForm *this-form*)
-                                (lookup-in-current-form-environment component-name)))
+              (*:callInitialize (as SimpleForm *this-form*) 
+                                (lookup-in-context-environment context component-name)))
             component-names))
-
-(define *init-thunk-environment* (gnu.mapping.Environment:make 'init-thunk-environment))
-
-(define (add-init-thunk component-name thunk)
-  (gnu.mapping.Environment:put *init-thunk-environment* component-name thunk))
-
-(define (get-init-thunk component-name)
-  (and (gnu.mapping.Environment:isBound *init-thunk-environment* component-name)
-       (gnu.mapping.Environment:get *init-thunk-environment* component-name)))
-
-(define (clear-init-thunks)
-  (set! *init-thunk-environment* (gnu.mapping.Environment:make 'init-thunk-environment)))
 
 ;;; (get-component comp1)
 ;;; ==> (lookup-in-current-form-environment 'comp1)
 (define-syntax get-component
   (syntax-rules ()
-    ((_ component-name)
-     (lookup-in-current-form-environment 'component-name))))
+    ((_ context component-name)
+     (lookup-in-context-environment 'context 'component-name))))
 
 ;; We'd like to do something like the following which could re-use existing components
 ;; and thereore avoid overriding property changes that the user might have made via
@@ -180,9 +364,9 @@
 
 ;;; This creates a better runtime error message in the case where there is
 ;;; a problem, and the component cannot be found.
-(define (lookup-component comp-name)
+(define (lookup-component context comp-name)
   ;; we explicitly pass #f as the default, even though that's the standard default
-  (let ((verified (lookup-in-current-form-environment comp-name #f)))
+  (let ((verified (lookup-in-context-environment context comp-name #f)))
     (if verified
         verified
         *non-coercible-value*)))
@@ -232,33 +416,33 @@
 ;;; Global variables
 
 ;;; (get-var var1)
-;;; ==> (lookup-global-var-in-current-form-environment 'var1)
+;;; ==> (lookup-in-context-global-var-environment 'var1)
 (define-syntax get-var
   (syntax-rules ()
-    ((_ var-name)
+    ((_ context var-name)
      ;; unbound global variables default to *the-null-value*
-     (lookup-global-var-in-current-form-environment 'var-name *the-null-value*))))
+     (lookup-in-context-global-var-environment 'context 'var-name *the-null-value*))))
 
 ;;; (set-var! var1 10)
-;;; ==> (add-global-var-to-current-form-environment 'var1 10)
+;;; ==> (add-to-context-global-var-environment 'context 'var1 10)
 ;;; note that set-var! will create the binding if it doesn't exist
 (define-syntax set-var!
-  (syntax-rules ()
-    ((_ var-name value)
-     (add-global-var-to-current-form-environment 'var-name value))))
+    (syntax-rules ()
+        ((_ context var-name value)
+         (add-to-context-global-var-environment 'context 'var-name value))))
 
 ;;; Lexical variables
 ;;; A lexical variable is looked up in the current environment
 ;;; following Kawa's ordinary rules.
 (define-syntax lexical-value
-  (syntax-rules ()
-    ((_ var-name)
-     (if (instance? var-name <java.lang.Package>)
-         (signal-runtime-error
-          (string-append "The variable " (get-display-representation `var-name)
-                         " is not bound in the current context")
-          "Unbound Variable")
-         var-name))))
+    (syntax-rules ()
+        ((_ var-name)
+         (if (instance? var-name <java.lang.Package>)
+             (signal-runtime-error
+                 (string-append "The variable " (get-display-representation `var-name)
+                                " is not bound in the current context")
+                 "Unbound Variable")
+             var-name))))
 
 ;;; Lexical Set Variable
 ;;; (set-lexical! var 10)
@@ -303,12 +487,12 @@
        (module-extends subclass-name)
        (module-name class-name)
        (module-static form-name)
-       (require <com.google.youngandroid.runtime>)
+       ;;(require <com.google.youngandroid.runtime>)
 
        (define *debug-form* #f)
 
        (define (android-log-form message)
-         (when *debug-form* (android.util.Log:i "YAIL" message)))
+         (when *debug-form* (android.util.Log:i "YAIL-FORM" message)))
 
        ;; An environment containing the form's components, functions and event handlers
        ;; We're using Kawa Environments here mostly as just a convenient dictionary implementation.
@@ -441,7 +625,7 @@
                      ;; else unregister event for registeredComponentName
                      (begin
                        (com.google.appinventor.components.runtime.EventDispatcher:unregisterEventForDelegation
-                         (as com.google.appinventor.components.runtime.HandlesEventDispatching (this))
+                         (symbol->string form-name-symbol)
                          registeredComponentName eventName)
                        #f))))
 
@@ -462,7 +646,7 @@
            (for-each (lambda (event-info)
                        ;; Tell the Simple event dispatcher to delegate dispatching of this event to this class
                        (SimpleEventDispatcher:registerEventForDelegation
-                        (as com.google.appinventor.components.runtime.HandlesEventDispatching (this))
+                        (symbol->string form-name-symbol)
                         (car event-info)
                         (cdr event-info)))
                      events))
@@ -549,6 +733,7 @@
             ;; to represent an uninitialized value
             ;; We have to explicity write #!null here, rather than
             ;; *the-null-value* because that external defintion hasn't happened yet
+            (android-log-form "adding *the-null-value*")
             (add-to-global-vars '*the-null-value* (lambda () #!null))
             ;; These next three clauses need to be in this order:
             ;; Properties can't be set until after the global variables are
@@ -561,6 +746,270 @@
           (exception com.google.appinventor.components.runtime.errors.YailRuntimeError
                      ;;(android-log-form "Caught exception in define-form ")
                      (process-exception exception))))))))
+
+(define-syntax define-task
+  (syntax-rules ()
+    ((_ class-name task-name)
+     (define-task-internal class-name task-name 'com.google.appinventor.components.runtime.Task #f))))
+
+(define-syntax define-repl-task
+  (syntax-rules ()
+    ((_ class-name task-name)
+     (define-task-internal class-name task-name 'com.google.appinventor.components.runtime.ReplTask #t))))
+
+(define-syntax define-task-internal
+  (syntax-rules ()
+    ((_ class-name task-name subclass-name isrepl)
+     (begin
+       (module-extends subclass-name)
+       (module-name class-name)
+       (module-static task-name)
+       ;;(require <com.google.youngandroid.runtime>)
+
+       (define *debug-task* #t)
+
+       (define (android-log-task message)
+         (when *debug-task* (android.util.Log:i "YAIL-TASK" message)))
+
+       ;; An environment containing the task's components, functions and event handlers
+       ;; We're using Kawa Environments here mostly as just a convenient dictionary implementation.
+       ;; As noted near the top of this file it is useful for attaching the environment to the REPL.
+       (define task-environment :: gnu.mapping.Environment
+         (gnu.mapping.Environment:make (symbol->string 'task-name)))
+
+       (define (add-to-task-environment name :: gnu.mapping.Symbol object)
+         (android-log-task (format #f "Adding ~A to env ~A with value ~A" name task-environment object))
+         (gnu.mapping.Environment:put task-environment name object))
+
+       (define (lookup-in-task-environment name :: gnu.mapping.Symbol #!optional (default-value #f))
+         (if *this-is-the-repl*
+             (lookup-in-context-environment (get-current-context-symbol) name default-value)
+             (if (and (not (eq? task-environment #!null))
+                      (gnu.mapping.Environment:isBound task-environment name))
+                 (gnu.mapping.Environment:get task-environment name)
+                 default-value)))
+
+       (define (is-bound-in-task-environment name :: gnu.mapping.Symbol)
+         (if *this-is-the-repl*
+             (is-bound-in-context-environment (get-current-context-symbol) name)
+             (gnu.mapping.Environment:isBound task-environment name)))
+
+       (define global-var-environment :: gnu.mapping.Environment
+         (gnu.mapping.Environment:make (string-append
+                                        (symbol->string 'task-name)
+                                        "-global-vars")))
+
+       (define (add-to-global-var-environment name :: gnu.mapping.Symbol object)
+         (android-log-task (format #f "Adding ~A to env ~A with value ~A" name global-var-environment object))
+         (gnu.mapping.Environment:put global-var-environment name object))
+
+
+       ;; Simple wants there to be a variable named the same as the class.  It will
+       ;; later get initialized to an instance of the class.
+       (define task-name :: class-name #!null)
+
+       ;; The REPL would like to know what the current name of the form is
+       (define task-name-symbol :: gnu.mapping.Symbol 'task-name)
+
+       ;; List of events to get registered in the $define method.
+       (define events-to-register  :: gnu.lists.LList '())
+
+       ;; List of components to get created in the $define method.
+       ;; Each component item is the component is represented as a list
+       ;; (container-name component-type component-name init-thunk)
+       (define components-to-create  :: gnu.lists.LList '())
+
+       ;; A call to add-to-events is generated by define-event to add the event to
+       ;; events-to-register
+      (define (add-to-events component-name event-name)
+
+         (set! events-to-register
+               (cons (cons component-name event-name)
+                     events-to-register)))
+
+       ;; A call to add-to-components is generated by add-component to add the component to
+       ;; components-to-create
+       (define (add-to-components container-name component-type component-name init-thunk)
+         (set! components-to-create
+               (cons (list container-name component-type component-name init-thunk)
+                     components-to-create)))
+
+       ;; List of global variables to be initialized in the $define method.
+       (define global-vars-to-create  :: gnu.lists.LList '())
+
+       ;; Add to the list of global variable to create.
+       (define (add-to-global-vars var val-thunk)
+         (set! global-vars-to-create
+               (cons (list var val-thunk)
+                     global-vars-to-create)))
+
+
+       ;; List of expressions to evaluate after the task has been created.
+       ;; Used for setting properties
+       (define task-do-after-creation  :: gnu.lists.LList '())
+
+       (define (add-to-task-do-after-creation thunk)
+         (set! task-do-after-creation
+               (cons thunk
+                     task-do-after-creation)))
+
+       (define (send-error error)
+         (com.google.appinventor.components.runtime.util.RetValManager:sendError error))
+
+       ;; For the HandlesEventDispatching interface
+       (define (dispatchEvent componentObject :: com.google.appinventor.components.runtime.Component
+                              registeredComponentName :: java.lang.String
+                              eventName :: java.lang.String
+                              args :: java.lang.Object[]) :: boolean
+           ;; Check that the component object that generated the event
+           ;; matches the component object associated with the
+           ;; component name that registered the event.  This is
+           ;; necessary, in part, due to the late binding that we want
+           ;; for event handlers and component names.
+           (begin
+             (android-log-task (string-append "SCHEME dispatchEvent " registeredComponentName " " eventName))
+           (let ((registeredObject (string->symbol registeredComponentName)))
+                 (if (is-bound-in-task-environment registeredObject)
+                     (if (eq? (lookup-in-task-environment registeredObject) componentObject)
+                        (let ((handler (lookup-handler registeredComponentName eventName)))
+                                ;; Note: This try-catch was originally part of the
+                                ;; generated handler from define-event.  It was moved
+                                ;; here because Kawa seems be unable to eval a
+                                ;; try-catch without compiling it and we can't support
+                                ;; compilation in anything (e.g. define-event) that
+                                ;; might get sent to the REPL!
+                                (try-catch
+                                 (begin
+                                   (apply handler (gnu.lists.LList:makeList args 0))
+                                   #t)
+                                 (exception java.lang.Throwable
+                                  (begin
+                                    (android-log-task (exception:getMessage))
+;;; Comment out the line below to inhibit a stack trace on a RunTimeError
+                                    (exception:printStackTrace)
+                                    (send-error (exception:getMessage))
+                                    #f))))
+                        #f)
+                     ;; else unregister event for registeredComponentName
+                     (begin
+                       (com.google.appinventor.components.runtime.EventDispatcher:unregisterEventForDelegation
+                         (symbol->string task-name-symbol)
+                         registeredComponentName eventName)
+                       #f)))))
+
+       (define (lookup-handler componentName eventName)
+         (lookup-in-task-environment
+          (string->symbol
+           (com.google.appinventor.components.runtime.EventDispatcher:makeFullEventName
+            componentName eventName))))
+
+       ;; This defines the Simple Form's abstract $define method. The Simple Form
+       ;; implementation will call this to cause initialization.
+       (define ($define) :: void
+
+         ;; Register the events with the Simple event dispatcher
+         (define (register-events events)
+           (define-alias SimpleEventDispatcher
+             <com.google.appinventor.components.runtime.EventDispatcher>)
+           (for-each (lambda (event-info)
+                       ;; Tell the Simple event dispatcher to delegate dispatching of this event to this class
+                       (SimpleEventDispatcher:registerEventForDelegation
+                        (symbol->string task-name-symbol)
+                        (car event-info)
+                        (cdr event-info)))
+                     events))
+
+         ;; Add the initial global variable bindings to the global variable environment
+         (define (init-global-variables var-val-pairs)
+           ;; (android-log-form (format #f "initializing global vars: ~A" var-val-pairs))
+           (for-each (lambda (var-val)
+                       (let ((var (car var-val))
+                             (val-thunk (cadr var-val)))
+                         (add-to-global-var-environment var (val-thunk))))
+                     var-val-pairs))
+
+         ;; Create each component and set its corresponding field
+         (define (init-components component-descriptors)
+           (for-each (lambda (component-info)
+                       (let ((component-name (caddr component-info))
+                             (init-thunk (cadddr component-info))
+                             (component-type (cadr component-info))
+                             (component-container (lookup-in-task-environment (car component-info))))
+                         ;; (android-log-form
+                         ;;  (format #f "making component: ~A of type: ~A with container: ~A (container-name: ~A)"
+                         ;;          component-name component-type component-container (car component-info)))
+                         (let ((component-object (make component-type component-container)))
+                           ;; Construct the component and assign it to its corresponding field
+                           (set! (field (this) component-name) component-object)
+                           ;; Add the mapping from component name -> component object to the
+                           ;; form-environment
+                           (add-to-task-environment component-name component-object))))
+                     component-descriptors)
+           ;; Now that all the components are constructed we can call
+           ;; their init-thunk and their Initialize methods.  We need
+           ;; to do this after all the construction steps because the
+           ;; init-thunk (i.e. design-time initializations) and
+           ;; Initialize methods may contain references to other
+           ;; components.
+           ;;
+           ;; First all the init-thunks
+           (for-each (lambda (component-info)
+                       (let ((component-name (caddr component-info))
+                             (init-thunk (cadddr component-info)))
+                         ;; Execute the component's init-thunk.
+                         (when init-thunk (init-thunk))))
+                     component-descriptors)
+           ;; Now the Initialize methods
+           (for-each (lambda (component-info)
+                       (let ((component-name (caddr component-info))
+                             (init-thunk (cadddr component-info)))
+                         ;; Invoke the component's Initialize() method
+                         ((this):callInitialize (field (this) component-name))))
+                     component-descriptors))
+
+         ;; A helper function
+         (define (symbol-append . symbols)
+           (string->symbol
+            (apply string-append
+                   (map symbol->string symbols))))
+
+         ;; Hack.  There's a bug in Kawa in their dynamic method lookup (done in
+         ;; the call to make in init-components, above) which throws an NPE if the language
+         ;; is not set.
+         (gnu.expr.Language:setDefaults (kawa.standard.Scheme:getInstance))
+
+         ;; Another hack. The run() method is defined internally by Kawa to eval the
+         ;; top-level forms but it's not getting properly executed, so we force it here.
+         (try-catch
+          (invoke (this) 'run)
+          (exception java.lang.Exception
+           (android-log-task (exception:getMessage))
+           (send-error (exception:getMessage))))
+         (set! task-name (this))
+         ;; add a mapping from the form name to the Form into the form-environment
+         (add-to-task-environment 'task-name (this))
+
+         (register-events events-to-register)
+
+         (try-catch
+          (begin
+            ;; We need this binding because the block parser sends this symbol
+            ;; to represent an uninitialized value
+            ;; We have to explicity write #!null here, rather than
+            ;; *the-null-value* because that external defintion hasn't happened yet
+            (android-log-task "adding *the-null-value*")
+            (add-to-global-vars '*the-null-value* (lambda () #!null))
+            ;; These next three clauses need to be in this order:
+            ;; Properties can't be set until after the global variables are
+            ;; assigned.   And some properties can't be set after the components are
+            ;; created: For example, the form's layout can't be changed after the
+            ;; components have been installed.  (This gives an error.)
+            (init-global-variables (reverse global-vars-to-create))
+            (for-each force (reverse task-do-after-creation))
+            (init-components (reverse components-to-create)))
+          (exception com.google.appinventor.components.runtime.errors.YailRuntimeError
+                     ;;(android-log-form "Caught exception in define-form ")
+                     (send-error (exception:getMessage)))))))))
 
 ;;;; define-event
 
@@ -591,7 +1040,7 @@
 
 (define-syntax define-event-helper
   (syntax-rules ()
-    ((_ event-func-name (arg ...) (expr ...))
+    ((_ context event-func-name (arg ...) (expr ...))
 
      ;; Note that if we expand directly into a lambda expression  below we expose
      ;; an error in the Kawa compiler and the function doesn't get defined properly.
@@ -604,9 +1053,12 @@
          ;; the comments on sanitize below
          (let ((arg (sanitize-component-data arg)) ...)
            expr ...))
+       (android-log (format #f "!!Event being registered in ~A as ~A with value ~A" 'context 'event-func-name event-func-name))
        (if *this-is-the-repl*
-           (add-to-current-form-environment 'event-func-name event-func-name)
-           (add-to-form-environment 'event-func-name event-func-name))))))
+           (add-to-context-environment 'context 'event-func-name event-func-name)
+           (if (is-current-context-form)
+               (add-to-form-environment 'event-func-name event-func-name)
+               (add-to-task-environment 'event-func-name event-func-name)))))))
 
 ;;; We make the compiler generate the calling code using the identifier *list-for-runtime* rather
 ;;; than list.   Otherwise, the call-yail-primitive code would break if it were a line in the body
@@ -617,7 +1069,7 @@
     ((_  args ...)
      (list args ...))))
 
-;;; (define-event Button2 Click (arg1 ...)  ...)
+;;; (define-event Screen1 Button2 Click (arg1 ...)  ...)
 ;;; ==>
 ;;; (define (Button2$Click arg1 ...) ...))
 ;;;
@@ -632,16 +1084,16 @@
 (define-syntax define-event
   (lambda (stx)
     (syntax-case stx ()
-      ((_ component-name event-name args . body)
+      ((_ context component-name event-name args . body)
        #`(begin
-           (define-event-helper ,(gen-event-name #`component-name #`event-name) args body)
+           (define-event-helper context ,(gen-event-name #`component-name #`event-name) args body)
            ;; TODO(markf): consider breaking this out as a procedure
            ;; that is parallel to add-to-current-form-environment,
            ;; which would make define-event look more like def, which
            ;; might be easier for people coming back to the code later.
            (if *this-is-the-repl*
                (com.google.appinventor.components.runtime.EventDispatcher:registerEventForDelegation
-                (as com.google.appinventor.components.runtime.HandlesEventDispatching *this-form*)
+                (get-current-context-name)
                 'component-name
                 'event-name)
                ;; If it's not the REPL the form's $define() method will do the registration
@@ -665,18 +1117,20 @@
   (syntax-rules ()
     ;; There's some Kawa bug that gets exposed if you change the clause ordering here
     ;; and put the var def rule before the func def rule.
-    ((_ (func-name args ...) body ...)
+    ((_ context (func-name args ...) body ...)
      (begin
+         (android-log (format #f "yail-defining in ~A function ~A(~A)" 'context 'func-name '(args ...) ))
        (if *this-is-the-repl*
-           (add-global-var-to-current-form-environment 'func-name
+           (add-to-context-global-var-environment 'context 'func-name
                                             (lambda (args ...) body ...))
            (add-to-global-vars 'func-name
                                (lambda ()
                                  (lambda (args ...) body ...))))))
-    ((_ var-name value)
+    ((_ context var-name value)
      (begin
+         (android-log (format #f "yail-defining in ~A variable ~A with value ~A" 'context 'var-name value ))
        (if *this-is-the-repl*
-           (add-global-var-to-current-form-environment 'var-name value)
+           (add-to-context-global-var-environment 'context 'var-name value)
            (add-to-global-vars 'var-name
                                (lambda () value)))))))
 
@@ -685,76 +1139,57 @@
 ;;; form has been created.  Used for setting the inital form properties
 (define-syntax do-after-form-creation
   (syntax-rules ()
-    ((_ expr ...)
-     (if *this-is-the-repl*
-         (begin expr ...)
-         (add-to-form-do-after-creation (delay (begin expr ...)))))))
+    ((_ form expr ...)
+     (begin
+         (if *this-is-the-repl*
+             (begin expr ...)
+             (add-to-form-do-after-creation (delay (begin expr ...))))))))
+
+(define-syntax do-after-task-creation
+  (syntax-rules ()
+    ((_ task expr ...)
+     (begin
+         (if *this-is-the-repl*
+             (begin expr ...)
+             (add-to-task-do-after-creation (delay (begin expr ...))))))))
+
+;;; Register our form after the form is created
+(define (register-form context :: gnu.mapping.Symbol)
+    (set-this-form)
+    (add-to-context-environments context *this-form*:form-environment)
+    (add-to-context-environment context context *this-form*)
+    (add-to-context-global-var-environments context *this-form*:global-var-environment)
+    (if *this-is-the-repl*
+        (add-to-context-init-thunk-environments context (gnu.mapping.Environment:make (string-append (symbol->string context) "-init-thunks")))))
+
+(define (register-task task :: gnu.mapping.Symbol)
+  (android-log "called register task")
+  (if *this-is-the-repl*
+      (begin
+        (add-to-context-environments task (gnu.mapping.Environment:make (symbol->string task)))
+        (add-to-context-environment task task SimpleReplTask:replTask)
+        (add-to-context-global-var-environments task (gnu.mapping.Environment:make (string-append (symbol->string task) "-global-vars")))
+        (add-to-context-init-thunk-environments task (gnu.mapping.Environment:make (string-append (symbol->string task) "-init-thunks"))))
+      (let ((this-task (SimpleTask:getTask (symbol->string task))))
+        (add-to-context-environments task this-task:task-environment)
+        (add-to-context-environment task task this-task)
+        (add-to-context-global-var-environments task this-task:global-var-environment)))
+  (android-log "successfully registered task"))
 
 ;; The following environments are really just for testing.
 (define *test-environment* (gnu.mapping.Environment:make 'test-env))
 (define *test-global-var-environment* (gnu.mapping.Environment:make 'test-global-var-env))
 
-(define (add-to-current-form-environment name :: gnu.mapping.Symbol object)
-                    ;  (android-log (format #f "Adding ~A to env ~A with value ~A" name
-                    ;                                     (if (not (eq? *this-form* #!null)) (*:.form-environment *this-form*) 'null)
-                    ;                                     object))
-  (if (not (eq? *this-form* #!null))
-      (gnu.mapping.Environment:put (*:.form-environment *this-form*) name object)
-      ;; The following is really for testing.  In normal situations *this-form* should be non-null
-      (gnu.mapping.Environment:put *test-environment* name object)))
 
-(define (lookup-in-current-form-environment name :: gnu.mapping.Symbol #!optional (default-value #f))
-                    ;  (android-log (format #f "Looking up ~A in env ~A" name
-                    ;                                     (if (not (eq? *this-form* #!null)) (*:.form-environment *this-form*) 'null)))
-  (let ((env (if (not (eq? *this-form* #!null))
-                 (*:.form-environment *this-form*)
-                 ;; The following is just for testing. In normal situations *this-form* should be non-null
-                 *test-environment*)))
-    (if (gnu.mapping.Environment:isBound env name)
-        (gnu.mapping.Environment:get env name)
-        default-value)))
 
-(define (delete-from-current-form-environment name :: gnu.mapping.Symbol)
-  (if (not (eq? *this-form* #!null))
-      (gnu.mapping.Environment:remove (*:.form-environment *this-form*) name)
-      ;; The following is really for testing.  In normal situations *this-form* should be non-null
-      (gnu.mapping.Environment:remove *test-environment* name)))
-
-(define (rename-in-current-form-environment old-name :: gnu.mapping.Symbol new-name :: gnu.mapping.Symbol)
-  (when (not (eqv? old-name new-name))
-    (let ((old-value (lookup-in-current-form-environment old-name)))
-      (if (not (eq? *this-form* #!null))
-          (gnu.mapping.Environment:put (*:.form-environment *this-form*) new-name old-value)
-          ;; The following is really for testing.  In normal situations *this-form* should be non-null
-          (gnu.mapping.Environment:put *test-environment*  new-name old-value))
-      (delete-from-current-form-environment old-name))))
-
-(define (add-global-var-to-current-form-environment name :: gnu.mapping.Symbol object)
-  (begin
-    (if (not (eq? *this-form* #!null))
-        (gnu.mapping.Environment:put (*:.global-var-environment *this-form*) name object)
-        ;; The following is really for testing.  In normal situations *this-form* should be non-null
-        (gnu.mapping.Environment:put *test-global-var-environment* name object))
-    ;; return *the-null-value* rather than #!void, which would show as a blank in the repl balloon
-    *the-null-value*))
-
-(define (lookup-global-var-in-current-form-environment name :: gnu.mapping.Symbol #!optional (default-value #f))
-  (let ((env (if (not (eq? *this-form* #!null))
-                 (*:.global-var-environment *this-form*)
-                 ;; The following is just for testing. In normal situations *this-form* should be non-null
-                 *test-global-var-environment*)))
-    (if (gnu.mapping.Environment:isBound env name)
-        (gnu.mapping.Environment:get env name)
-        default-value)))
-
-(define (reset-current-form-environment)
+(define (reset-current-form-environment) 
   (if (not (eq? *this-form* #!null))
       (let ((form-name (*:.form-name-symbol *this-form*)))
         ;; Create a new environment
         (set! (*:.form-environment *this-form*)
               (gnu.mapping.Environment:make (symbol->string form-name)))
         ;; Add a binding from the form name to the form object
-        (add-to-current-form-environment form-name *this-form*)
+        (add-to-environment (*:.form-environment *this-form*) form-name *this-form*)
         ;; Create a new global variable environment
         (set! (*:.global-var-environment *this-form*)
               (gnu.mapping.Environment:make (string-append
@@ -765,6 +1200,21 @@
         (set! *test-environment* (gnu.mapping.Environment:make 'test-env))
         (*:addParent (KawaEnvironment:getCurrent) *test-environment*)
         (set! *test-global-var-environment* (gnu.mapping.Environment:make 'test-global-var-env)))))
+
+(define (reset-task-environment task :: gnu.mapping.Symbol)
+  (android-log "reset-task-environment called")
+  (let ((this-task (get-context-instance task)))
+    (if (not (eq? this-task #!null))
+        (if *this-is-the-repl*
+            (begin
+              (clear-context-environment task)
+              (add-to-context-environment task task SimpleReplTask:replTask)
+              (clear-context-global-var-environment task))
+            (begin
+              (set! this-task:task-environment (gnu.mapping.Environment:make (symbol->string task)))
+              (add-to-environment this-task:task-environment task this-task)
+              (set! this-task:global-var-environment (gnu.mapping.Environment:make (string-append (symbol->string task) "-global-vars"))))))))
+
 
 (define-syntax foreach
   (syntax-rules ()
@@ -871,12 +1321,12 @@
 ;;; values they will receive.
 
 
-(define (call-component-method component-name method-name arglist typelist)
+(define (call-component-method context component-name method-name arglist typelist)
   (let ((coerced-args (coerce-args method-name arglist typelist)))
     (let ((result
            (if (all-coercible? coerced-args)
                (apply invoke
-                      `(,(lookup-in-current-form-environment component-name)
+                      `(,(lookup-in-context-environment context component-name)
                         ,method-name
                         ,@coerced-args))
                (generate-runtime-type-error method-name arglist))))
@@ -892,7 +1342,7 @@
 ;;; Note that the result is coming back from a component, so we have to
 ;;; sanitize it
 
-(define (call-component-type-method possible-component component-type method-name arglist typelist)
+(define (call-component-type-method context possible-component component-type method-name arglist typelist)
   ;; Note that we use the cdr of the typelist because it contains the generic
   ;; 'component' type for the component and we want to check the more specific type
   ;; that is passed in via the component-type argument
@@ -1134,7 +1584,8 @@
           (string-append "The arguments " (show-arglist-no-parens arglist)
                          " are the wrong number of arguments for " (get-display-representation procedure-name))
           (string-append "Wrong number of arguments for" (get-display-representation procedure-name))))
-        (else (map coerce-arg arglist typelist))))
+        (else
+            (map coerce-arg arglist typelist))))
 
 (define (coerce-arg arg type)
   (let ((arg (sanitize-atomic arg)))
@@ -1166,9 +1617,9 @@
    ((string? arg)
     (if (string=? arg "")
         *the-null-value*
-        (lookup-component (string->symbol arg))))
+        (lookup-component (get-current-context-symbol) (string->symbol arg))))
    ((instance? arg com.google.appinventor.components.runtime.Component) arg)
-   ((symbol? arg) (lookup-component arg))
+   ((symbol? arg) (lookup-component (get-current-context-symbol) arg))
    (else *non-coercible-value*)))
 
 (define (coerce-to-component-of-type arg type)
@@ -2479,10 +2930,17 @@ list, use the make-yail-list constructor with no arguments.
 ;;; the phone's UI thread. The result is then enqueued to be returned
 ;;; to the phone via the "send-to-block" function.
 
-(define-syntax process-repl-input
+(define-syntax process-repl-form-input
   (syntax-rules ()
-    ((_ blockid expr)
-     (in-ui blockid (delay expr)))))
+    ((_ form blockid expr)
+     (begin
+            (in-ui form blockid (delay expr))))))
+
+(define-syntax process-repl-task-input
+  (syntax-rules ()
+    ((_ task blockid expr)
+     (begin
+            (in-bg task blockid (delay expr))))))
 
 ;; This code causes the evaluation of the code sent to the phone. Output
 ;; is normally generated by "Report Execution" balloons attached to blocks
@@ -2491,11 +2949,11 @@ list, use the make-yail-list constructor with no arguments.
 ;; However, if an exception occurs, this code sends back an error message
 ;; to the Do It block. (Someday, it might go to the offending block.)
 
-(define (in-ui blockid promise)
+(define (in-ui form blockid promise)
   (set! *this-is-the-repl* #t)          ;; Should do this somewhere else...
   (*ui-handler*:post
    (runnable (lambda ()
-               (send-to-block blockid
+               (send-to-block form "Form" blockid
                 (try-catch
                  (try-catch
                   (list "OK"
@@ -2510,38 +2968,53 @@ list, use the make-yail-list constructor with no arguments.
                             (list
                              "NOK"
                              (exception:getMessage)))))))))
-
+(define (in-bg task blockid promise)
+  (set! *this-is-the-repl* #t)          ;; Should do this somewhere else...
+  (android-log (format #f "in BG called: ~A" (java.lang.Thread:currentThread)))
+  (SimpleReplTask:runTaskCode
+   task
+   (runnable (lambda ()
+               (android-log (format #f "in BG doing: ~A" (java.lang.Thread:currentThread)))
+               (force promise))))
+  (android-log (format #f "in BG done: ~A" (java.lang.Thread:currentThread)))
+  )
 ;; send-to-block is used for all communication back to the blocks editor
 ;; Calls on report are also generated for code from the blocks compiler
 ;; when a block is being watched.
 ;; send-to-block sends the result of the expression or an error message to the block editor
-(define (send-to-block blockid message)
+(define (send-to-block context-name context-type blockid message)
   (let* ((good (car message))
          (value (cadr message)))
-    (com.google.appinventor.components.runtime.util.RetValManager:appendReturnValue blockid good value)
+    (com.google.appinventor.components.runtime.util.RetValManager:appendReturnValue context-name context-type blockid good value)
     ))
 
 (define (clear-current-form)
   (when (not (eq? *this-form* #!null))
-    (clear-init-thunks)
     ;; TODO(sharon): also need to unregister any previously registered events
     (reset-current-form-environment)
-    (com.google.appinventor.components.runtime.EventDispatcher:unregisterAllEventsForDelegation)
+    (com.google.appinventor.components.runtime.EventDispatcher:unregisterAllEventsOfContext (get-current-context-name))
     (*:clear *this-form*)))
+
+(define (clear-task task :: gnu.mapping.Symbol)
+  (android-log "clear task called")
+  (let ((this-task (get-context-instance task)))
+    (when (not (eq? this-task #!null))
+          (reset-task-environment task)
+          (com.google.appinventor.components.runtime.EventDispatcher:unregisterAllEventsOfContext (symbol->string task)))))
 
 ;; Used by the repl to set the name of the form
 (define (set-form-name form-name)
   (*:setFormName *this-form* form-name))
 
-(define (remove-component component-name)
+(define (remove-component context component-name)
   (let* ((component-symbol (string->symbol component-name))
-         (component-object (lookup-in-current-form-environment component-symbol)))
-    (delete-from-current-form-environment component-symbol)
+         (component-object (lookup-in-context-environment context component-symbol)))
+    (remove-from-context-environment context component-symbol)
     (when (not (eq? *this-form* #!null))
       (*:deleteComponent *this-form* component-object))))
 
-(define (rename-component old-component-name new-component-name)
-  (rename-in-current-form-environment
+(define (rename-component context old-component-name new-component-name)
+  (rename-in-context-environment context
    (string->symbol old-component-name)
    (string->symbol new-component-name)))
 
@@ -2549,9 +3022,59 @@ list, use the make-yail-list constructor with no arguments.
 ;;;; End Support for REPL
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(define (add-to-current-context-environment name :: gnu.mapping.Symbol object)
+  (add-to-context-environment (get-current-context-symbol) name object))
+
+(define (remove-from-current-context-environment name :: gnu.mapping.Symbol)
+  (remove-from-context-environment (get-current-context-symbol) name))
+
+(define (is-bound-in-current-context-environment name :: gnu.mapping.Symbol)
+  (is-bound-in-context-environment (get-current-context-symbol) name))
+
+(define (get-from-current-context-environment name :: gnu.mapping.Symbol)
+  (get-from-currrent-context-environment (get-current-context-symbol) name))
+
+(define (lookup-in-current-context-environment name :: gnu.mapping.Symbol #!optional (default-value #f))
+  (lookup-in-context-environment (get-current-context-symbol) name default-value))
+
+(define (rename-in-context-environment context :: gnu.mapping.Symbol old-name :: gnu.mapping.Symbol new-name :: gnu.mapping.Symbol)
+  (when (not (eqv? old-name new-name))
+        (let ((old-value (lookup-in-context-environment context old-name)))
+          (add-to-context-environment context new-name old-value)
+          (remove-from-context-environment context old-name))))
+
+(define (is-current-context-form) :: boolean
+  (if (eq? (android.os.Looper:myLooper) (android.os.Looper:getMainLooper))
+      #t
+      #f))
+
+(define (is-current-context-task) :: boolean
+  (if (instance? (java.lang.Thread:currentThread) <com.google.appinventor.components.runtime.Task$TaskThread>)
+      #t
+      #f))
+
+(define (get-current-context-name) :: <java.lang.String>
+  (cond
+   ((is-current-context-form)
+    (let ((current-context (SimpleForm:getActiveForm)))
+      (current-context:getFormName)))
+   ((is-current-context-task)
+    (SimpleTask:getCurrentTaskName))))
+
+(define (get-current-context-symbol) :: <gnu.mapping.Symbol>
+  (string->symbol (get-current-context-name)))
+
+(define (get-current-context-instance)
+  (cond
+   ((is-current-context-form)
+    (SimpleForm:getActiveForm))
+   ((is-current-context-task)
+    (SimpleTask:getCurrentTask))))
+
+
 (define *ui-handler* #!null)
 (define *this-form* #!null)
-
 
 ;;; This is called as part of the code that sets up the form in the phone application.
 ;;; It is not explicitly called when the Repl is started. But set-up-repl-environment
@@ -2561,7 +3084,6 @@ list, use the make-yail-list constructor with no arguments.
   (set-this-form)
   (set! *ui-handler* (android.os.Handler)))
 
-
 ;; Each time an event handler is executed, *this-form* must be set to the active
 ;; form so that we have the correct environment for looking up symbols.
 ;; Note that set-this-form is called from init-runtime (above) and from each
@@ -2569,6 +3091,7 @@ list, use the make-yail-list constructor with no arguments.
 
 (define (set-this-form)
   (set! *this-form* (SimpleForm:getActiveForm)))
+
 
 
 ;; For Testing

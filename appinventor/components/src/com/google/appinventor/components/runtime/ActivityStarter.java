@@ -96,7 +96,7 @@ import android.util.Log;
     category = ComponentCategory.CONNECTIVITY,
     nonVisible = true,
     iconName = "images/activityStarter.png")
-@SimpleObject
+@SimpleObject(taskCompatible = false)
 public class ActivityStarter extends AndroidNonvisibleComponent
     implements ActivityResultListener, Component, Deleteable {
 
@@ -427,6 +427,10 @@ public class ActivityStarter extends AndroidNonvisibleComponent
     resultIntent = null;
     result = "";
 
+    if (this.form == null) {
+      return;
+    }
+
     Intent intent = buildActivityIntent();
 
     if (requestCode == 0) {
@@ -442,9 +446,14 @@ public class ActivityStarter extends AndroidNonvisibleComponent
         ErrorMessages.ERROR_ACTIVITY_STARTER_NO_ACTION_INFO);
     } else {
       try {
-        container.$context().startActivityForResult(intent, requestCode);
+        if (container.$form() != null) { // Make sure we have a form
+          form.dispatchErrorOccurredEvent(this, "StartActivity",
+            ErrorMessages.ERROR_ACTIVITY_STARTER_NO_CALLING_ACTIVITY);
+          return;
+        }
+        container.$form().startActivityForResult(intent, requestCode);
         String openAnim = container.$form().getOpenAnimType();
-        AnimationUtil.ApplyOpenScreenAnimation(container.$context(), openAnim);
+        AnimationUtil.ApplyOpenScreenAnimation(container.$form(), openAnim);
       } catch (ActivityNotFoundException e) {
         form.dispatchErrorOccurredEvent(this, "StartActivity",
           ErrorMessages.ERROR_ACTIVITY_STARTER_NO_CORRESPONDING_ACTIVITY);

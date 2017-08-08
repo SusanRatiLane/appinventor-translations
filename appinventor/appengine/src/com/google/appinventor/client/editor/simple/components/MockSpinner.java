@@ -36,7 +36,7 @@ public final class MockSpinner extends MockVisibleComponent {
     spinnerWidget.setStylePrimaryName("ode-SimpleMockComponent");
     spinnerWidget.addStyleName("spinnerComponentStyle");
     initComponent(spinnerWidget);
-    refreshForm();
+    refreshContext();
   }
 
   @Override

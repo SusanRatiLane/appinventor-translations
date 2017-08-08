@@ -6,6 +6,7 @@
 
 package com.google.appinventor.components.runtime;
 
+import android.content.Context;
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.DesignerProperty;
 import com.google.appinventor.components.annotations.SimpleObject;
@@ -42,7 +43,7 @@ public class TableArrangement extends AndroidViewComponent
   */
   public TableArrangement(ComponentContainer container) {
     super(container);
-    context = container.$context();
+    context = $form();
 
     viewLayout = new TableLayout(context, 2, 2);
 
@@ -96,13 +97,43 @@ public class TableArrangement extends AndroidViewComponent
   // ComponentContainer implementation
 
   @Override
-  public Activity $context() {
-    return context;
+  public Context $context() {
+    return container.$context();
   }
 
   @Override
   public Form $form() {
     return container.$form();
+  }
+
+  @Override
+  public Task $task() {
+    return container.$task();
+  }
+
+  @Override
+  public boolean isContext() {
+    return false;
+  }
+
+  @Override
+  public boolean isForm() {
+    return false;
+  }
+
+  @Override
+  public boolean isTask() {
+    return false;
+  }
+
+  @Override
+  public boolean inForm() {
+    return ($form() != null);
+  }
+
+  @Override
+  public boolean inTask() {
+    return ($task() != null);
   }
 
   @Override
@@ -149,6 +180,13 @@ public class TableArrangement extends AndroidViewComponent
 
     ViewUtil.setChildHeightForTableLayout(component.getView(), height);
 
+  }
+
+  @Override
+  public void dispatchErrorOccurredEvent(Component component, String functionName, int errorNumber, Object... messageArgs) {
+    if (inForm()) {
+      $form().dispatchErrorOccurredEvent(component,functionName, errorNumber, messageArgs);
+    }
   }
 
   // AndroidViewComponent implementation

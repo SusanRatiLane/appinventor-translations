@@ -76,7 +76,7 @@ public class SpeechRecognizer extends AndroidNonvisibleComponent
     if (requestCode == 0) {
       requestCode = form.registerForActivityResult(this);
     }
-    container.$context().startActivityForResult(intent, requestCode);
+    container.$form().startActivityForResult(intent, requestCode);
   }
 
   @Override

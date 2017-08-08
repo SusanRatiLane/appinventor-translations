@@ -14,8 +14,10 @@ import com.google.appinventor.shared.rpc.project.ProjectNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidBlocksNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidFormNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidTaskNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidYailNode;
 import com.google.gwt.user.client.Window;
+import java.util.ArrayList;
 
 /**
  * Command for deleting files.
@@ -40,21 +42,26 @@ public class DeleteFileCommand extends ChainableCommand {
       final Ode ode = Ode.getInstance();
 
       if (node instanceof YoungAndroidSourceNode) {
-        // node could be either a YoungAndroidFormNode or a YoungAndroidBlocksNode.
-        // Before we delete the form, we need to close both the form editor and the blocks editor
+        // node could be either a YoungAndroidFormNode or a YoungAndroidTaskNode or a YoungAndroidBlocksNode.
+        // Before we delete the context, we need to close both the context editor and the blocks editor
         // (in the browser).
         final String qualifiedFormName = ((YoungAndroidSourceNode) node).getQualifiedName();
         final String formFileId = YoungAndroidFormNode.getFormFileId(qualifiedFormName);
+        final String taskFileId = YoungAndroidTaskNode.getTaskFileId(qualifiedFormName);
         final String blocksFileId = YoungAndroidBlocksNode.getBlocklyFileId(qualifiedFormName);
         final String yailFileId = YoungAndroidYailNode.getYailFileId(qualifiedFormName);
         final long projectId = node.getProjectId();
-        String fileIds[] = new String[2];
-        fileIds[0] = formFileId;
-        fileIds[1] = blocksFileId;
-        ode.getEditorManager().closeFileEditors(projectId, fileIds);
+        ArrayList<String> fileIds = new ArrayList<String>(2);
+        for (ProjectNode sourceNode : node.getProjectRoot().getAllSourceNodes()) {
+          if (sourceNode.getFileId().equals(formFileId) || sourceNode.getFileId().equals(taskFileId) ||
+              sourceNode.getFileId().equals(blocksFileId)) {
+              fileIds.add(sourceNode.getFileId());
+          }
+        }
+        ode.getEditorManager().closeFileEditors(projectId, fileIds.toArray(new String[0]));
 
-        // When we tell the project service to delete either the form (.scm) file or the blocks
-        // (.bky) file, it will delete both of them, and also the yail (.yail) file.
+        // When we tell the project service to delete either the form (.scm) file or the task (.tsk) or the blocks
+        // (.bky) file, it will delete all of them, including the yail (.yail) file.
         ode.getProjectService().deleteFile(ode.getSessionId(), projectId, node.getFileId(),
             new OdeAsyncCallback<Long>(
         // message on failure
@@ -65,13 +72,14 @@ public class DeleteFileCommand extends ChainableCommand {
             Project project = getProject(node);
             for (ProjectNode sourceNode : node.getProjectRoot().getAllSourceNodes()) {
               if (sourceNode.getFileId().equals(formFileId) ||
+                  sourceNode.getFileId().equals(taskFileId) ||
                   sourceNode.getFileId().equals(blocksFileId) ||
                   sourceNode.getFileId().equals(yailFileId)) {
                 project.deleteNode(sourceNode);
               }
             }
-            ode.getDesignToolbar().removeScreen(project.getProjectId(), 
-                ((YoungAndroidSourceNode) node).getFormName());
+            ode.getDesignToolbar().removeContext(project.getProjectId(),
+                ((YoungAndroidSourceNode) node).getContextName());
             ode.updateModificationDate(projectId, date);
             executeNextCommand(node);
           }

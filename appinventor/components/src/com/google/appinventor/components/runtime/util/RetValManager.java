@@ -22,6 +22,9 @@ import android.util.Log;
 
 public class RetValManager {
 
+  public static final String CONTEXT_TYPE_FORM = "Form";
+  public static final String CONTEXT_TYPE_TASK = "Task";
+
   private static final String LOG_TAG = "RetValManager";
   private static final Object semaphore = new Object();
   private static final long TENSECONDS = 10000; // Ten Seconds (in milliseconds)
@@ -44,10 +47,12 @@ public class RetValManager {
    * @param ok Indication of success or failure
    * @param item The item to append
    */
-  public static void appendReturnValue(String blockid, String ok, String item) {
+  public static void appendReturnValue(String contextName, String contextType, String blockid, String ok, String item) {
     synchronized (semaphore) {
       JSONObject retval = new JSONObject();
       try {
+        retval.put("contextname", contextName);
+        retval.put("contexttype", contextType);
         retval.put("status", ok);
         retval.put("type", "return");
         retval.put("value", item);
@@ -64,10 +69,12 @@ public class RetValManager {
     }
   }
 
-  public static void sendError(String error) {
+  public static void sendError(String contextName, String contextType, String error) {
     synchronized (semaphore) {
       JSONObject retval = new JSONObject();
       try {
+        retval.put("contextname", contextName);
+        retval.put("contexttype", contextType);
         retval.put("status", "OK");
         retval.put("type", "error");
         retval.put("value", error);
@@ -86,13 +93,16 @@ public class RetValManager {
   /*
    * pushScreen -- Push to a new Screen
    *
+   * @param contextName The name of context from where this is being called
    * @param screenName The screen to go to.
    * @param value The value to hand it
    */
-  public static void pushScreen(String screenName, Object value) {
+  public static void pushScreen(String contextName, String contextType, String screenName, Object value) {
     synchronized (semaphore) {
       JSONObject retval = new JSONObject();
       try {
+        retval.put("contextname", contextName);
+        retval.put("contexttype", contextType);
         retval.put("status", "OK");
         retval.put("type", "pushScreen");
         retval.put("screen", screenName);
@@ -113,13 +123,15 @@ public class RetValManager {
   /*
    * popScreen -- Pop to a Previous Screen
    *
-   * @param screenName The screen to go to.
+   * @param contextName The name of context from where this is being called
    * @param value The value to hand it
    */
-  public static void popScreen(String value) {
+  public static void popScreen(String contextName, String contextType, String value) {
     synchronized (semaphore) {
       JSONObject retval = new JSONObject();
       try {
+        retval.put("contextname", contextName);
+        retval.put("contexttype", contextType);
         retval.put("status", "OK");
         retval.put("type", "popScreen");
         if (value != null)

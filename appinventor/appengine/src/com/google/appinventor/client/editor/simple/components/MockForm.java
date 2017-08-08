@@ -44,7 +44,7 @@ import com.google.gwt.user.client.ui.TreeItem;
  * Normal size is a 1:1 with pixels on a device with dpi:160. We use that as the baseline for the
  * browser too. All UI elements should be scaled to DP for buckets other than 'normal'.
  */
-public final class MockForm extends MockContainer {
+public final class MockForm extends MockContext {
 
   /*
    * Widget for the mock form title bar.
@@ -190,7 +190,7 @@ public final class MockForm extends MockContainer {
   int usableScreenHeight;       // TEMP: Make package visible so we can use it MockHVLayoutBase
 
   // Set of listeners for any changes of the form
-  final HashSet<FormChangeListener> formChangeListeners = new HashSet<FormChangeListener>();
+  final HashSet<ContextChangeListener> formChangeListeners = new HashSet<ContextChangeListener>();
 
   // Don't access the verticalScrollbarWidth field directly. Use getVerticalScrollbarWidth().
   private static int verticalScrollbarWidth;
@@ -364,8 +364,18 @@ public final class MockForm extends MockContainer {
   }
 
   @Override
-  public boolean isForm() {
+  public final MockTask getTask() {
+    return null;
+  }
+
+  @Override
+  public final boolean isForm() {
     return true;
+  }
+
+  @Override
+  public final boolean isTask() {
+    return false;
   }
 
 
@@ -701,20 +711,20 @@ public final class MockForm extends MockContainer {
   }
 
   /**
-   * Adds an {@link FormChangeListener} to the listener set if it isn't already in there.
+   * Adds an {@link ContextChangeListener} to the listener set if it isn't already in there.
    *
-   * @param listener  the {@code FormChangeListener} to be added
+   * @param listener  the {@code ContextChangeListener} to be added
    */
-  public void addFormChangeListener(FormChangeListener listener) {
+  public void addContextChangeListener(ContextChangeListener listener) {
     formChangeListeners.add(listener);
   }
 
   /**
-   * Removes an {@link FormChangeListener} from the listener list.
+   * Removes an {@link ContextChangeListener} from the listener list.
    *
-   * @param listener  the {@code FormChangeListener} to be removed
+   * @param listener  the {@code ContextChangeListener} to be removed
    */
-  public void removeFormChangeListener(FormChangeListener listener) {
+  public void removeContextChangeListener(ContextChangeListener listener) {
     formChangeListeners.remove(listener);
   }
 
@@ -723,7 +733,7 @@ public final class MockForm extends MockContainer {
    */
   protected void fireComponentPropertyChanged(MockComponent component,
       String propertyName, String propertyValue) {
-    for (FormChangeListener listener : formChangeListeners) {
+    for (ContextChangeListener listener : formChangeListeners) {
       listener.onComponentPropertyChanged(component, propertyName, propertyValue);
     }
   }
@@ -732,7 +742,7 @@ public final class MockForm extends MockContainer {
    * Triggers a component removed event to be sent to the listener on the listener list.
    */
   protected void fireComponentRemoved(MockComponent component, boolean permanentlyDeleted) {
-    for (FormChangeListener listener : formChangeListeners) {
+    for (ContextChangeListener listener : formChangeListeners) {
       listener.onComponentRemoved(component, permanentlyDeleted);
     }
   }
@@ -741,7 +751,7 @@ public final class MockForm extends MockContainer {
    * Triggers a component added event to be sent to the listener on the listener list.
    */
   protected void fireComponentAdded(MockComponent component) {
-    for (FormChangeListener listener : formChangeListeners) {
+    for (ContextChangeListener listener : formChangeListeners) {
       listener.onComponentAdded(component);
     }
   }
@@ -750,7 +760,7 @@ public final class MockForm extends MockContainer {
    * Triggers a component renamed event to be sent to the listener on the listener list.
    */
   protected void fireComponentRenamed(MockComponent component, String oldName) {
-    for (FormChangeListener listener : formChangeListeners) {
+    for (ContextChangeListener listener : formChangeListeners) {
       listener.onComponentRenamed(component, oldName);
     }
   }
@@ -759,7 +769,7 @@ public final class MockForm extends MockContainer {
    * Triggers a component selection change event to be sent to the listener on the listener list.
    */
   protected void fireComponentSelectionChange(MockComponent component, boolean selected) {
-    for (FormChangeListener listener : formChangeListeners) {
+    for (ContextChangeListener listener : formChangeListeners) {
       listener.onComponentSelectionChange(component, selected);
     }
   }
@@ -842,10 +852,10 @@ public final class MockForm extends MockContainer {
       setTutorialURLProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_HORIZONTAL_ALIGNMENT)) {
       myLayout.setHAlignmentFlags(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_VERTICAL_ALIGNMENT)) {
       myLayout.setVAlignmentFlags(newValue);
-      refreshForm();
+      refreshContext();
     }
   }
 

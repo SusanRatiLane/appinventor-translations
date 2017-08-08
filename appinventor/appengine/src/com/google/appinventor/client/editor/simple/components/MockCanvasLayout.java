@@ -38,13 +38,13 @@ final class MockCanvasLayout extends MockLayout {
         if (imageUrl != null && !imageUrl.isEmpty()) {
           OdeLog.elog("Error occurred while loading image " + imageUrl);
         }
-        container.refreshForm();
+        container.refreshContext();
       }
     });
     image.addLoadHandler(new LoadHandler() {
       @Override
       public void onLoad(LoadEvent event) {
-        container.refreshForm();
+        container.refreshContext();
       }
     });
   }

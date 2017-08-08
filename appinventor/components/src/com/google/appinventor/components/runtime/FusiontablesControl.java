@@ -224,7 +224,7 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
   public FusiontablesControl(ComponentContainer componentContainer) {
     super(componentContainer.$form());
     this.container = componentContainer;
-    this.activity = componentContainer.$context();
+    this.activity = componentContainer.$form();
     requestHelper = createClientLoginHelper(DIALOG_TEXT, FUSIONTABLE_SERVICE);
     query = DEFAULT_QUERY;
 

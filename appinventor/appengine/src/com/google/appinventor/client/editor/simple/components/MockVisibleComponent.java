@@ -124,12 +124,12 @@ public abstract class MockVisibleComponent extends MockComponent {
     super.onPropertyChange(propertyName, newValue);
 
     if (propertyName.equals(PROPERTY_NAME_WIDTH)) {
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_HEIGHT)) {
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_VISIBLE)) {
       setVisibleProperty(newValue);
-      refreshForm();
+      refreshContext();
     }
   }
 }

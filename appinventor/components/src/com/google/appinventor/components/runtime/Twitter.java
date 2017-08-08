@@ -313,7 +313,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
               .parse(authURL));
           browserIntent.setClassName(container.$context(),
               WEBVIEW_ACTIVITY_CLASS);
-          container.$context().startActivityForResult(browserIntent,
+          container.$form().startActivityForResult(browserIntent,
               requestCode);
         } catch (TwitterException e) {
           Log.i("Twitter", "Got exception: " + e.getMessage());

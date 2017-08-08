@@ -67,7 +67,7 @@ public final class MockComponentsUtil {
     // away, we will be told the image is 0 x 0 because it isn't loaded yet.
     // I have not been able to figure out how to get the browser to give us a onLoad (or
     // similar event) when the image is loaded. If we could get such an event, we can
-    // call refreshForm in the container and win.
+    // call refreshContext in the container and win.
     //
     // The code below fudges this by setting up a time to fire after 1 second with the
     // hope that the image will have been loaded by then and its dimensions known.
@@ -76,13 +76,13 @@ public final class MockComponentsUtil {
     Timer t = new Timer() {
         @Override
         public void run() {
-          container.refreshForm();
+          container.refreshContext();
         }
       };
 //    widget.addHandler(new LoadHandler() {
 //        @Override
 //        public void onLoad(LoadEvent event) {
-//          container.refreshForm();
+//          container.refreshContext();
 //        }
 //      }, new Type<LoadHandler>());
     setWidgetBackgroundImage(widget, image);

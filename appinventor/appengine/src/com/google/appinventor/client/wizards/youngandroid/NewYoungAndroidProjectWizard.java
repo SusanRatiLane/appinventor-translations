@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2012 MIT, All rights reserved
+// Copyright 2011-2017 MIT, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -126,7 +126,7 @@ public final class NewYoungAndroidProjectWizard extends NewProjectWizard {
                 Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
                     @Override
                     public void execute() {
-                      if (Ode.getInstance().screensLocked()) { // Wait until I/O finished
+                      if (Ode.getInstance().contextsLocked()) { // Wait until I/O finished
                         Scheduler.get().scheduleDeferred(this); // on other project
                       } else {
                         Ode.getInstance().openYoungAndroidProjectInDesigner(project);

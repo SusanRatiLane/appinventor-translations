@@ -15,7 +15,7 @@ import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.editor.simple.SimpleEditor;
 import com.google.appinventor.client.editor.simple.components.utils.PropertiesUtil;
 import com.google.appinventor.client.editor.youngandroid.YaBlocksEditor;
-import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
+import com.google.appinventor.client.editor.youngandroid.YaContextEditor;
 import com.google.appinventor.client.explorer.SourceStructureExplorerItem;
 import com.google.appinventor.client.explorer.project.Project;
 import com.google.appinventor.client.output.OdeLog;
@@ -86,7 +86,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   public static final String PROPERTY_NAME_UUID = "Uuid";
   protected static final List<String> YAIL_NAMES = Arrays.asList("CsvUtil", "Double", "Float",
     "Integer", "JavaCollection", "JavaIterator", "KawaEnvironment", "Long", "Short",
-    "SimpleForm", "String", "Pattern", "YailList", "YailNumberToString", "YailRuntimeError");
+    "SimpleForm", "SimpleTask", "SimpleReplTask", "String", "Pattern", "YailList", "YailNumberToString",
+     "YailRuntimeError");
   private static final int ICON_IMAGE_WIDTH = 16;
   private static final int ICON_IMAGE_HEIGHT = 16;
   public static final int BORDER_SIZE = 2 + 2; // see ode-SimpleMockComponent in Ya.css
@@ -160,7 +161,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
         hide();
         String oldName = getName();
         changeProperty(PROPERTY_NAME_NAME, newName);
-        getForm().fireComponentRenamed(MockComponent.this, oldName);
+        getContext().fireComponentRenamed(MockComponent.this, oldName);
       } else {
         newNameTextBox.setFocus(true);
         newNameTextBox.selectAll();
@@ -222,7 +223,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   // case of no children
   private static final List<MockComponent> NO_CHILDREN = Collections.emptyList();
 
-  // Editor of Simple form source file the component belongs to
+  // Editor of Simple context source file the component belongs to
   protected final SimpleEditor editor;
 
   private final String type;
@@ -242,8 +243,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
   private DragSourceSupport dragSourceSupport;
 
-  // Component container the component belongs to (this will be null for the root component aka the
-  // form)
+  // Component container the component belongs to (this will be null for the root component aka
+  // form or task)
   private MockContainer container;
 
   private MouseListenerCollection mouseListeners = new MouseListenerCollection();
@@ -284,24 +285,24 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
       @Override
       public boolean canRename() {
-        return !isForm();
+        return !isContext();
       }
 
       @Override
       public void rename() {
-        if (!isForm()) {
+        if (!isContext()) {
           new RenameDialog(getName()).center();
         }
       }
 
       @Override
       public boolean canDelete() {
-        return !isForm();
+        return !isContext();
       }
 
       @Override
       public void delete() {
-        if (!isForm()) {
+        if (!isContext()) {
           if (Window.confirm(MESSAGES.reallyDeleteComponent())) {
             MockComponent.this.delete();
           }
@@ -317,8 +318,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     // visual aspects according to changes of its properties
     properties.addPropertyChangeListener(this);
 
-    // Allow dragging this component in a drag-and-drop action if this is not the root form
-    if (!isForm()) {
+    // Allow dragging this component in a drag-and-drop action if this is not the root context
+    if (!isContext()) {
       dragSourceSupport = new DragSourceSupport(this);
       addMouseListener(dragSourceSupport);
     }
@@ -348,7 +349,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     // already used UUIDs
     // Set the component's UUID
     // The default value here can be anything except 0, because YoungAndroidProjectServce
-    // creates forms with an initial Uuid of 0, and Properties.java doesn't encode
+    // creates contexts with an initial Uuid of 0, and Properties.java doesn't encode
     // default values when it generates JSON for a component.
     addProperty(PROPERTY_NAME_UUID, "-1", null, new TextPropertyEditor());
     changeProperty(PROPERTY_NAME_UUID, "" + Random.nextInt());
@@ -562,6 +563,15 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   }
 
   /**
+   * Returns the context containing this component.
+   *
+   * @return  containing context
+   */
+  public MockContext getContext() {
+    return getContainer().getContext();
+  }
+
+  /**
    * Returns the form containing this component.
    *
    * @return  containing form
@@ -570,9 +580,27 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     return getContainer().getForm();
   }
 
+  /**
+   * Returns the task containing this component.
+   *
+   * @return  containing task
+   */
+  public MockTask getTask() {
+    return getContainer().getTask();
+  }
+
+  public boolean isContext() {
+    return false;
+  }
+
   public boolean isForm() {
     return false;
   }
+
+  public boolean isTask() {
+    return false;
+  }
+
 
   /**
    * Indicates whether a component has a visible representation.
@@ -588,7 +616,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * Selects this component in the visual editor.
    */
   public final void select() {
-    getForm().setSelectedComponent(this);
+    getContext().setSelectedComponent(this);
   }
 
   /**
@@ -605,14 +633,14 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     } else {
       removeStyleDependentName("selected");
     }
-    getForm().fireComponentSelectionChange(this, selected);
+    getContext().fireComponentSelectionChange(this, selected);
   }
 
   /**
    * Returns whether this component is selected.
    */
   public boolean isSelected() {
-    return (getForm().getSelectedComponent() == this);
+    return (getContext().getSelectedComponent() == this);
   }
 
   /**
@@ -692,7 +720,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   }
 
   /**
-   * If this component isn't a Form, and this component's type isn't already in typesAndIcons,
+   * If this component isn't a Context, and this component's type isn't already in typesAndIcons,
    * adds this component's type name as a key to typesAndIcons, mapped to the HTML string used
    * to display the component type's icon. Subclasses that contain components should override
    * this to add their own info as well as that for their contained components.
@@ -700,7 +728,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    */
   public void collectTypesAndIcons(Map<String, String> typesAndIcons) {
     String name = getVisibleTypeName();
-    if (!isForm() && !typesAndIcons.containsKey(name)) {
+    if (!isContext() && !typesAndIcons.containsKey(name)) {
       String imageHTML = new ClippedImagePrototype(iconImage.getUrl(), iconImage.getOriginLeft(),
           iconImage.getOriginTop(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT).getHTML();
       typesAndIcons.put(name, imageHTML);
@@ -848,8 +876,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
   @Override
   public DropTarget[] getDropTargets() {
-    final List<DropTarget> targetsWithinForm = getForm().getDropTargetsWithin();
-    return targetsWithinForm.toArray(new DropTarget[targetsWithinForm.size()]);
+    final List<DropTarget> targetsWithinContext = getContext().getDropTargetsWithin();
+    return targetsWithinContext.toArray(new DropTarget[targetsWithinContext.size()]);
   }
 
   @Override
@@ -919,29 +947,29 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   }
 
   /**
-   * Refreshes the form.
+   * Refreshes the context.
    *
    * <p>This method should be called whenever a property that affects the size
-   * of the component is changed. It calls refreshForm(false) which permits
+   * of the component is changed. It calls refreshContext(false) which permits
    * throttling.
    */
-  final void refreshForm() {
-    refreshForm(false);
+  final void refreshContext() {
+    refreshContext(false);
   }
 
   /*
-   * Refresh the current form. If force is true, we bypass the
+   * Refresh the current context. If force is true, we bypass the
    * throttling code. This is needed by MockImageBase because it
-   * *must* refresh the form before resizing loaded images.
+   * *must* refresh the context before resizing loaded images.
    *
    */
-  final void refreshForm(boolean force) {
+  final void refreshContext(boolean force) {
     if (isAttached()) {
-      if (getContainer() != null || isForm()) {
+      if ((getContainer() != null) || isContext()) {
         if (force) {
-          getForm().doRefresh();
+          getContext().doRefresh();
         } else {
-          getForm().refresh();
+          getContext().refresh();
         }
       }
     }
@@ -953,16 +981,16 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   public void onPropertyChange(String propertyName, String newValue) {
     if (propertyName.equals(PROPERTY_NAME_NAME)) {
       setTitle(newValue);
-    } else if (getContainer() != null || isForm()) {
-      /* If we've already placed the component onto a Form (and therefore
+    } else if (getContainer() != null || isContext()) {
+      /* If we've already placed the component onto a Context (and therefore
        * into a container) then call fireComponentPropertyChanged().
        * It's not really an instantiated component until its been added to
        * a container. If we don't make this test then we end up calling
        * fireComponentPropertyChanged when we start dragging the component from
-       * the palette. We need to explicitly trigger on Form here, because forms
+       * the palette. We need to explicitly trigger on Context here, because contexts
        * are not in containers.
        */
-      getForm().fireComponentPropertyChanged(this, propertyName, newValue);
+      getContext().fireComponentPropertyChanged(this, propertyName, newValue);
     }
   }
 
@@ -974,7 +1002,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   public void delete() {
     OdeLog.log("Got delete component for " + this.getName());
     this.editor.getProjectEditor().clearLocation(getName());
-    getForm().select();
+    getContext().select();
     // Pass true to indicate that the component is being permanently deleted.
     getContainer().removeComponent(this, true);
     // tell the component its been removed, so it can remove children's blocks
@@ -1061,7 +1089,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     }
     for (PropertyDefinition property : newProperties) {
       if (toBeAdded.contains(property.getName())) {
-        PropertyEditor propertyEditor = PropertiesUtil.createPropertyEditor(property.getEditorType(), (YaFormEditor) editor);
+        PropertyEditor propertyEditor = PropertiesUtil.createPropertyEditor(property.getEditorType(), (YaContextEditor) editor);
         addProperty(property.getName(), property.getDefaultValue(), property.getCaption(), propertyEditor);
       }
     }

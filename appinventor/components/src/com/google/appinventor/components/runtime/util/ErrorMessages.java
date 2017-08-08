@@ -85,6 +85,7 @@ public final class ErrorMessages {
   // ActivityStarter errors
   public static final int ERROR_ACTIVITY_STARTER_NO_CORRESPONDING_ACTIVITY = 601;
   public static final int ERROR_ACTIVITY_STARTER_NO_ACTION_INFO = 602;
+  public static final int ERROR_ACTIVITY_STARTER_NO_CALLING_ACTIVITY = 603;
   // Media errors
   public static final int ERROR_UNABLE_TO_LOAD_MEDIA = 701;
   public static final int ERROR_UNABLE_TO_PREPARE_MEDIA = 702;
@@ -368,6 +369,8 @@ public final class ErrorMessages {
         "No corresponding activity was found.");
     errorMessages.put(ERROR_ACTIVITY_STARTER_NO_ACTION_INFO,
         "No Action information in ActivityStarter was found.");
+    errorMessages.put(ERROR_ACTIVITY_STARTER_NO_CALLING_ACTIVITY,
+        "Should not call Activity without current Activity");
     // Media errors
     errorMessages.put(ERROR_UNABLE_TO_LOAD_MEDIA,
         "Unable to load %s.");

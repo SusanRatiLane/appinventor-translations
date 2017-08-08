@@ -2,23 +2,25 @@
 $Source $Yail
 |#
 
-(define-repl-form edu.mit.appinventor.aicompanion3.Screen1 Screen1)
 (require <com.google.youngandroid.runtime>)
+(define-repl-form edu.mit.appinventor.aicompanion3.Screen1 Screen1)
 
-(def (p$badversion )  (set-and-coerce-property! 'ErrorLabel 'Text "The version of App Inventor you are using is not compatible with this Companion app. " 'text))
-(def (p$callrendezvous $code)  (set-and-coerce-property! 'Web1 'Url (call-yail-primitive string-append (*list-for-runtime* "http://" (get-var g$rendezvousServer) "/rendezvous/" ) '(text text text ) "join") 'text)(call-component-method 'Web1 'PostText (*list-for-runtime* (call-component-method 'Web1 'BuildRequestData (*list-for-runtime* (call-yail-primitive make-yail-list (*list-for-runtime* (call-yail-primitive make-yail-list (*list-for-runtime* "key" (lexical-value $code) ) '(any any ) "make a list") (call-yail-primitive make-yail-list (*list-for-runtime* "ipaddr" (call-component-method 'PhoneStatus1 'GetWifiIpAddress (*list-for-runtime*) '()) ) '(any any ) "make a list") (call-yail-primitive make-yail-list (*list-for-runtime* "port" "9987" ) '(any any ) "make a list") ) '(any any any ) "make a list")) '(list))) '(text)))
-(def (p$checkWiFi )  (if (call-yail-primitive yail-equal? (*list-for-runtime* 1 (call-yail-primitive string-starts-at (*list-for-runtime* (call-component-method 'PhoneStatus1 'GetWifiIpAddress (*list-for-runtime*) '()) "Error") '(text text) "starts at")) '(any any) "=") (begin   (call-component-method 'Notifier1 'ShowChooseDialog (*list-for-runtime* "Your Device does not appear to have a WiFi Connection"  "No WiFi"  "Continue without WiFi"  "Exit"  #f) '(text text text text boolean)))))
-(def (p$getRendezvousServer ) (call-component-method 'TinyDB1 'GetValue (*list-for-runtime* "rendezvousServer"  (get-var g$rendezvousServer)) '(text any)))
-(def (p$isAPK $input) (call-yail-primitive yail-equal? (*list-for-runtime* (call-yail-primitive string-starts-at (*list-for-runtime* (lexical-value $input) "http://") '(text text) "starts at") 1) '(any any) "="))
-(def (p$processcode $x)  (if ((get-var p$isAPK) (lexical-value $x)) (begin   (call-component-method 'PhoneStatus1 'installURL (*list-for-runtime* (lexical-value $x)) '(text))) (begin   ((get-var p$callrendezvous) (call-component-method 'PhoneStatus1 'setHmacSeedReturnCode (*list-for-runtime* ((get-var p$extractRendezvousServer) (lexical-value $x))) '(text)))(call-component-method 'PhoneStatus1 'startHTTPD (*list-for-runtime* #f) '(boolean)))))
-(def (p$extractRendezvousServer $code) (if (call-yail-primitive string-contains (*list-for-runtime* (lexical-value $code) ";") '(text text) "contains") (let ( ($codes (call-yail-primitive string-split (*list-for-runtime* (lexical-value $code) ";") '(text text) "split"))  ) (begin   ((get-var p$setRendezvousServer) (call-yail-primitive yail-list-get-item (*list-for-runtime* (lexical-value $codes) 1) '(list number) "select list item") #f) (call-yail-primitive yail-list-get-item (*list-for-runtime* (lexical-value $codes) 2) '(list number) "select list item")) ) (lexical-value $code)))
-(def (p$resetRendezvousServer )  (set-var! g$rendezvousServer "rendezvous.appinventor.mit.edu")(call-component-method 'TinyDB1 'ClearTag (*list-for-runtime* "rendezvousServer") '(text)))
-(def (p$setRendezvousServer $value $permanent)  (set-var! g$rendezvousServer (lexical-value $value))(if (lexical-value $permanent) (begin   (call-component-method 'TinyDB1 'StoreValue (*list-for-runtime* "rendezvousServer"  (lexical-value $value)) '(text any)))))
-(def (p$startdirectconnect )  (let ( ($ignore "")  )   (set-lexical! $ignore (call-component-method 'PhoneStatus1 'setHmacSeedReturnCode (*list-for-runtime* "emulator") '(text))) )(call-component-method 'PhoneStatus1 'startHTTPD (*list-for-runtime* #t) '(boolean)))
-(def g$rendezvousServer "rendezvous.appinventor.mit.edu")
+(def Screen1 (p$badversion )  (set-and-coerce-property! 'ErrorLabel 'Text "The version of App Inventor you are using is not compatible with this Companion app. " 'text))
+(def Screen1 (p$callrendezvous $code)  (set-and-coerce-property! 'Web1 'Url (call-yail-primitive string-append (*list-for-runtime* "http://" (get-var Screen1 g$rendezvousServer) "/rendezvous/" ) '(text text text ) "join") 'text)(call-component-method 'Screen1 'Web1 'PostText (*list-for-runtime* (call-component-method 'Screen1 'Web1 'BuildRequestData (*list-for-runtime* (call-yail-primitive make-yail-list (*list-for-runtime* (call-yail-primitive make-yail-list (*list-for-runtime* "key" (lexical-value $code) ) '(any any ) "make a list") (call-yail-primitive make-yail-list (*list-for-runtime* "ipaddr" (call-component-method 'Screen1 'PhoneStatus1 'GetWifiIpAddress (*list-for-runtime*) '()) ) '(any any ) "make a list") (call-yail-primitive make-yail-list (*list-for-runtime* "port" "9987" ) '(any any ) "make a list") ) '(any any any ) "make a list")) '(list))) '(text)))
+(def Screen1 (p$checkWiFi )  (if (call-yail-primitive yail-equal? (*list-for-runtime* 1 (call-yail-primitive string-starts-at (*list-for-runtime* (call-component-method 'Screen1 'PhoneStatus1 'GetWifiIpAddress (*list-for-runtime*) '()) "Error") '(text text) "starts at")) '(any any) "=") (begin   (call-component-method 'Screen1 'Notifier1 'ShowChooseDialog (*list-for-runtime* "Your Device does not appear to have a WiFi Connection"  "No WiFi"  "Continue without WiFi"  "Exit"  #f) '(text text text text boolean)))))
+(def Screen1 (p$getRendezvousServer ) (call-component-method 'Screen1 'TinyDB1 'GetValue (*list-for-runtime* "rendezvousServer"  (get-var Screen1 g$rendezvousServer)) '(text any)))
+(def Screen1 (p$isAPK $input) (call-yail-primitive yail-equal? (*list-for-runtime* (call-yail-primitive string-starts-at (*list-for-runtime* (lexical-value $input) "http://") '(text text) "starts at") 1) '(any any) "="))
+(def Screen1 (p$processcode $x)  (if ((get-var Screen1 p$isAPK) (lexical-value $x)) (begin   (call-component-method 'Screen1 'PhoneStatus1 'installURL (*list-for-runtime* (lexical-value $x)) '(text))) (begin   ((get-var Screen1 p$callrendezvous) (call-component-method 'Screen1 'PhoneStatus1 'setHmacSeedReturnCode (*list-for-runtime* ((get-var Screen1 p$extractRendezvousServer) (lexical-value $x))) '(text)))(call-component-method 'Screen1 'PhoneStatus1 'startHTTPD (*list-for-runtime* #f) '(boolean)))))
+(def Screen1 (p$extractRendezvousServer $code) (if (call-yail-primitive string-contains (*list-for-runtime* (lexical-value $code) ";") '(text text) "contains") (let ( ($codes (call-yail-primitive string-split (*list-for-runtime* (lexical-value $code) ";") '(text text) "split"))  ) (begin   ((get-var Screen1 p$setRendezvousServer) (call-yail-primitive yail-list-get-item (*list-for-runtime* (lexical-value $codes) 1) '(list number) "select list item") #f) (call-yail-primitive yail-list-get-item (*list-for-runtime* (lexical-value $codes) 2) '(list number) "select list item")) ) (lexical-value $code)))
+(def Screen1 (p$resetRendezvousServer )  (set-var! Screen1 g$rendezvousServer "rendezvous.appinventor.mit.edu")(call-component-method 'Screen1 'TinyDB1 'ClearTag (*list-for-runtime* "rendezvousServer") '(text)))
+(def Screen1 (p$setRendezvousServer $value $permanent)  (set-var! Screen1 g$rendezvousServer (lexical-value $value))(if (lexical-value $permanent) (begin   (call-component-method 'Screen1 'TinyDB1 'StoreValue (*list-for-runtime* "rendezvousServer"  (lexical-value $value)) '(text any)))))
+(def Screen1 (p$startdirectconnect )  (let ( ($ignore "")  )   (set-lexical! $ignore (call-component-method 'Screen1 'PhoneStatus1 'setHmacSeedReturnCode (*list-for-runtime* "emulator") '(text))) )(call-component-method 'Screen1 'PhoneStatus1 'startHTTPD (*list-for-runtime* #t) '(boolean)))
+(def Screen1 g$rendezvousServer "rendezvous.appinventor.mit.edu")
 ;;; Screen1
 
-(do-after-form-creation (set-and-coerce-property! 'Screen1 'AlignHorizontal 3 'number)
+(do-after-form-creation Screen1
+ (register-form 'Screen1)'
+ (set-and-coerce-property! 'Screen1 'AlignHorizontal 3 'number)
  (set-and-coerce-property! 'Screen1 'BackgroundColor #x00FFFFFF 'number)
  (set-and-coerce-property! 'Screen1 'BackgroundImage "mooning.png" 'text)
  (set-and-coerce-property! 'Screen1 'Icon "AI2Companion-Icon.png" 'text)
@@ -26,12 +28,14 @@ $Source $Yail
  (set-and-coerce-property! 'Screen1 'Title "MIT App Inventor 2 Companion" 'text)
 )
 
-(define-event Screen1 Initialize()(set-this-form)
-    (set-var! g$rendezvousServer ((get-var p$getRendezvousServer) ))(set-and-coerce-property! 'ScanButton 'BackgroundColor -16738048 'number)(set-and-coerce-property! 'ConnectButton 'BackgroundColor -13312 'number)(if (call-component-method 'PhoneStatus1 'isDirect (*list-for-runtime*) '()) (begin   (set-and-coerce-property! 'PhonePanel 'Visible #f 'boolean)(set-and-coerce-property! 'EmulatorPanel 'Visible #t 'boolean)(set-and-coerce-property! 'IPContainer 'Visible #f 'boolean)((get-var p$startdirectconnect) )) (begin   (set-and-coerce-property! 'PhonePanel 'Visible #t 'boolean)(set-and-coerce-property! 'EmulatorPanel 'Visible #f 'boolean)(set-and-coerce-property! 'ipaddrlabel 'Text (call-component-method 'PhoneStatus1 'GetWifiIpAddress (*list-for-runtime*) '()) 'text)(set-and-coerce-property! 'IPContainer 'Visible #t 'boolean)((get-var p$checkWiFi) )))(call-component-method 'PhoneStatus1 'setAssetsLoaded (*list-for-runtime*) '())(set-and-coerce-property! 'versionlabel 'Text (call-component-method 'PhoneStatus1 'getVersionName (*list-for-runtime*) '()) 'text))
+(define-event Screen1 Screen1 Initialize()(set-this-form)
+    (set-var! Screen1 g$rendezvousServer ((get-var Screen1 p$getRendezvousServer) ))(set-and-coerce-property! 'ScanButton 'BackgroundColor -16738048 'number)(set-and-coerce-property! 'ConnectButton 'BackgroundColor -13312 'number)(if (call-component-method 'Screen1 'PhoneStatus1 'isDirect (*list-for-runtime*) '()) (begin   (set-and-coerce-property! 'PhonePanel 'Visible #f 'boolean)(set-and-coerce-property! 'EmulatorPanel 'Visible #t 'boolean)(set-and-coerce-property! 'IPContainer 'Visible #f 'boolean)((get-var Screen1 p$startdirectconnect) )) (begin   (set-and-coerce-property! 'PhonePanel 'Visible #t 'boolean)(set-and-coerce-property! 'EmulatorPanel 'Visible #f 'boolean)(set-and-coerce-property! 'ipaddrlabel 'Text (call-component-method 'Screen1 'PhoneStatus1 'GetWifiIpAddress (*list-for-runtime*) '()) 'text)(set-and-coerce-property! 'IPContainer 'Visible #t 'boolean)((get-var Screen1 p$checkWiFi) )))(call-component-method 'Screen1 'PhoneStatus1 'setAssetsLoaded (*list-for-runtime*) '())(set-and-coerce-property! 'versionlabel 'Text (call-component-method 'Screen1 'PhoneStatus1 'getVersionName (*list-for-runtime*) '()) 'text))
 ;;; SettingsPanel
 
-(add-component Screen1 com.google.appinventor.components.runtime.VerticalArrangement SettingsPanel 
+(add-component Screen1 Screen1 com.google.appinventor.components.runtime.VerticalArrangement SettingsPanel
 (set-and-coerce-property! 'SettingsPanel 'AlignHorizontal 3 'number)
+
+(set-and-coerce-property! 'SettingsPanel 'Visible #f 'boolean)
 
 (set-and-coerce-property! 'SettingsPanel 'Width -2 'number)
 
@@ -41,7 +45,7 @@ $Source $Yail
 
 ;;; settingsintro
 
-(add-component SettingsPanel com.google.appinventor.components.runtime.Label settingsintro 
+(add-component Screen1 SettingsPanel com.google.appinventor.components.runtime.Label settingsintro
 (set-and-coerce-property! 'settingsintro 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'settingsintro 'Text "App Inventor Companion Settings" 'text)
@@ -50,12 +54,12 @@ $Source $Yail
 
 ;;; HorizontalArrangement4
 
-(add-component SettingsPanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement4 
+(add-component Screen1 SettingsPanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement4
 )
 
 ;;; Label12
 
-(add-component HorizontalArrangement4 com.google.appinventor.components.runtime.Label Label12 
+(add-component Screen1 HorizontalArrangement4 com.google.appinventor.components.runtime.Label Label12
 (set-and-coerce-property! 'Label12 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label12 'Text "Set Rendezvous Server: " 'text)
@@ -64,37 +68,37 @@ $Source $Yail
 
 ;;; rendezvoustextbox
 
-(add-component HorizontalArrangement4 com.google.appinventor.components.runtime.TextBox rendezvoustextbox 
+(add-component Screen1 HorizontalArrangement4 com.google.appinventor.components.runtime.TextBox rendezvoustextbox
 (set-and-coerce-property! 'rendezvoustextbox 'Hint "Hint for TextBox1" 'text)
 
 )
 
 ;;; HorizontalArrangement5
 
-(add-component SettingsPanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement5 
+(add-component Screen1 SettingsPanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement5
 )
 
 ;;; SetRenzvousServer
 
-(add-component HorizontalArrangement5 com.google.appinventor.components.runtime.Button SetRenzvousServer 
+(add-component Screen1 HorizontalArrangement5 com.google.appinventor.components.runtime.Button SetRenzvousServer
 (set-and-coerce-property! 'SetRenzvousServer 'Text "Set Rendezvous Server" 'text)
 
 )
 
-(define-event SetRenzvousServer Click()(set-this-form)
-    ((get-var p$setRendezvousServer) (get-property 'rendezvoustextbox 'Text) #t)(call-component-method 'rendezvoustextbox 'HideKeyboard (*list-for-runtime*) '())(set-and-coerce-property! 'SettingsPanel 'Visible #f 'boolean)(set-and-coerce-property! 'MainPanel 'Visible #t 'boolean))
+(define-event Screen1 SetRenzvousServer Click()(set-this-form)
+    ((get-var Screen1 p$setRendezvousServer) (get-property 'rendezvoustextbox 'Text) #t)(call-component-method 'Screen1 'rendezvoustextbox 'HideKeyboard (*list-for-runtime*) '())(set-and-coerce-property! 'SettingsPanel 'Visible #f 'boolean)(set-and-coerce-property! 'MainPanel 'Visible #t 'boolean))
 ;;; ResetRendezvousServer
 
-(add-component HorizontalArrangement5 com.google.appinventor.components.runtime.Button ResetRendezvousServer 
+(add-component Screen1 HorizontalArrangement5 com.google.appinventor.components.runtime.Button ResetRendezvousServer
 (set-and-coerce-property! 'ResetRendezvousServer 'Text "Reset to Default" 'text)
 
 )
 
-(define-event ResetRendezvousServer Click()(set-this-form)
-    ((get-var p$resetRendezvousServer) )(set-and-coerce-property! 'SettingsPanel 'Visible #f 'boolean)(set-and-coerce-property! 'MainPanel 'Visible #t 'boolean))
+(define-event Screen1 ResetRendezvousServer Click()(set-this-form)
+    ((get-var Screen1 p$resetRendezvousServer) )(set-and-coerce-property! 'SettingsPanel 'Visible #f 'boolean)(set-and-coerce-property! 'MainPanel 'Visible #t 'boolean))
 ;;; MainPanel
 
-(add-component Screen1 com.google.appinventor.components.runtime.VerticalArrangement MainPanel 
+(add-component Screen1 Screen1 com.google.appinventor.components.runtime.VerticalArrangement MainPanel
 (set-and-coerce-property! 'MainPanel 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'MainPanel 'Width -2 'number)
@@ -103,7 +107,7 @@ $Source $Yail
 
 ;;; Header
 
-(add-component MainPanel com.google.appinventor.components.runtime.HorizontalArrangement Header 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.HorizontalArrangement Header
 (set-and-coerce-property! 'Header 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'Header 'Width -2 'number)
@@ -112,14 +116,14 @@ $Source $Yail
 
 ;;; Image1
 
-(add-component Header com.google.appinventor.components.runtime.Image Image1 
+(add-component Screen1 Header com.google.appinventor.components.runtime.Image Image1
 (set-and-coerce-property! 'Image1 'Picture "Title.png" 'text)
 
 )
 
 ;;; EmulatorPanel
 
-(add-component MainPanel com.google.appinventor.components.runtime.VerticalArrangement EmulatorPanel 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.VerticalArrangement EmulatorPanel
 (set-and-coerce-property! 'EmulatorPanel 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'EmulatorPanel 'Width -2 'number)
@@ -128,7 +132,7 @@ $Source $Yail
 
 ;;; Label5
 
-(add-component EmulatorPanel com.google.appinventor.components.runtime.Label Label5 
+(add-component Screen1 EmulatorPanel com.google.appinventor.components.runtime.Label Label5
 (set-and-coerce-property! 'Label5 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label5 'Text "Running using the emulator or USB,\u000awaiting to get blocks..." 'text)
@@ -137,7 +141,7 @@ $Source $Yail
 
 ;;; ErrorLabel
 
-(add-component MainPanel com.google.appinventor.components.runtime.Label ErrorLabel 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.Label ErrorLabel
 (set-and-coerce-property! 'ErrorLabel 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'ErrorLabel 'Width -2 'number)
@@ -150,7 +154,7 @@ $Source $Yail
 
 ;;; PhonePanel
 
-(add-component MainPanel com.google.appinventor.components.runtime.VerticalArrangement PhonePanel 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.VerticalArrangement PhonePanel
 (set-and-coerce-property! 'PhonePanel 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'PhonePanel 'Width -2 'number)
@@ -159,7 +163,7 @@ $Source $Yail
 
 ;;; Spacer1
 
-(add-component PhonePanel com.google.appinventor.components.runtime.Label Spacer1 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.Label Spacer1
 (set-and-coerce-property! 'Spacer1 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Spacer1 'Height 8 'number)
@@ -170,7 +174,7 @@ $Source $Yail
 
 ;;; instructionContainer
 
-(add-component PhonePanel com.google.appinventor.components.runtime.HorizontalArrangement instructionContainer 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.HorizontalArrangement instructionContainer
 (set-and-coerce-property! 'instructionContainer 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'instructionContainer 'Width -2 'number)
@@ -179,7 +183,7 @@ $Source $Yail
 
 ;;; Spacer2
 
-(add-component instructionContainer com.google.appinventor.components.runtime.Label Spacer2 
+(add-component Screen1 instructionContainer com.google.appinventor.components.runtime.Label Spacer2
 (set-and-coerce-property! 'Spacer2 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Spacer2 'Width 8 'number)
@@ -188,14 +192,14 @@ $Source $Yail
 
 ;;; Image2
 
-(add-component instructionContainer com.google.appinventor.components.runtime.Image Image2 
+(add-component Screen1 instructionContainer com.google.appinventor.components.runtime.Image Image2
 (set-and-coerce-property! 'Image2 'Picture "Instructions.png" 'text)
 
 )
 
 ;;; Spacer3
 
-(add-component instructionContainer com.google.appinventor.components.runtime.Label Spacer3 
+(add-component Screen1 instructionContainer com.google.appinventor.components.runtime.Label Spacer3
 (set-and-coerce-property! 'Spacer3 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Spacer3 'Width 8 'number)
@@ -204,7 +208,7 @@ $Source $Yail
 
 ;;; Label10
 
-(add-component PhonePanel com.google.appinventor.components.runtime.Label Label10 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.Label Label10
 (set-and-coerce-property! 'Label10 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label10 'Height 8 'number)
@@ -213,7 +217,7 @@ $Source $Yail
 
 ;;; HorizontalArrangement2
 
-(add-component PhonePanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement2 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement2
 (set-and-coerce-property! 'HorizontalArrangement2 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'HorizontalArrangement2 'Width -2 'number)
@@ -222,7 +226,7 @@ $Source $Yail
 
 ;;; Label7
 
-(add-component HorizontalArrangement2 com.google.appinventor.components.runtime.Label Label7 
+(add-component Screen1 HorizontalArrangement2 com.google.appinventor.components.runtime.Label Label7
 (set-and-coerce-property! 'Label7 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label7 'Width 16 'number)
@@ -231,7 +235,7 @@ $Source $Yail
 
 ;;; CodeBox
 
-(add-component HorizontalArrangement2 com.google.appinventor.components.runtime.TextBox CodeBox 
+(add-component Screen1 HorizontalArrangement2 com.google.appinventor.components.runtime.TextBox CodeBox
 (set-and-coerce-property! 'CodeBox 'FontTypeface 1 'number)
 
 (set-and-coerce-property! 'CodeBox 'Width -2 'number)
@@ -246,7 +250,7 @@ $Source $Yail
 
 ;;; Label8
 
-(add-component HorizontalArrangement2 com.google.appinventor.components.runtime.Label Label8 
+(add-component Screen1 HorizontalArrangement2 com.google.appinventor.components.runtime.Label Label8
 (set-and-coerce-property! 'Label8 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label8 'Width 16 'number)
@@ -255,7 +259,7 @@ $Source $Yail
 
 ;;; Label9
 
-(add-component PhonePanel com.google.appinventor.components.runtime.Label Label9 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.Label Label9
 (set-and-coerce-property! 'Label9 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label9 'Height 4 'number)
@@ -264,7 +268,7 @@ $Source $Yail
 
 ;;; ConnectButton
 
-(add-component PhonePanel com.google.appinventor.components.runtime.Button ConnectButton 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.Button ConnectButton
 (set-and-coerce-property! 'ConnectButton 'BackgroundColor #xFFFFFF00 'number)
 
 (set-and-coerce-property! 'ConnectButton 'FontSize 18 'number)
@@ -275,11 +279,11 @@ $Source $Yail
 
 )
 
-(define-event ConnectButton Click()(set-this-form)
-    (call-component-method 'CodeBox 'HideKeyboard (*list-for-runtime*) '())((get-var p$processcode) (get-property 'CodeBox 'Text)))
+(define-event Screen1 ConnectButton Click()(set-this-form)
+    (call-component-method 'Screen1 'CodeBox 'HideKeyboard (*list-for-runtime*) '())((get-var Screen1 p$processcode) (get-property 'CodeBox 'Text)))
 ;;; Spacer
 
-(add-component PhonePanel com.google.appinventor.components.runtime.Label Spacer 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.Label Spacer
 (set-and-coerce-property! 'Spacer 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Spacer 'Height 8 'number)
@@ -288,7 +292,7 @@ $Source $Yail
 
 ;;; ScanButton
 
-(add-component PhonePanel com.google.appinventor.components.runtime.Button ScanButton 
+(add-component Screen1 PhonePanel com.google.appinventor.components.runtime.Button ScanButton
 (set-and-coerce-property! 'ScanButton 'BackgroundColor #xFF00FF00 'number)
 
 (set-and-coerce-property! 'ScanButton 'FontSize 18 'number)
@@ -299,11 +303,11 @@ $Source $Yail
 
 )
 
-(define-event ScanButton Click()(set-this-form)
-    (call-component-method 'BarcodeScanner1 'DoScan (*list-for-runtime*) '()))
+(define-event Screen1 ScanButton Click()(set-this-form)
+    (call-component-method 'Screen1 'BarcodeScanner1 'DoScan (*list-for-runtime*) '()))
 ;;; IPContainer
 
-(add-component MainPanel com.google.appinventor.components.runtime.HorizontalArrangement IPContainer 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.HorizontalArrangement IPContainer
 (set-and-coerce-property! 'IPContainer 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'IPContainer 'Width -2 'number)
@@ -312,7 +316,7 @@ $Source $Yail
 
 ;;; Label4
 
-(add-component IPContainer com.google.appinventor.components.runtime.Label Label4 
+(add-component Screen1 IPContainer com.google.appinventor.components.runtime.Label Label4
 (set-and-coerce-property! 'Label4 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label4 'Text "Your IP Address is: " 'text)
@@ -321,7 +325,7 @@ $Source $Yail
 
 ;;; ipaddrlabel
 
-(add-component IPContainer com.google.appinventor.components.runtime.Label ipaddrlabel 
+(add-component Screen1 IPContainer com.google.appinventor.components.runtime.Label ipaddrlabel
 (set-and-coerce-property! 'ipaddrlabel 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'ipaddrlabel 'Text "Unknown" 'text)
@@ -330,7 +334,7 @@ $Source $Yail
 
 ;;; HorizontalArrangement3
 
-(add-component MainPanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement3 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.HorizontalArrangement HorizontalArrangement3
 (set-and-coerce-property! 'HorizontalArrangement3 'AlignHorizontal 3 'number)
 
 (set-and-coerce-property! 'HorizontalArrangement3 'Width -2 'number)
@@ -339,7 +343,7 @@ $Source $Yail
 
 ;;; Label11
 
-(add-component HorizontalArrangement3 com.google.appinventor.components.runtime.Label Label11 
+(add-component Screen1 HorizontalArrangement3 com.google.appinventor.components.runtime.Label Label11
 (set-and-coerce-property! 'Label11 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'Label11 'Text "Version: " 'text)
@@ -348,7 +352,7 @@ $Source $Yail
 
 ;;; versionlabel
 
-(add-component HorizontalArrangement3 com.google.appinventor.components.runtime.Label versionlabel 
+(add-component Screen1 HorizontalArrangement3 com.google.appinventor.components.runtime.Label versionlabel
 (set-and-coerce-property! 'versionlabel 'HasMargins #f 'boolean)
 
 (set-and-coerce-property! 'versionlabel 'Text "Unknown" 'text)
@@ -357,33 +361,33 @@ $Source $Yail
 
 ;;; PhoneStatus1
 
-(add-component MainPanel com.google.appinventor.components.runtime.PhoneStatus PhoneStatus1 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.PhoneStatus PhoneStatus1
 )
 
-(define-event PhoneStatus1 OnSettings()(set-this-form)
-    (set-and-coerce-property! 'MainPanel 'Visible #f 'boolean)(set-and-coerce-property! 'SettingsPanel 'Visible #t 'boolean)(set-and-coerce-property! 'rendezvoustextbox 'Text ((get-var p$getRendezvousServer) ) 'text))
+(define-event Screen1 PhoneStatus1 OnSettings()(set-this-form)
+    (set-and-coerce-property! 'MainPanel 'Visible #f 'boolean)(set-and-coerce-property! 'SettingsPanel 'Visible #t 'boolean)(set-and-coerce-property! 'rendezvoustextbox 'Text ((get-var Screen1 p$getRendezvousServer) ) 'text))
 ;;; Web1
 
-(add-component MainPanel com.google.appinventor.components.runtime.Web Web1 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.Web Web1
 )
 
 ;;; BarcodeScanner1
 
-(add-component MainPanel com.google.appinventor.components.runtime.BarcodeScanner BarcodeScanner1 (set-and-coerce-property! 'BarcodeScanner1 'UseExternalScanner #f 'boolean)
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.BarcodeScanner BarcodeScanner1 (set-and-coerce-property! 'BarcodeScanner1 'UseExternalScanner #f 'boolean)
 )
 
-(define-event BarcodeScanner1 AfterScan($result)(set-this-form)
-    (set-and-coerce-property! 'CodeBox 'Text (lexical-value $result) 'text)((get-var p$processcode) (lexical-value $result)))
+(define-event Screen1 BarcodeScanner1 AfterScan($result)(set-this-form)
+    (set-and-coerce-property! 'CodeBox 'Text (lexical-value $result) 'text)((get-var Screen1 p$processcode) (lexical-value $result)))
 ;;; Notifier1
 
-(add-component MainPanel com.google.appinventor.components.runtime.Notifier Notifier1 
+(add-component Screen1 MainPanel com.google.appinventor.components.runtime.Notifier Notifier1
 )
 
-(define-event Notifier1 AfterChoosing($choice)(set-this-form)
-    (if (call-yail-primitive yail-equal? (*list-for-runtime* (lexical-value $choice) "Exit") '(any any) "=") (begin   (call-component-method 'PhoneStatus1 'shutdown (*list-for-runtime*) '()))))
+(define-event Screen1 Notifier1 AfterChoosing($choice)(set-this-form)
+    (if (call-yail-primitive yail-equal? (*list-for-runtime* (lexical-value $choice) "Exit") '(any any) "=") (begin   (call-component-method 'Screen1 'PhoneStatus1 'shutdown (*list-for-runtime*) '()))))
 ;;; TinyDB1
 
-(add-component Screen1 com.google.appinventor.components.runtime.TinyDB TinyDB1 
+(add-component Screen1 Screen1 com.google.appinventor.components.runtime.TinyDB TinyDB1
 )
 
 (init-runtime)

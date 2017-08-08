@@ -6,6 +6,7 @@
 
 package com.google.appinventor.components.runtime;
 
+import android.content.Context;
 import com.google.appinventor.components.annotations.SimpleObject;
 
 /**
@@ -16,21 +17,31 @@ import com.google.appinventor.components.annotations.SimpleObject;
 @SimpleObject
 public abstract class AndroidNonvisibleComponent implements Component {
 
+  protected final ComponentContainer container;
+  protected final Context context;
   protected final Form form;
+  protected final Task task;
 
   /**
    * Creates a new AndroidNonvisibleComponent.
    *
-   * @param form the container that this component will be placed in
+   * @param container the container that this component will be placed in
    */
-  protected AndroidNonvisibleComponent(Form form) {
-    this.form = form;
+  protected AndroidNonvisibleComponent(ComponentContainer container) {
+    this.container = container;
+    this.context = container.$context();
+    this.form = container.$form();
+    this.task = container.$task();
   }
 
   // Component implementation
 
   @Override
   public HandlesEventDispatching getDispatchDelegate() {
-    return form;
+    if (form != null)
+      return form.getDispatchDelegate();
+    if (task != null)
+      return task.getDispatchDelegate();
+    return null;
   }
 }

@@ -32,22 +32,6 @@ goog.require('AI.Events');
 if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {}
 Blockly.ReplMgr.yail = null;
 
-top.loadAll = true;             // Use "Chunked" loading for initial form load
-                                // or any case where we have more then one "chunk"
-                                // of code queued for the device. We put this variable
-                                // in the top window to ease debugging (this may change
-                                // in the future).
-top.loadAllErrorCount = 0;      // When we get an error loading a chunk, we turn off
-                                // loadAll and set this to some positive value
-                                // (20 at the moment). We then count this value down each
-                                // time we do not get an error. When we hit zero, we
-                                // turn loadAll back on. The idea here is that when we
-                                // get an error loading a chunk, we retry the load but
-                                // not as one chunk. In that fashion, the actual blocks
-                                // with the error will be flagged. But we lose efficiency
-                                // so after some time without errors, we turn chunking
-                                // back on.
-
 // Repl State
 // Repl "state" definitions
 
@@ -73,9 +57,57 @@ Blockly.ReplStateObj.prototype = {
     'didversioncheck' : false
 };
 
+Blockly.ContextPhoneState= function() {
+    this.blocksYail = {};       // Setting this is important for each object to have its own blocksYail
+    this.phoneQueue = [];       // Setting this is important for each object to have its own phoneQueue
+};
+Blockly.ContextPhoneState.prototype = {
+    'name' : "",                // name of the context
+    'type' : "",                // type of context either "Form" or Task"
+    'json' : "",                // encoded json form of context
+    'workspace' : null,         // blockly workspace object containing the blocks of the context
+    'componentYail' : "",       // tracks the component yail to prevent redundancy
+    'blocksYail' : {},          // tracks the blocks yail to prevent redundancy
+    'phoneQueue' : [],          // Used for sending to phone
+    'loadAll' : false,          // Use "Chunked" loading for initial form load
+                                // or any case where we have more then one "chunk"
+                                // of code queued for the device. Each context has
+                                // their own loadAll for efficiency.
+    'loadAllErrorCount' : 0     // When we get an error loading a chunk, we turn off
+                                // loadAll and set this to some positive value
+                                // (20 at the moment). We then count this value down each
+                                // time we do not get an error. When we hit zero, we
+                                // turn loadAll back on. The idea here is that when we
+                                // get an error loading a chunk, we retry the load but
+                                // not as one chunk. In that fashion, the actual blocks
+                                // with the error will be flagged. But we lose efficiency
+                                // so after some time without errors, we turn chunking
+                                // back on.
+}
+
 // Blockly is only loaded once now, so we can init this here.
 top.ReplState = new Blockly.ReplStateObj();
 top.ReplState.phoneState = {};
+
+Blockly.ReplMgr.preparePhoneState = function() {
+    if (!top.ReplState.phoneState) {
+        top.ReplState.phoneState = {};
+    }
+    var phoneState = top.ReplState.phoneState;
+    if (!phoneState.form) {
+        phoneState.form = new Blockly.ContextPhoneState();
+    }
+    if (!phoneState.tasks) {
+        phoneState.tasks = {};
+    }
+    return;
+}
+
+Blockly.ReplMgr.resetPhoneState = function() {
+    top.ReplState.phoneState = {};
+    this.preparePhoneState();
+    return;
+}
 
 // Blockly.mainWorkSpace --- hold the main workspace
 
@@ -84,23 +116,36 @@ top.ReplState.phoneState = {};
  * @param {Blockly.WorkspaceSvg} workspace
  */
 Blockly.ReplMgr.buildYail = function(workspace) {
+    console.log("buildYail_0"); //TODO(remove)
     var phoneState;
     var code = [];
     var blocks;
     var block;
     var needinitialize = false;
-    if (!top.ReplState.phoneState) { // If there is no phone state, make some!
-        top.ReplState.phoneState = {};
-    }
+    this.preparePhoneState();
     phoneState = top.ReplState.phoneState;
-    if (!phoneState.formJson || !phoneState.packageName)
+    if (!phoneState.packageName)
         return;                 // Nothing we can do without these
+    console.log("buildYail_0.5"); //TODO(remove)
+    var phoneStateContext;
+    var workspaceContextName = workspace.contextName;
+    if (workspaceContextName == phoneState.form.name) {
+        phoneStateContext = phoneState.form;
+    }
+    if (!phoneStateContext) {
+        for (var taskName in phoneState.tasks)  {
+            if (taskName == workspaceContextName)  {
+                phoneStateContext = phoneState.tasks[taskName];
+            }
+        }
+        if (!phoneStateContext) {
+            return; // workspaceContextName does not match current phoneState
+        }
+    }
     if (!phoneState.initialized) {
         phoneState.initialized = true;
-        phoneState.blockYail = {};
-        phoneState.componentYail = "";
     }
-
+    console.log("buildYail_1"); //TODO(remove)
     var nameConverter;
     if (phoneState.nofqcn) {
         nameConverter = function(input) {
@@ -112,29 +157,31 @@ Blockly.ReplMgr.buildYail = function(workspace) {
             return input;
         };
     }
-    var jsonObject = JSON.parse(phoneState.formJson);
-    var formProperties;
-    var formName;
+    var jsonObject = JSON.parse(phoneStateContext.json);
+    var contextProperties;
+    var contextName;
     if (jsonObject.Properties) {
-        formProperties = jsonObject.Properties;
-        formName = formProperties.$Name;
+        contextProperties = jsonObject.Properties;
+        contextName = contextProperties.$Name;
     }
-    var componentMap = Blockly.mainWorkspace.buildComponentMap([], [], false, false);
+    var componentMap = phoneStateContext.workspace.buildComponentMap([], [], false, false);
     var componentNames = [];
     for (var comp in componentMap.components)
         componentNames.push(comp);
-    if (formProperties) {
-        if (formName != 'Screen1')
-            code.push(Blockly.Yail.getComponentRenameString("Screen1", formName));
-        var sourceType = jsonObject.Source;
-        if (sourceType == "Form") {
-            code = code.concat(Blockly.Yail.getComponentLines(formName, formProperties, null /*parent*/, componentMap, true /* forRepl */, nameConverter, workspace.getComponentDatabase()));
-        } else {
-            throw "Source type " + sourceType + " is invalid.";
+    var contextInfo = {
+        name : contextName,
+        type : jsonObject.Source
+    }
+    if (contextProperties) {
+        if (contextInfo.type == "Form") {
+            if (contextInfo.name != 'Screen1')
+                code.push(Blockly.Yail.getComponentRenameString("Screen1", contextName));
         }
+        code = code.concat(Blockly.Yail.getComponentLines(contextName, contextProperties, null /*parent*/,
+                componentMap, true /* forRepl */, nameConverter, phoneStateContext.workspace.getComponentDatabase()));
 
-        // Fetch all of the components in the form, this may result in duplicates
-        componentNames = Blockly.Yail.getDeepNames(formProperties, componentNames);
+        // Fetch all of the components in the context, this may result in duplicates
+        componentNames = Blockly.Yail.getDeepNames(contextProperties, componentNames);
         // Remove the duplicates
         var uniqueNames = componentNames.filter(function(elem, pos) {
             return componentNames.indexOf(elem) == pos;});
@@ -142,20 +189,34 @@ Blockly.ReplMgr.buildYail = function(workspace) {
 
         code = code.join('\n');
 
-        if (phoneState.componentYail != code) {
-            // We need to send all of the component cruft (sorry)
-            needinitialize = true;
-            phoneState.blockYail = {}; // Sorry, have to send the blocks again.
-            this.putYail(Blockly.Yail.YAIL_CLEAR_FORM);
-            // Tell the Companion the current form name
-            this.putYail(Blockly.Yail.YAIL_SET_FORM_NAME_BEGIN + formName + Blockly.Yail.YAIL_SET_FORM_NAME_END);
-            this.putYail(code);
-            this.putYail(Blockly.Yail.YAIL_INIT_RUNTIME);
-            phoneState.componentYail = code;
+        if (contextInfo.type == "Form") {
+            if (phoneState.form.componentYail != code) {
+                // We need to send all of the component cruft (sorry)
+                needinitialize = true;
+                phoneState.form.blocksYail = {}; // Sorry, have to send the blocks again.
+                this.putYail(contextInfo, Blockly.Yail.YAIL_CLEAR_FORM);
+                // Tell the Companion the current form name
+                this.putYail(contextInfo, Blockly.Yail.YAIL_SET_FORM_NAME_BEGIN + contextName + Blockly.Yail.YAIL_SET_FORM_NAME_END);
+                this.putYail(contextInfo, code);
+                this.putYail(contextInfo, Blockly.Yail.YAIL_INIT_RUNTIME);
+                phoneState.form.componentYail = code;
+            }
+        } else if (contextInfo.type == "Task") {
+            if (!phoneState.tasks[contextName]) {
+                throw new Error("Invalid PhoneState : No task \"" + contextName + "\" is found");
+            }
+            if (!phoneState.tasks[contextName].componentYail != code) {
+                needinitialize = true;
+                phoneState.tasks[contextName].blocksYail = {};
+                this.putYail(contextInfo, Blockly.Yail.YAIL_CLEAR_TASK + Blockly.Yail.YAIL_QUOTE + contextName + Blockly.Yail.YAIL_CLOSE_COMBINATION);
+                this.putYail(contextInfo, code);
+                phoneState.tasks[contextName].componentYail = code;
+
+            }
         }
     }
 
-    blocks = Blockly.mainWorkspace.getTopBlocks(true);
+    blocks = phoneStateContext.workspace.getTopBlocks(true);
     var success = function() {
         if (this.block.replError)
             this.block.replError = null;
@@ -179,30 +240,99 @@ Blockly.ReplMgr.buildYail = function(workspace) {
             block.type != "procedures_defreturn")
             continue;
         var tempyail = Blockly.Yail.blockToCode(block);
-        if (phoneState.blockYail[block.id] != tempyail) { // Only send changed yail
-            this.putYail(tempyail, block, success, failure);
-            phoneState.blockYail[block.id] = tempyail;
+        if (contextInfo.type == "Form") {
+            if (!phoneState.form.blocksYail || phoneState.form.blocksYail[block.id] != tempyail) { // Only send changed yail
+                this.putYail(contextInfo, tempyail, block, success, failure);
+                phoneState.form.blocksYail[block.id] = tempyail;
+            }
+        } else if (contextInfo.type == "Task") {
+            if (!phoneState.tasks[contextName]) {
+                throw new Error("Invalid PhoneState : No task \"" + contextName + "\" is found");
+            }
+            if (!phoneState.tasks[contextName].blocksYail)
+                phoneState.tasks[contextName].blocksYail = {};
+            if (phoneState.tasks[contextName].blocksYail[block.id] != tempyail) {
+                this.putYail(contextInfo, tempyail, block, success, failure);
+                phoneState.tasks[contextName].blocksYail[block.id] = tempyail;
+            }
         }
     }
 
     // need to do this after the blocks have been defined
     if (needinitialize) {
-        this.putYail(Blockly.Yail.getComponentInitializationString(formName, componentNames));
+        this.putYail(contextInfo, Blockly.Yail.getComponentInitializationString(contextName, componentNames));
     }
 };
 
-Blockly.ReplMgr.sendFormData = function(formJson, packageName, workspace) {
-    top.ReplState.phoneState.formJson = formJson;
+Blockly.ReplMgr.sendFormData = function(formName, formJson, packageName, workspace) {
+    packageName = packageName.slice(0, packageName.lastIndexOf("."));   // Get the app package only
+    if (top.ReplState.phoneState.packageName != packageName) {  // Prevent other project contexts from mixing
+        this.resetPhoneState();
+    }
+    console.log("sendFormData : " + formName); // TODO(remove)
+    this.preparePhoneState();
     top.ReplState.phoneState.packageName = packageName;
+    formName = formName.split(/_/)[1];
+    top.ReplState.phoneState.form = new Blockly.ContextPhoneState();
+    top.ReplState.phoneState.form.name = formName;
+    top.ReplState.phoneState.form.type = "Form";
+    top.ReplState.phoneState.form.json = formJson;
+    top.ReplState.phoneState.form.workspace = workspace;
+    this.callPollYail(formName, workspace);
+};
+
+Blockly.ReplMgr.sendTaskData = function(taskName, taskJson, packageName, workspace) {
+    packageName = packageName.slice(0, packageName.lastIndexOf("."));   // Get the app package only
+    if (top.ReplState.phoneState.packageName != packageName) {  // Prevent other project contexts from mixing
+        this.resetPhoneState();
+    }
+    console.log("sendTaskData : " + taskName); // TODO(remove)
+    this.preparePhoneState();
+    top.ReplState.phoneState.packageName = packageName;
+    taskName = taskName.split(/_/)[1];
+    top.ReplState.phoneState.tasks[taskName] = new Blockly.ContextPhoneState();
+    top.ReplState.phoneState.tasks[taskName].name = taskName;
+    top.ReplState.phoneState.tasks[taskName].type = "Task";
+    top.ReplState.phoneState.tasks[taskName].json = taskJson;
+    top.ReplState.phoneState.tasks[taskName].workspace = workspace;
+    this.callPollYail(taskName, workspace);
+};
+
+Blockly.ReplMgr.callPollYail = function(contextName, workspace) {
     var context = this;
     var poller = function() {   // Keep track of "this"
         context.polltimer = null;
         return context.pollYail.call(context, workspace);
     };
-    if (this.polltimer) {       // We have one running, punt it.
-        clearTimeout(this.polltimer);
+    this.addPollTimer(contextName, poller);
+};
+
+Blockly.ReplMgr.addPollTimer = function(contextName, poller) {
+    if (!this.polltimers) {
+        this.polltimers = {};
     }
-    this.polltimer = setTimeout(poller, 500);
+    if (this.polltimers[contextName]) {
+        clearTimeout(this.polltimers[contextName]);
+    }
+    this.polltimers[contextName] = setTimeout(poller, 500);
+};
+
+Blockly.ReplMgr.removePollTimer = function(contextName) {
+    if (!this.polltimers) {
+        this.polltimers = {};
+        return;
+    }
+    clearTimeout(this.polltimers[contextName]);
+};
+
+Blockly.ReplMgr.clearAllPollTimers = function() {
+    if (!this.polltimers) {
+        this.polltimers = {};
+        return;
+    }
+    for (var timer in this.polltimers) {
+        clearTimeout(this.polltimers[timer]);
+    }
 };
 
 Blockly.ReplMgr.pollYail = function(workspace) {
@@ -213,6 +343,7 @@ Blockly.ReplMgr.pollYail = function(workspace) {
     } catch (err) {                  // We get an error on FireFox when window is gone.
         return;
     }
+    console.log("pollYail called"); // TODO(remove)
     if (top.ReplState.state == this.rsState.CONNECTED) {
         this.buildYail(workspace);
     }
@@ -225,13 +356,13 @@ Blockly.ReplMgr.resetYail = function(partial) {
     top.ReplState.phoneState.initialized = false; // so running io stops
     this.putYail.reset();
     if (!partial) {
-        top.ReplState.phoneState = { "phoneQueue" : []};
+        this.resetPhoneState();
     }
 };
 
 // Theory of Operation
 //
-// This blocks of code implements communication to the phone. Yail Forms
+// This blocks of code implements communication to the phone. Yail Forms and Tasks
 // are queued on ReplState.phoneState.phoneQueue. Each entry in the
 // queue is an object that contains the yail to run and two callbacks, one
 // for success and one for failure.
@@ -249,9 +380,10 @@ Blockly.ReplMgr.putYail = (function() {
     var phonereceiving = false;
     var engine = {
         // Enqueue form for the phone
-        'putYail' : function(code, block, success, failure) {
+        'putYail' : function(contextInfo, code, block, success, failure) {
             rs = top.ReplState;
             context = this;
+            console.log("putYail " + contextInfo.type + "[" + contextInfo.name + "] = " + code); // TODO(remove)
             if (rs === undefined || rs === null) {
                 console.log('putYail: replState not set yet.');
                 return;
@@ -263,12 +395,21 @@ Blockly.ReplMgr.putYail = (function() {
             if (!rs.phoneState.phoneQueue) {
                 rs.phoneState.phoneQueue = [];
             }
-            rs.phoneState.phoneQueue.push({
-                'code' : Blockly.ReplMgr.quoteUnicode(code), // Deal with unicode characters and kawa
-                'success' : success,
-                'failure' : failure,
-                'block' : block
-            });
+            if (contextInfo.type == "Form") {
+                rs.phoneState.form.phoneQueue.push({
+                    'code' : Blockly.ReplMgr.quoteUnicode(code), // Deal with unicode characters and kawa
+                    'success' : success,
+                    'failure' : failure,
+                    'block' : block
+                });
+            } else if (contextInfo.type == "Task") {
+                rs.phoneState.tasks[contextInfo.name].phoneQueue.push({
+                    'code' : Blockly.ReplMgr.quoteUnicode(code), // Deal with unicode characters and kawa
+                    'success' : success,
+                    'failure' : failure,
+                    'block' : block
+                });
+            }
             if (!rs.phoneState.ioRunning) {
                 rs.phoneState.ioRunning = true;
                 engine.pollphone(); // Trigger callback side
@@ -282,72 +423,113 @@ Blockly.ReplMgr.putYail = (function() {
             if (!phonereceiving) {
                 engine.receivefromphone();
             }
-            var work;
-            if (top.loadAll) {
-                var chunk;
-                var allcode = "";
-                var first = true;
-                var chunked = false;
-                var lastblock;
-                while ((chunk = rs.phoneState.phoneQueue.shift())) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        console.log("We did chunk!");
-                        chunked = true;
+            var replInputData = {
+                tasks : {},
+                form : {}
+            };
+            var replInputWorks = {};
+            var workExists = false;
+            var pushToReplInput = function(context) {
+                var replInputWork;
+                var replInputDataEntry;
+                if (context.loadAll)  {
+                    var chunk;
+                    var allcode = "";
+                    var first = true;
+                    var chunked = false;
+                    var lastblock;
+                    while((chunk = context.phoneQueue.shift())) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            console.log(context.name + " : We did chunk");
+                            chunked = true;
+                        }
+                        allcode += chunk.code;      // We can concatonate because AppInvHTTPD runs us
+                                                    // in a (begin) block
+                        lastblock = chunk.block;
                     }
-                    allcode += chunk.code; // We can concatonate because AppInvHTTPD runs us
-                                           // in a (begin) block
-                    lastblock = chunk.block;
-                }
-                if (first) {               // There was no work to do
-                    rs.phoneState.ioRunning = false;
-                    return;
-                }
-                work = { 'code' : allcode,
-                         'block' : null,   // We cannot link this large code block
-                                           // to any particular block (yet)
-                         'chunking' : true // indicate we are chunking...
-                       };
-                if (chunked) {
-                    console.log("Chunk: " + allcode);
+                    if (first)  {
+                        return; // There was no work to do
+                    }
+                    workExists = true;  // There was work to do
+                    replInputWork = {
+                        'block' : null,     // We cannot link this large code block
+                                            // to any particular block (yet)
+                        'chunking'  : true  // indicate we are chunking...
+                    };
+                    replInputDataEntry = {
+                        'name' : context.name,
+                        'type' : context.type,
+                        'code' : allcode
+                    };
+                    if (chunked) {
+                        console.log("Chunk: " + allcode);
+                    } else {
+                        console.log("Slow Path: " + allcode);
+                        replInputWork.block = lastblock;
+                    }
+
                 } else {
-                    console.log("Slow Path: " + allcode);
-                    work.block = lastblock; // Only one block, so we can provide it
+                    var queueItem = context.phoneQueue.shift();
+                    if (!queueItem) {
+                        return;
+                    }
+                    workExists = true;
+                    replInputWork = {
+                        'success' : queueItem.success,
+                        'failure' : queueItem.failure,
+                        'block' : queueItem.block
+                    };
+                    replInputDataEntry = {
+                        'name' : context.name,
+                        'type' : context.type,
+                        'code' : queueItem.code
+                    };
                 }
-            } else {
-                work = rs.phoneState.phoneQueue.shift();
-                if (!work) {
-                    rs.phoneState.ioRunning = false;
-                    return;
+                var blockid;
+                if (replInputWork.block) {
+                    // Quote blockId as a string due to non-numeric identifiers generated from
+                    // Blockly's soup {@see Blockly.utils.genUid.soup_}
+                    blockid = '"' + replInputWork.block.id + '"';
+                } else {
+                    if (replInputWork.chunking) {
+                        blockid = "-2";
+                    } else {
+                        blockid = "-1";
+                    }
                 }
+                replInputDataEntry.blockid = blockid;
+                if (context.type == "Form") {
+                    replInputData.form = replInputDataEntry;
+                } else if (context.type == "Task") {
+                    replInputData.tasks[context.name] = replInputDataEntry;
+                }
+                replInputWorks[context.name] = replInputWork;
+            };
+
+            for (var task in rs.phoneState.tasks) {
+                pushToReplInput(rs.phoneState.tasks[task]);
+            }
+            pushToReplInput(rs.phoneState.form);
+
+            if (!workExists) {
+                rs.phoneState.ioRunning = false;
+                return;
             }
             var encoder = new goog.Uri.QueryData();
             conn = goog.net.XmlHttp();
-            var blockid;
-            if (work.block) {
-                // Quote blockId as a string due to non-numeric identifiers generated from
-                // Blockly's soup {@see Blockly.utils.genUid.soup_}
-                blockid = '"' + work.block.id + '"';
-            } else {
-                if (work.chunking) { // Used to indicate an error in when chunking
-                    blockid = "-2";
-                } else {
-                    blockid = "-1";
-                }
-            }
-
             conn.open('POST', rs.url, true);
             conn.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     var json = goog.json.parse(this.response);
-                    if (json.status != 'OK') {
-                        if (work.failure)
-                            work.failure(Blockly.Msg.REPL_ERROR_FROM_COMPANION);
-                    } else {
-                        if (work.success)
-                            work.success();
-                    }
+//                    if (json.status != 'OK') {
+//                        if (replInputWork.failure)
+//                            replInputWork.failure(Blockly.Msg.REPL_ERROR_FROM_COMPANION);
+//                    } else {
+//                        if (replInputWork.success)
+//                            replInputWork.success();
+//                    }
                     context.processRetvals(json.values);
                     rs.seq_count += 1;
                     if (rs.phoneState.initialized) // Only continue if we are still initialized
@@ -355,23 +537,24 @@ Blockly.ReplMgr.putYail = (function() {
                 } else {
                     if (this.readyState == 4) {
                         console.log("putYail(poller): status = " + this.status);
-                        if (work.failure) {
-                            work.failure(Blockly.Msg.REPL_NETWORK_CONNECTION_ERROR);
-                        }
+//                        if (work.failure) {
+//                            work.failure(Blockly.Msg.REPL_NETWORK_CONNECTION_ERROR);
+//                        }
                         var dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_NETWORK_ERROR, Blockly.Msg.REPL_NETWORK_ERROR_RESTART, Blockly.Msg.REPL_OK, null, 0,
                             function() {
                                 dialog.hide();
-                                context.hardreset(context.formName);
+                                context.hardreset(context.formName); // TODO(justus) : context.formName is undefined
                             });
                         engine.resetcompanion();
                     }
                 }
 
             };
-            encoder.add('mac', Blockly.ReplMgr.hmac(work.code + rs.seq_count + blockid));
+            var repl_input = JSON.stringify(replInputData);
+            console.log("Sending repl_input = " + repl_input); //TODO(remove)
+            encoder.add('mac', Blockly.ReplMgr.hmac(repl_input + rs.seq_count));
             encoder.add('seq', rs.seq_count);
-            encoder.add('code', work.code);
-            encoder.add('blockid', blockid);
+            encoder.add('repl_input', repl_input);
             var stuff = encoder.toString();
             conn.send(stuff);
         },
@@ -466,7 +649,7 @@ Blockly.ReplMgr.putYail = (function() {
             context.resetYail(false);
 //   hardreset is now done in the handler for the network error dialog OK
 //   button.
-//          context.hardreset(context.formName); // kill adb and emulator
+//          context.hardreset(context.formName); // kill adb and emulator TODO(justus): context.formName is undefined
             rs.didversioncheck = false;
             top.BlocklyPanel_indicateDisconnect();
         },
@@ -659,28 +842,44 @@ Blockly.ReplMgr.processRetvals = function(responses) {
 
     for (var i = 0; i < responses.length; i++) {
         var r = responses[i];
+        var phoneStateContext;
+        if (r.contexttype == "Form" && r.contextname == top.ReplState.phoneState.form.name) {
+            phoneStateContext = top.ReplState.phoneState.form;
+        }
+        if (r.contexttype == "Task") {
+            for (var task in top.ReplState.phoneState.tasks) {
+                if (r.contextname == task) {
+                    phoneStateContext = top.ReplState.phoneState.tasks[task];
+                }
+            }
+        }
+        if (!phoneStateContext) {
+            // error maybe we switched projects
+            // TODO(justus) what do we do here?
+            return;
+        }
         console.log("processRetVals: " + JSON.stringify(r));
         switch(r.type) {
         case "return":
-            if (r.status == "OK" && top.loadAllErrorCount > 0) {
-                console.log("Error Countdown: " + top.loadAllErrorCount);
-                top.loadAllErrorCount -= 1;
-                if (top.loadAllErrorCount <= 0) {
-                    top.loadAllErrorCount = 0; // Make sure!
-                    top.loadAll = true;
-                    console.log("Reseting top.loadAll to true");
+            if (r.status == "OK" && phoneStateContext.loadAllErrorCount > 0) {
+                console.log("Error Countdown: " + phoneStateContext.loadAllErrorCount);
+                phoneStateContext.loadAllErrorCount -= 1;
+                if (phoneStateContext.loadAllErrorCount <= 0) {
+                    phoneStateContext.loadAllErrorCount = 0; // Make sure!
+                    phoneStateContext.loadAll = true;
+                    console.log("Reseting phoneStateContext.loadAll to true");
                 }
             }
             if (r.blockid == "-2" && r.status != "OK") {
                 // We had an error in initial form load or at another
                 // time when we were chunking forms together
-                top.loadAll = false;
-                top.loadAllErrorCount = 20;
+                phoneStateContext.loadAll = false;
+                phoneStateContext.loadAllErrorCount = 20;
                 console.log("Error in chunking, disabling.");
                 this.resetYail(true);
-                this.pollYail(Blockly.mainWorkspace);
+                this.pollYail(phoneStateContext.workspace);
             } else if (r.blockid != "-1" && r.blockid != "-2") {
-                block = Blockly.mainWorkspace.getBlockById(r.blockid);
+                block = phoneStateContext.workspace.getBlockById(r.blockid);
                 if (block === null) {
                     break;      // This happens when we switch screens during a poll
                 }
@@ -790,7 +989,7 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
                 top.ReplState.connection = null;
                 top.BlocklyPanel_indicateDisconnect();
                 context.resetYail(false);
-                context.hardreset(context.formName);
+                context.hardreset(context.formName); // TODO(justus): context.formName is undefined
             } else {
                 ubercounter = 0;
                 counter = 10;
@@ -995,7 +1194,7 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
         }
         this.resetYail(false);
         top.ReplState.state = this.rsState.IDLE;
-        this.hardreset(this.formName);       // Tell aiStarter to kill off adb
+        this.hardreset(this.formName);       // Tell aiStarter to kill off adb TODO(justus): this.formName is undefined
     }
 };
 

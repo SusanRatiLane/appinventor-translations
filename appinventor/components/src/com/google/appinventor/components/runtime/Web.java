@@ -192,7 +192,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
    */
   public Web(ComponentContainer container) {
     super(container.$form());
-    activity = container.$context();
+    activity = container.$form();
 
     cookieHandler = (SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD)
         ? GingerbreadUtil.newCookieManager()

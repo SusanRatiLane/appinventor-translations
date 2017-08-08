@@ -108,7 +108,7 @@ public final class WebViewer extends AndroidViewComponent {
     webview.getSettings().setBuiltInZoomControls(true);
 
     if (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR)
-      EclairUtil.setupWebViewGeoLoc(this, webview, container.$context());
+      EclairUtil.setupWebViewGeoLoc(this, webview, container.$form());
 
     container.$add(this);
 

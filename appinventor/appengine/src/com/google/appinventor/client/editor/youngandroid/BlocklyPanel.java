@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright © 2009-2011 Google, All Rights reserved
-// Copyright © 2011-2016 Massachusetts Institute of Technology, All rights reserved
+// Copyright © 2011-2017 Massachusetts Institute of Technology, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -43,7 +43,7 @@ import static com.google.appinventor.client.Ode.MESSAGES;
 /**
  * Blocks editor panel.
  * The contents of the blocks editor panel is in an iframe identified by
- * the formName passed to the constructor. That identifier is also the hashtag
+ * the contextName passed to the constructor. That identifier is also the hashtag
  * on the URL that is the source of the iframe. This class provides methods for
  * calling the Javascript Blockly code from the rest of the Designer.
  *
@@ -62,7 +62,7 @@ public class BlocklyPanel extends HTMLPanel {
     public void initBlockly();
   }
 
-  private static final String EDITOR_HTML = "<div id=\"FORM_NAME\" class=\"svg\" tabindex=\"-1\"></div>";
+  private static final String EDITOR_HTML = "<div id=\"CONTEXT_NAME\" class=\"svg\" tabindex=\"-1\"></div>";
   private static final NativeTranslationMap SIMPLE_COMPONENT_TRANSLATIONS;
 
   static {
@@ -100,11 +100,17 @@ public class BlocklyPanel extends HTMLPanel {
   // The currently displayed form (project/screen)
   private static String currentForm;
 
+  // The currently displayed context (project/screen/task)
+  private static String currentContext;
+
   // Warning indicator visibility status
   private static boolean isWarningVisible = false;
 
-  // My form name
-  private final String formName;
+  // My contextName of the format projectId_contextName
+  private final String contextName;
+
+  // My BlocksEditor name
+  private final YaBlocksEditor myBlocksEditor;
 
   /**
    * Objects registered to listen for workspace changes.
@@ -117,7 +123,7 @@ public class BlocklyPanel extends HTMLPanel {
   private JavaScriptObject workspace;
 
   /**
-   * If true, the loading of the blocks editor has not completed.
+   * If true, the loading of the blocks editor has completed.
    */
   private boolean loadComplete = false;
 
@@ -126,15 +132,16 @@ public class BlocklyPanel extends HTMLPanel {
    */
   private boolean loadError = false;
 
-  public BlocklyPanel(YaBlocksEditor blocksEditor, String formName) {
-    this(blocksEditor, formName, false);
+  public BlocklyPanel(YaBlocksEditor blocksEditor, String fullContextName) {
+    this(blocksEditor, fullContextName, false);
   }
 
-  public BlocklyPanel(YaBlocksEditor blocksEditor, String formName, boolean readOnly) {
+  public BlocklyPanel(YaBlocksEditor blocksEditor, String fullContextName, boolean readOnly) {
     super("");
     getElement().addClassName("svg");
-    getElement().setId(formName);
-    this.formName = formName;
+    getElement().setId(fullContextName);
+    this.contextName = fullContextName;
+    this.myBlocksEditor = blocksEditor;
     /* Blockly initialization now occurs in three stages. This is due to the fact that certain
      * Blockly objects rely on SVG methods such as getScreenCTM(), which are not properly
      * initialized and/or null prior to the svg element being attached to the DOM. The first
@@ -147,7 +154,7 @@ public class BlocklyPanel extends HTMLPanel {
      * has been downloaded from the server.
      */
     initWorkspace(Long.toString(blocksEditor.getProjectId()), readOnly, LocaleInfo.getCurrentLocale().isRTL());
-    OdeLog.log("Created BlocklyPanel for " + formName);
+    OdeLog.log("Created BlocklyPanel for " + contextName);
   }
 
   /**
@@ -179,8 +186,8 @@ public class BlocklyPanel extends HTMLPanel {
       return;
     }
     if (loadError) {
-      YaBlocksEditor.setBlocksDamaged(formName);
-      ErrorReporter.reportError(MESSAGES.blocksNotSaved(formName));
+      YaBlocksEditor.setBlocksDamaged(contextName);
+      ErrorReporter.reportError(MESSAGES.blocksNotSaved(contextName));
     } else {
       for (BlocklyWorkspaceChangeListener listener : listeners) {
         listener.onWorkspaceChange(this, event);
@@ -201,7 +208,7 @@ public class BlocklyPanel extends HTMLPanel {
   }
 
   /**
-   * Remember any component instances for this form in case
+   * Remember any component instances for this context in case
    * the workspace gets reinitialized later (we get detached from
    * our parent object and then our blocks editor gets loaded
    * again later). Also, remember the current state of the blocks
@@ -213,28 +220,28 @@ public class BlocklyPanel extends HTMLPanel {
    */
   public void saveComponentsAndBlocks() {
     // Call doResetYail which will stop the timer that is polling the phone. It is important
-    // that it be stopped to avoid a race condition where the last timer on this form fires
-    // while the new form is loading.
+    // that it be stopped to avoid a race condition where the last timer on this context fires
+    // while the new context is loading.
     doResetYail();
   }
 
   /**
    * Load the blocks described by blocksContent into the blocks workspace.
    *
-   * @param formJson JSON description of Form's structure for upgrading
+   * @param contextJSON JSON description of Context's structure for upgrading
    * @param blocksContent XML description of a blocks workspace in format expected by Blockly
    * @throws LoadBlocksException if Blockly throws an uncaught exception
    */
-  // [lyn, 2014/10/27] added formJson for upgrading
-  public void loadBlocksContent(String formJson, String blocksContent) throws LoadBlocksException {
+  // [lyn, 2014/10/27] added contextJSON for upgrading
+  public void loadBlocksContent(String contextJSON, String blocksContent) throws LoadBlocksException {
     try {
-      doLoadBlocksContent(formJson, blocksContent);
+      doLoadBlocksContent(contextJSON, blocksContent);
     } catch (JavaScriptException e) {
       loadError = true;
-      ErrorReporter.reportError(MESSAGES.blocksLoadFailure(formName));
-      OdeLog.elog("Error loading blocks for screen " + formName + ": "
+      ErrorReporter.reportError(MESSAGES.blocksLoadFailure(contextName));
+      OdeLog.elog("Error loading blocks for context " + contextName + ": "
           + e.getDescription());
-      throw new LoadBlocksException(e, formName);
+      throw new LoadBlocksException(e, contextName);
     } finally {
       loadComplete = true;
     }
@@ -246,29 +253,33 @@ public class BlocklyPanel extends HTMLPanel {
    * @return the yail code as a String
    * @throws YailGenerationException if there was a problem generating the Yail
    */
-  public String getYail(String formJson, String packageName) throws YailGenerationException {
+  public String getYail(String contextJson, String packageName) throws YailGenerationException {
     try {
-      return doGetYail(formJson, packageName);
+      return doGetYail(contextJson, packageName);
     } catch (JavaScriptException e) {
-      throw new YailGenerationException(e.getDescription(), formName);
+      throw new YailGenerationException(e.getDescription(), contextName);
     }
   }
 
   /**
-   * Send component data (json and form name) to Blockly for building
+   * Send component data (json and context name) to Blockly for building
    * yail for the REPL.
    *
    * @throws YailGenerationException if there was a problem generating the Yail
    */
-  public void sendComponentData(String formJson, String packageName) throws YailGenerationException {
-    if (!currentForm.equals(formName)) { // Not working on the current form...
-      OdeLog.log("Not working on " + currentForm + " (while sending for " + formName + ")");
+  public void sendComponentData(String contextJson, String packageName) throws YailGenerationException {
+    if (myBlocksEditor.isFormBlocksEditor() && !currentForm.equals(contextName)) { // Not working on the current form...
+      OdeLog.log("Not working on " + currentForm + " (while sending for " + contextName + ")");
       return;
     }
     try {
-      doSendJson(formJson, packageName);
+      if (myBlocksEditor.isFormBlocksEditor()) {
+        doSendFormJson(contextName, contextJson, packageName);
+      } else if (myBlocksEditor.isTaskBlocksEditor()) {
+        doSendTaskJson(contextName, contextJson, packageName);
+      }
     } catch (JavaScriptException e) {
-      throw new YailGenerationException(e.getDescription(), formName);
+      throw new YailGenerationException(e.getDescription(), contextName);
     }
   }
 
@@ -294,6 +305,11 @@ public class BlocklyPanel extends HTMLPanel {
   // a connected device.
   public static void setCurrentForm(String formName) {
     currentForm = formName;
+  }
+
+  // Set currentContext
+  public static void setCurrentContext(String contextName) {
+    currentContext = contextName;
   }
 
   public static void indicateDisconnect() {
@@ -403,8 +419,8 @@ public class BlocklyPanel extends HTMLPanel {
     return YaBlocksEditor.getComponentsJSONString(Long.parseLong(projectId));
   }
 
-  public static String getComponentInstanceTypeName(String formName, String instanceName) {
-    return YaBlocksEditor.getComponentInstanceTypeName(formName, instanceName);
+  public static String getComponentInstanceTypeName(String contextName, String instanceName) {
+    return YaBlocksEditor.getComponentInstanceTypeName(contextName, instanceName);
   }
 
   public static int getYaVersion() {
@@ -413,6 +429,20 @@ public class BlocklyPanel extends HTMLPanel {
 
   public static int getBlocksLanguageVersion() {
     return YaVersion.BLOCKS_LANGUAGE_VERSION;
+  }
+
+  /**
+   * Called from within native javascript to check if the workspace
+   * of the context with name @contextName belongs to a Form Context
+   * or a Task Context.
+   */
+
+  public static boolean isFormBlockly(String contextName) {
+    return YaBlocksEditor.isFormBlocksEditor(contextName);
+  }
+
+  public static boolean isTaskBlockly(String contextName) {
+    return YaBlocksEditor.isTaskBlocksEditor(contextName);
   }
 
   public static String getQRCode(String inString) {
@@ -428,11 +458,11 @@ public class BlocklyPanel extends HTMLPanel {
    */
 
   public void updateCompanion() {
-    updateCompanion(formName);
+    updateCompanion(contextName);
   }
 
-  public static void updateCompanion(String formName) {
-    doUpdateCompanion(formName);
+  public static void updateCompanion(String contextName) {
+    doUpdateCompanion(contextName);
   }
 
   /**
@@ -554,14 +584,17 @@ public class BlocklyPanel extends HTMLPanel {
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getSnapEnabled());
     $wnd.BlocklyPanel_saveUserSettings =
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::saveUserSettings());
+    $wnd.BlocklyPanel_isFormBlockly =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::isFormBlockly(Ljava/lang/String;));
+    $wnd.BlocklyPanel_isTaskBlockly =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::isTaskBlockly(Ljava/lang/String;));
   }-*/;
 
   private native void initWorkspace(String projectId, boolean readOnly, boolean rtl)/*-{
     var el = this.@com.google.gwt.user.client.ui.UIObject::getElement()();
     var workspace = Blockly.BlocklyEditor.create(el,
-      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::formName,
+      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::contextName,
       readOnly, rtl);
-    workspace.projectId = projectId;
     var cb = $entry(this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspaceChanged(Lcom/google/gwt/core/client/JavaScriptObject;));
     cb = cb.bind(this);
     workspace.addChangeListener(function(e) {
@@ -595,17 +628,16 @@ public class BlocklyPanel extends HTMLPanel {
   native void makeActive()/*-{
     Blockly.mainWorkspace = this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace;
     // Trigger a screen switch to send new YAIL.
-    var parts = Blockly.mainWorkspace.formName.split(/_/);
-    Blockly.mainWorkspace.fireChangeListener(new AI.Events.ScreenSwitch(parts[0], parts[1]));
+    Blockly.mainWorkspace.fireChangeListener(new AI.Events.ScreenSwitch(Blockly.mainWorkspace.projectId, Blockly.mainWorkspace.contextName));
   }-*/;
 
-  // [lyn, 2014/10/27] added formJson for upgrading
-  public native void doLoadBlocksContent(String formJson, String blocksContent) /*-{
+  // [lyn, 2014/10/27] added contextJson for upgrading
+  public native void doLoadBlocksContent(String contextJson, String blocksContent) /*-{
     var workspace = this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace;
     var previousMainWorkspace = Blockly.mainWorkspace;
     try {
       Blockly.mainWorkspace = workspace;
-      workspace.loadBlocksFile(formJson, blocksContent).verifyAllBlocks();
+      workspace.loadBlocksFile(contextJson, blocksContent).verifyAllBlocks();
     } catch(e) {
       workspace.loadError = true;
       throw e;
@@ -727,13 +759,18 @@ public class BlocklyPanel extends HTMLPanel {
     }
   }-*/;
 
-  public native String doGetYail(String formJson, String packageName) /*-{
+  public native String doGetYail(String contextJson, String packageName) /*-{
     return this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace
-      .getFormYail(formJson, packageName);
+      .getContextYail(contextJson, packageName);
   }-*/;
 
-  public native void doSendJson(String formJson, String packageName) /*-{
-    Blockly.ReplMgr.sendFormData(formJson, packageName,
+  public native void doSendFormJson(String formName, String formJson, String packageName) /*-{
+    Blockly.ReplMgr.sendFormData(formName, formJson, packageName,
+      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace);
+  }-*/;
+
+  public native void doSendTaskJson(String taskName, String taskJson, String packageName) /*-{
+    Blockly.ReplMgr.sendTaskData(taskName, taskJson, packageName,
       this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace);
   }-*/;
 
@@ -756,7 +793,7 @@ public class BlocklyPanel extends HTMLPanel {
 
   public native void doHardReset() /*-{
     Blockly.ReplMgr.ehardreset(
-      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::formName
+      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::contextName
     );
   }-*/;
 

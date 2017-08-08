@@ -62,7 +62,7 @@ implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListene
    */
   public NearField(ComponentContainer container) {
     super(container.$form());
-    activity = container.$context();
+    activity = container.$form();
     writeType = 1;
     nfcAdapter = (SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD)
         ? GingerbreadUtil.newNfcAdapter(activity)

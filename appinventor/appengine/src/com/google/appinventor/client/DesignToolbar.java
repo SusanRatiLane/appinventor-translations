@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2012 MIT, All rights reserved
+// Copyright 2011-2017 MIT, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -8,12 +8,9 @@ package com.google.appinventor.client;
 
 import com.google.appinventor.client.editor.FileEditor;
 import com.google.appinventor.client.editor.ProjectEditor;
-import com.google.appinventor.client.editor.youngandroid.BlocklyPanel;
-import com.google.appinventor.client.editor.youngandroid.YaBlocksEditor;
-import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
-import com.google.appinventor.client.editor.youngandroid.YaProjectEditor;
-
+import com.google.appinventor.client.editor.youngandroid.*;
 import com.google.appinventor.client.explorer.commands.AddFormCommand;
+import com.google.appinventor.client.explorer.commands.AddTaskCommand;
 import com.google.appinventor.client.explorer.commands.ChainableCommand;
 import com.google.appinventor.client.explorer.commands.DeleteFileCommand;
 
@@ -41,6 +38,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +47,7 @@ import static com.google.appinventor.client.Ode.MESSAGES;
 
 /**
  * The design toolbar houses command buttons in the Young Android Design
- * tab (for the UI designer (a.k.a, Form Editor) and Blocks Editor).
+ * tab (Context Editor and Blocks Editor).
  *
  */
 public class DesignToolbar extends Toolbar {
@@ -57,45 +55,70 @@ public class DesignToolbar extends Toolbar {
   private boolean isReadOnly;   // If the UI is in read only mode
 
   /*
-   * A Screen groups together the form editor and blocks editor for an
-   * application screen. Name is the name of the screen (form) displayed
+   * A Context groups together the context editor and blocks editor for an
+   * application screen. Name is the name of the context (form or task) displayed
    * in the screens pull-down.
    */
-  public static class Screen {
-    public final String screenName;
-    public final FileEditor formEditor;
-    public final FileEditor blocksEditor;
+  public static class Context {
+    public final String contextName;
+    public final YaContextEditor contextEditor;
+    public final YaBlocksEditor blocksEditor;
 
-    public Screen(String name, FileEditor formEditor, FileEditor blocksEditor) {
-      this.screenName = name;
-      this.formEditor = formEditor;
-      this.blocksEditor = blocksEditor;
+    public Context(String name, FileEditor contextEditor, FileEditor blocksEditor) {
+      this.contextName = name;
+      this.contextEditor = (YaContextEditor) contextEditor;
+      this.blocksEditor = (YaBlocksEditor) blocksEditor;
     }
   }
 
   /*
    * A project as represented in the DesignToolbar. Each project has a name
-   * (as displayed in the DesignToolbar on the left), a set of named screens,
-   * and an indication of which screen is currently being edited.
+   * (as displayed in the DesignToolbar on the left), a set of named contexts,
+   * and an indication of which context is currently being edited.
    */
   public static class DesignProject {
     public final String name;
-    public final Map<String, Screen> screens; // screen name -> Screen
-    public String currentScreen; // name of currently displayed screen
+    public final Map<String, Context> screens; // screen name -> Screen
+    public final Map<String, Context> tasks; // task name -> Task
+    public String currentContext; // name of currently displayed screen/task
+    public String lastScreen; // name of the last opened screen. May be equal to currentContext.
 
     public DesignProject(String name, long projectId) {
       this.name = name;
       screens = Maps.newHashMap();
-      // Screen1 is initial screen by default
-      currentScreen = YoungAndroidSourceNode.SCREEN1_FORM_NAME;
-      // Let BlocklyPanel know which screen to send Yail for
-      BlocklyPanel.setCurrentForm(projectId + "_" + currentScreen);
+      tasks = Maps.newHashMap();
+      // Screen1 is initial context by default
+      currentContext = YoungAndroidSourceNode.SCREEN1_FORM_NAME;
+      lastScreen = currentContext;
+      BlocklyPanel.setCurrentContext(projectId + "_" + currentContext);
+      // Let BlocklyPanel know which context to send Yail for
+      BlocklyPanel.setCurrentForm(projectId + "_" + currentContext);
+    }
+
+    public Context getContext(String contextName) {
+      Context context = screens.get(contextName);
+      if (context == null) {
+        context = tasks.get(contextName);
+      }
+      return context;
+    }
+
+    public List<Context> getTasks() {
+      List<Context> tasks = new ArrayList<Context>();
+      for (Context task : this.tasks.values()) {
+        tasks.add(task);
+      }
+      return tasks;
+    }
+
+    public Context getLastScreen() {
+      return screens.get(lastScreen);
     }
 
     // Returns true if we added the screen (it didn't previously exist), false otherwise.
     public boolean addScreen(String name, FileEditor formEditor, FileEditor blocksEditor) {
-      if (!screens.containsKey(name)) {
-        screens.put(name, new Screen(name, formEditor, blocksEditor));
+      if (!screens.containsKey(name) && !tasks.containsKey(name)) {
+        screens.put(name, new Context(name, formEditor, blocksEditor));
         return true;
       } else {
         return false;
@@ -106,17 +129,45 @@ public class DesignToolbar extends Toolbar {
       screens.remove(name);
     }
 
-    public void setCurrentScreen(String name) {
-      currentScreen = name;
+    public boolean addTask(String name, FileEditor taskEditor, FileEditor blocksEditor) {
+      if (!tasks.containsKey(name) && !screens.containsKey(name)) {
+        tasks.put(name, new Context(name, taskEditor, blocksEditor));
+        return true;
+      } else {
+        return false;
+      }
     }
+
+    public void removeTask(String name) {
+      tasks.remove(name);
+    }
+
+    public void setCurrentContext(String name) {
+      currentContext = name;
+      if (screens.containsKey(currentContext)) {
+        this.lastScreen = currentContext;
+      }
+    }
+
+    public void removeContext(String name) {
+      if (screens.containsKey(name)) {
+        this.removeScreen(name);
+      }
+      if (tasks.containsKey(name)) {
+        this.removeTask(name);
+      }
+    }
+
   }
 
   private static final String WIDGET_NAME_TUTORIAL_TOGGLE = "TutorialToggle";
   private static final String WIDGET_NAME_ADDFORM = "AddForm";
-  private static final String WIDGET_NAME_REMOVEFORM = "RemoveForm";
-  private static final String WIDGET_NAME_SCREENS_DROPDOWN = "ScreensDropdown";
+  private static final String WIDGET_NAME_ADDTASK = "AddTask";
+  private static final String WIDGET_NAME_REMOVECONTEXT = "RemoveContext";
+
+  private static final String WIDGET_NAME_CONTEXTS_DROPDOWN = "ContextsDropdown";
   private static final String WIDGET_NAME_SWITCH_TO_BLOCKS_EDITOR = "SwitchToBlocksEditor";
-  private static final String WIDGET_NAME_SWITCH_TO_FORM_EDITOR = "SwitchToFormEditor";
+  private static final String WIDGET_NAME_SWITCH_TO_CONTEXT_EDITOR = "SwitchToContextEditor";
 
   // Switch language
   private static final String WIDGET_NAME_SWITCH_LANGUAGE = "Language";
@@ -128,10 +179,10 @@ public class DesignToolbar extends Toolbar {
 
   // Enum for type of view showing in the design tab
   public enum View {
-    FORM,   // Form editor view
+    CONTEXT,   // Context editor view
     BLOCKS  // Blocks editor view
   }
-  public View currentView = View.FORM;
+  public View currentView = View.CONTEXT;
 
   public Label projectNameLabel;
 
@@ -168,21 +219,28 @@ public class DesignToolbar extends Toolbar {
     toolbar.setCellWidth(projectNameLabel, "222px");
 
     addButton(new ToolbarItem(WIDGET_NAME_TUTORIAL_TOGGLE,
-        MESSAGES.toggleTutorialButton(), new ToogleTutorialAction()));
+            MESSAGES.toggleTutorialButton(), new ToogleTutorialAction()));
     setButtonVisible(WIDGET_NAME_TUTORIAL_TOGGLE, false); // Don't show unless needed
 
-    List<DropDownItem> screenItems = Lists.newArrayList();
-    addDropDownButton(WIDGET_NAME_SCREENS_DROPDOWN, MESSAGES.screensButton(), screenItems);
+    List<DropDownItem> contextItems = Lists.newArrayList();
+    addDropDownButton(WIDGET_NAME_CONTEXTS_DROPDOWN, MESSAGES.contextsButton(), contextItems);
 
     if (AppInventorFeatures.allowMultiScreenApplications() && !isReadOnly) {
       addButton(new ToolbarItem(WIDGET_NAME_ADDFORM, MESSAGES.addFormButton(),
-          new AddFormAction()));
-      addButton(new ToolbarItem(WIDGET_NAME_REMOVEFORM, MESSAGES.removeFormButton(),
-          new RemoveFormAction()));
+              new AddFormAction()));
+    }
+    if (AppInventorFeatures.allowTasks() && !isReadOnly) {
+      addButton(new ToolbarItem(WIDGET_NAME_ADDTASK, MESSAGES.addTaskButton(),
+              new AddTaskAction()));
+    }
+    if((AppInventorFeatures.allowMultiScreenApplications() || AppInventorFeatures.allowTasks()) && !isReadOnly) {
+      addButton(new ToolbarItem(WIDGET_NAME_REMOVECONTEXT, MESSAGES.removeButton(),
+              new RemoveContextAction()));
+
     }
 
-    addButton(new ToolbarItem(WIDGET_NAME_SWITCH_TO_FORM_EDITOR,
-        MESSAGES.switchToFormEditorButton(), new SwitchToFormEditorAction()), true);
+    addButton(new ToolbarItem(WIDGET_NAME_SWITCH_TO_CONTEXT_EDITOR,
+        MESSAGES.switchToContextEditorButton(), new SwitchToContextEditorAction()), true);
     addButton(new ToolbarItem(WIDGET_NAME_SWITCH_TO_BLOCKS_EDITOR,
         MESSAGES.switchToBlocksEditorButton(), new SwitchToBlocksEditorAction()), true);
 
@@ -208,7 +266,7 @@ public class DesignToolbar extends Toolbar {
     @Override
     public void execute() {
       Ode ode = Ode.getInstance();
-      if (ode.screensLocked()) {
+      if (ode.contextsLocked()) {
         return;                 // Don't permit this if we are locked out (saving files)
       }
       final ProjectRootNode projectRootNode = ode.getCurrentYoungAndroidProjectRootNode();
@@ -230,40 +288,94 @@ public class DesignToolbar extends Toolbar {
     }
   }
 
-  private class RemoveFormAction implements Command {
+  private class AddTaskAction implements Command {
     @Override
     public void execute() {
       Ode ode = Ode.getInstance();
-      if (ode.screensLocked()) {
-        return;                 // Don't permit this if we are locked out (saving files)
+      if (ode.contextsLocked()) {
+        return;
       }
-      YoungAndroidSourceNode sourceNode = ode.getCurrentYoungAndroidSourceNode();
-      if (sourceNode != null && !sourceNode.isScreen1()) {
-        // DeleteFileCommand handles the whole operation, including displaying the confirmation
-        // message dialog, closing the form editor and the blocks editor,
-        // deleting the files in the server's storage, and deleting the
-        // corresponding client-side nodes (which will ultimately trigger the
-        // screen deletion in the DesignToolbar).
-        final String deleteConfirmationMessage = MESSAGES.reallyDeleteForm(
-            sourceNode.getFormName());
-        ChainableCommand cmd = new DeleteFileCommand() {
+      final ProjectRootNode projectRootNode = ode.getCurrentYoungAndroidProjectRootNode();
+      if (projectRootNode != null) {
+        Runnable doSwitch = new Runnable() {
           @Override
-          protected boolean deleteConfirmation() {
-            return Window.confirm(deleteConfirmationMessage);
+          public void run() {
+            ChainableCommand cmd = new AddTaskCommand();
+            cmd.startExecuteChain(Tracking.PROJECT_ACTION_ADDTASK_YA, projectRootNode);
           }
         };
-        cmd.startExecuteChain(Tracking.PROJECT_ACTION_REMOVEFORM_YA, sourceNode);
+        // take a screenshot of the current blocks if we are in the blocks editor
+        if (currentView == View.BLOCKS) {
+          Ode.getInstance().screenShotMaybe(doSwitch, false);
+        } else {
+          doSwitch.run();
+        }
       }
     }
   }
 
-  private class SwitchScreenAction implements Command {
+  private class RemoveContextAction implements Command {
+    @Override
+    public void execute() {
+      Ode ode = Ode.getInstance();
+      if (ode.contextsLocked()) {
+        return;                 // Don't permit this if we are locked out (saving files)
+      }
+      YoungAndroidSourceNode sourceNode = ode.getCurrentYoungAndroidSourceNode();
+      FileEditor fileEditor = ode.getCurrentFileEditor();
+      if (sourceNode != null && !sourceNode.isScreen1()) {
+        // DeleteFileCommand handles the whole operation, including displaying the confirmation
+        // message dialog, closing the context editor and the blocks editor,
+        // deleting the files in the server's storage, and deleting the
+        // corresponding client-side nodes (which will ultimately trigger the
+        // screen deletion in the DesignToolbar).
+        String confirmMessage = "";
+        String trackingAction = "";
+        boolean isForm = false;
+        boolean isTask = false;
+        if (fileEditor instanceof YaContextEditor) {
+          if (fileEditor instanceof YaFormEditor) {
+            isForm = true;
+          } else if (fileEditor instanceof YaTaskEditor) {
+            isTask = true;
+          }
+        } else if (fileEditor instanceof YaBlocksEditor) {
+          YaBlocksEditor blocksEditor = (YaBlocksEditor) fileEditor;
+          if (blocksEditor.isFormBlocksEditor()) {
+            isForm = true;
+          }
+          else if (blocksEditor.isTaskBlocksEditor()) {
+            isTask = true;
+          }
+        }
+        if (isForm) {
+          confirmMessage = MESSAGES.reallyDeleteForm(sourceNode.getContextName());
+          trackingAction = Tracking.PROJECT_ACTION_REMOVEFORM_YA;
+        } else if (isTask) {
+          confirmMessage = MESSAGES.reallyDeleteTask(sourceNode.getContextName());
+          trackingAction = Tracking.PROJECT_ACTION_REMOVETASK_YA;
+        }
+        if (isForm || isTask) {
+          final String deleteConfirmationMessage = confirmMessage;
+          ChainableCommand cmd = new DeleteFileCommand() {
+            @Override
+            protected boolean deleteConfirmation() {
+              return Window.confirm(deleteConfirmationMessage);
+            }
+          };
+          cmd.startExecuteChain(trackingAction, sourceNode);
+        }
+      }
+    }
+  }
+
+  private class SwitchContextAction implements Command {
     private final long projectId;
     private final String name;  // screen name
 
-    public SwitchScreenAction(long projectId, String screenName) {
+    public SwitchContextAction(long projectId, String contextName) {
       this.projectId = projectId;
-      this.name = screenName;
+      this.name = contextName;
     }
 
     @Override
@@ -274,29 +386,29 @@ public class DesignToolbar extends Toolbar {
         Ode.getInstance().screenShotMaybe(new Runnable() {
             @Override
             public void run() {
-              doSwitchScreen(projectId, name, currentView);
+              doSwitchContext(projectId, name, currentView);
             }
           }, false);
       } else {
-        doSwitchScreen(projectId, name, currentView);
+        doSwitchContext(projectId, name, currentView);
       }
     }
   }
 
-  private void doSwitchScreen(final long projectId, final String screenName, final View view) {
+  private void doSwitchContext(final long projectId, final String contextName, final View view) {
     Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
         @Override
         public void execute() {
-          if (Ode.getInstance().screensLocked()) { // Wait until I/O complete
+          if (Ode.getInstance().contextsLocked()) { // Wait until I/O complete
             Scheduler.get().scheduleDeferred(this);
           } else {
-            doSwitchScreen1(projectId, screenName, view);
+            doSwitchContext1(projectId, contextName, view);
           }
         }
       });
   }
 
-  private void doSwitchScreen1(long projectId, String screenName, View view) {
+  private void doSwitchContext1(long projectId, String contextName, View view) {
     if (!projectMap.containsKey(projectId)) {
       OdeLog.wlog("DesignToolbar: no project with id " + projectId
           + ". Ignoring SwitchScreenAction.execute().");
@@ -304,19 +416,22 @@ public class DesignToolbar extends Toolbar {
     }
     DesignProject project = projectMap.get(projectId);
     if (currentProject != project) {
-      // need to switch projects first. this will not switch screens.
+      // need to switch projects first. this will not switch contexts.
       if (!switchToProject(projectId, project.name)) {
         return;
       }
     }
-    String newScreenName = screenName;
-    if (!currentProject.screens.containsKey(newScreenName)) {
-      // Can't find the requested screen in this project. This shouldn't happen, but if it does
+    String newContextName = contextName;
+    boolean isScreen = currentProject.screens.containsKey(newContextName);
+    boolean isTask = currentProject.tasks.containsKey(newContextName);
+    if (!isScreen && !isTask) {
+      // Can't find the requested context in this project. This shouldn't happen, but if it does
       // for some reason, try switching to Screen1 instead.
-      OdeLog.wlog("Trying to switch to non-existent screen " + newScreenName +
+      OdeLog.wlog("Trying to switch to non-existent context " + newContextName +
           " in project " + currentProject.name + ". Trying Screen1 instead.");
       if (currentProject.screens.containsKey(YoungAndroidSourceNode.SCREEN1_FORM_NAME)) {
-        newScreenName = YoungAndroidSourceNode.SCREEN1_FORM_NAME;
+        newContextName = YoungAndroidSourceNode.SCREEN1_FORM_NAME;
+        isScreen = true;
       } else {
         // something went seriously wrong!
         ErrorReporter.reportError("Something is wrong. Can't find Screen1 for project "
@@ -325,23 +440,31 @@ public class DesignToolbar extends Toolbar {
       }
     }
     currentView = view;
-    Screen screen = currentProject.screens.get(newScreenName);
-    ProjectEditor projectEditor = screen.formEditor.getProjectEditor();
-    currentProject.setCurrentScreen(newScreenName);
-    setDropDownButtonCaption(WIDGET_NAME_SCREENS_DROPDOWN, newScreenName);
-    OdeLog.log("Setting currentScreen to " + newScreenName);
-    if (currentView == View.FORM) {
-      projectEditor.selectFileEditor(screen.formEditor);
+    Context context = null;
+    if (isScreen) {
+      context = currentProject.screens.get(newContextName);
+    } else if (isTask) {
+      context = currentProject.tasks.get(newContextName);
+    }
+    ProjectEditor projectEditor = context.contextEditor.getProjectEditor();
+    currentProject.setCurrentContext(newContextName);
+    setDropDownButtonCaption(WIDGET_NAME_CONTEXTS_DROPDOWN, newContextName);
+    if (currentView == View.CONTEXT) {
+      projectEditor.selectFileEditor(context.contextEditor);
       toggleEditor(false);
       Ode.getInstance().getTopToolbar().updateFileMenuButtons(1);
     } else {  // must be View.BLOCKS
-      projectEditor.selectFileEditor(screen.blocksEditor);
+      projectEditor.selectFileEditor(context.blocksEditor);
       toggleEditor(true);
       Ode.getInstance().getTopToolbar().updateFileMenuButtons(1);
     }
-    // Inform the Blockly Panel which project/screen (aka form) we are working on
-    BlocklyPanel.setCurrentForm(projectId + "_" + newScreenName);
-    screen.blocksEditor.makeActiveWorkspace();
+    // Inform the Blockly Panel which project/context we are working on
+    OdeLog.log("Setting currentContext to " + newContextName);
+    BlocklyPanel.setCurrentContext(projectId + "_" + newContextName);
+    if (isScreen) {
+      BlocklyPanel.setCurrentForm(projectId + "_" + newContextName);
+    }
+    context.blocksEditor.makeActiveWorkspace();
   }
 
   private class SwitchToBlocksEditorAction implements Command {
@@ -354,32 +477,32 @@ public class DesignToolbar extends Toolbar {
       }
       if (currentView != View.BLOCKS) {
         long projectId = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getProjectId();
-        switchToScreen(projectId, currentProject.currentScreen, View.BLOCKS);
+        switchToContext(projectId, currentProject.currentContext, View.BLOCKS);
         toggleEditor(true);       // Gray out the blocks button and enable the designer button
         Ode.getInstance().getTopToolbar().updateFileMenuButtons(1);
       }
     }
   }
 
-  private class SwitchToFormEditorAction implements Command {
+  private class SwitchToContextEditorAction implements Command {
     @Override
     public void execute() {
       if (currentProject == null) {
         OdeLog.wlog("DesignToolbar.currentProject is null. "
-            + "Ignoring SwitchToFormEditorAction.execute().");
+            + "Ignoring SwitchToContextEditorAction.execute().");
         return;
       }
-      if (currentView != View.FORM) {
+      if (currentView != View.CONTEXT) {
         // We are leaving a blocks editor, so take a screenshot
         Ode.getInstance().screenShotMaybe(new Runnable() {
-            @Override
-            public void run() {
-              long projectId = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getProjectId();
-              switchToScreen(projectId, currentProject.currentScreen, View.FORM);
-              toggleEditor(false);      // Gray out the Designer button and enable the blocks button
-              Ode.getInstance().getTopToolbar().updateFileMenuButtons(1);
-            }
-          }, false);
+          @Override
+          public void run() {
+            long projectId = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getProjectId();
+            switchToContext(projectId, currentProject.currentContext, View.CONTEXT);
+            toggleEditor(false);      // Gray out the Designer button and enable the blocks button
+            Ode.getInstance().getTopToolbar().updateFileMenuButtons(1);
+          }
+        }, false);
       }
     }
   }
@@ -405,14 +528,18 @@ public class DesignToolbar extends Toolbar {
         return true;
       }
       pushedScreens.clear();    // Effectively switching applications clear stack of screens
-      clearDropDownMenu(WIDGET_NAME_SCREENS_DROPDOWN);
+      clearDropDownMenu(WIDGET_NAME_CONTEXTS_DROPDOWN);
       OdeLog.log("DesignToolbar: switching to existing project " + projectName + " with id "
           + projectId);
       currentProject = projectMap.get(projectId);
-      // TODO(sharon): add screens to drop-down menu in the right order
-      for (Screen screen : currentProject.screens.values()) {
-        addDropDownButtonItem(WIDGET_NAME_SCREENS_DROPDOWN, new DropDownItem(screen.screenName,
-            screen.screenName, new SwitchScreenAction(projectId, screen.screenName)));
+      // TODO(sharon): add contexts to drop-down menu in the right order
+      for (Context screen : currentProject.screens.values()) {
+        addDropDownButtonItem(WIDGET_NAME_CONTEXTS_DROPDOWN, new DropDownItem(screen.contextName,
+            screen.contextName, new SwitchContextAction(projectId, screen.contextName)));
+      }
+      for (Context task : currentProject.tasks.values()) {
+        addDropDownButtonItem(WIDGET_NAME_CONTEXTS_DROPDOWN, new DropDownItem(task.contextName,
+            task.contextName, new SwitchContextAction(projectId, task.contextName)));
       }
       projectNameLabel.setText(projectName);
     } else {
@@ -440,8 +567,29 @@ public class DesignToolbar extends Toolbar {
     DesignProject project = projectMap.get(projectId);
     if (project.addScreen(name, formEditor, blocksEditor)) {
       if (currentProject == project) {
-        addDropDownButtonItem(WIDGET_NAME_SCREENS_DROPDOWN, new DropDownItem(name,
-            name, new SwitchScreenAction(projectId, name)));
+        addDropDownButtonItem(WIDGET_NAME_CONTEXTS_DROPDOWN, new DropDownItem(name,
+            name, new SwitchContextAction(projectId, name)));
+      }
+    }
+  }
+
+  /*
+   * Add a task name to the drop-down for the project with id projectId.
+   * name is the task name, taskEditor is the file editor for the task,
+   * and blocksEditor is the file editor for the tasks's blocks.
+   */
+  public void addTask(long projectId, String name, FileEditor taskEditor,
+                      FileEditor blocksEditor) {
+    if (!projectMap.containsKey(projectId)) {
+      OdeLog.wlog("DesignToolbar can't find project " + name + " with id " + projectId
+          + ". Ignoring addTask().");
+      return;
+    }
+    DesignProject project = projectMap.get(projectId);
+    if (project.addTask(name, taskEditor, blocksEditor)) {
+      if (currentProject == project) {
+        addDropDownButtonItem(WIDGET_NAME_CONTEXTS_DROPDOWN, new DropDownItem(name,
+            name, new SwitchContextAction(projectId, name))); //TODO:
       }
     }
   }
@@ -455,11 +603,11 @@ public class DesignToolbar extends Toolbar {
   public static boolean pushScreen(String screenName) {
     DesignToolbar designToolbar = Ode.getInstance().getDesignToolbar();
     long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
-    String currentScreen = designToolbar.currentProject.currentScreen;
+    String lastScreen = designToolbar.currentProject.lastScreen; // We may not be on a Screen
     if (!designToolbar.currentProject.screens.containsKey(screenName)) // No such screen -- can happen
       return false;                                                    // because screen is user entered here.
-    pushedScreens.addFirst(currentScreen);
-    designToolbar.doSwitchScreen(projectId, screenName, View.BLOCKS);
+    pushedScreens.addFirst(lastScreen);
+    designToolbar.doSwitchContext(projectId, screenName, View.BLOCKS);
     return true;
   }
 
@@ -471,7 +619,7 @@ public class DesignToolbar extends Toolbar {
       return;                   // Nothing to do really
     }
     newScreen = pushedScreens.removeFirst();
-    designToolbar.doSwitchScreen(projectId, newScreen, View.BLOCKS);
+    designToolbar.doSwitchContext(projectId, newScreen, View.BLOCKS);
   }
 
   // Called from Javascript when Companion is disconnected
@@ -480,50 +628,50 @@ public class DesignToolbar extends Toolbar {
   }
 
   /*
-   * Switch to screen name in project projectId. Also switches projects if
+   * Switch to context name in project projectId. Also switches projects if
    * necessary.
    */
-  public void switchToScreen(long projectId, String screenName, View view) {
-    doSwitchScreen(projectId, screenName, view);
+  public void switchToContext(long projectId, String contextName, View view) {
+    doSwitchContext(projectId, contextName, view);
   }
 
   /*
-   * Remove screen name (if it exists) from project projectId
+   * Remove context name (if it exists) from project projectId
    */
-  public void removeScreen(long projectId, String name) {
+  public void removeContext(long projectId, String name) {
     if (!projectMap.containsKey(projectId)) {
       OdeLog.wlog("DesignToolbar can't find project " + name + " with id " + projectId
-          + " Ignoring removeScreen().");
+          + " Ignoring removeContext().");
       return;
     }
-    OdeLog.log("DesignToolbar: got removeScreen for project " + projectId
-        + ", screen " + name);
+    OdeLog.log("DesignToolbar: got removeContext for project " + projectId
+        + ", context " + name);
     DesignProject project = projectMap.get(projectId);
     if (!project.screens.containsKey(name)) {
       // already removed this screen
       return;
     }
     if (currentProject == project) {
-      // if removing current screen, choose a new screen to show
-      if (currentProject.currentScreen.equals(name)) {
+      // if removing current context, choose a new context to show
+      if (currentProject.currentContext.equals(name)) {
         // TODO(sharon): maybe make a better choice than screen1, but for now
         // switch to screen1 because we know it is always there
-        switchToScreen(projectId, YoungAndroidSourceNode.SCREEN1_FORM_NAME, View.FORM);
+        switchToContext(projectId, YoungAndroidSourceNode.SCREEN1_FORM_NAME, View.CONTEXT);
       }
-      removeDropDownButtonItem(WIDGET_NAME_SCREENS_DROPDOWN, name);
+      removeDropDownButtonItem(WIDGET_NAME_CONTEXTS_DROPDOWN, name);
     }
-    project.removeScreen(name);
+    project.removeContext(name);
   }
 
   private void toggleEditor(boolean blocks) {
     setButtonEnabled(WIDGET_NAME_SWITCH_TO_BLOCKS_EDITOR, !blocks);
-    setButtonEnabled(WIDGET_NAME_SWITCH_TO_FORM_EDITOR, blocks);
+    setButtonEnabled(WIDGET_NAME_SWITCH_TO_CONTEXT_EDITOR, blocks);
 
-    if (AppInventorFeatures.allowMultiScreenApplications() && !isReadOnly) {
-      if (getCurrentProject() == null || getCurrentProject().currentScreen == "Screen1") {
-        setButtonEnabled(WIDGET_NAME_REMOVEFORM, false);
+    if ((AppInventorFeatures.allowMultiScreenApplications() || AppInventorFeatures.allowTasks()) && !isReadOnly) {
+      if (getCurrentProject() == null || getCurrentProject().currentContext == "Screen1") {
+        setButtonEnabled(WIDGET_NAME_REMOVECONTEXT, false);
       } else {
-        setButtonEnabled(WIDGET_NAME_REMOVEFORM, true);
+        setButtonEnabled(WIDGET_NAME_REMOVECONTEXT, true);
       }
     }
   }

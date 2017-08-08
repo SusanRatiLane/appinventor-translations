@@ -129,26 +129,26 @@ public final class MockLabel extends MockVisibleComponent {
       setBackgroundColorProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_FONTBOLD)) {
       setFontBoldProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTITALIC)) {
       setFontItalicProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTSIZE)) {
       setFontSizeProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTTYPEFACE)) {
       setFontTypefaceProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXT)) {
       setTextProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXTCOLOR)) {
       setTextColorProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_HTMLFORMAT)) {
       // Just need to re-set the saved text so it is displayed
       // either as HTML or text as appropriate
       setTextProperty(savedText);
-      refreshForm();
+      refreshContext();
     }
   }
 }

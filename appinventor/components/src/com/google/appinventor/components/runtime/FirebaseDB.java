@@ -133,7 +133,7 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
     // back in the UI thread.  They do this by posting those actions
     // to androidUIHandler.
     androidUIHandler = new Handler();
-    this.activity = container.$context();
+    this.activity = container.$form();
     Firebase.setAndroidContext(activity);
 
     developerBucket = ""; // set dynamically in the Designer

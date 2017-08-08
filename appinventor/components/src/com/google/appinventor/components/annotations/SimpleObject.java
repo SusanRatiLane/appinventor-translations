@@ -23,6 +23,16 @@ import java.lang.annotation.Target;
 public @interface SimpleObject {
 
     /**
+     * True if this component works on Screen context
+     */
+    boolean screenCompatible() default true;
+
+    /**
+     * True if this component works on Task context
+     */
+    boolean taskCompatible() default true;
+
+    /**
      * True if this component is an external component.
      * Setting to True is mandatory for packing Extensions (aix)
      */

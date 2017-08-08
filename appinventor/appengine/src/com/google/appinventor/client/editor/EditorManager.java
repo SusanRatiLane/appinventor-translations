@@ -77,11 +77,11 @@ public final class EditorManager {
       public void run() {
         // When the timer goes off, save all dirtyProjectSettings and
         // dirtyFileEditors.
-        Ode.getInstance().lockScreens(true); // Lock out changes
+        Ode.getInstance().lockContexts(true); // Lock out changes
         saveDirtyEditors(new Command() {
             @Override
             public void execute() {
-              Ode.getInstance().lockScreens(false); // I/O finished, unlock
+              Ode.getInstance().lockContexts(false); // I/O finished, unlock
             }
           });
       }
@@ -321,7 +321,7 @@ public final class EditorManager {
             try {
               yailFiles.add(yaBlocksEditor.getYail());
             } catch (YailGenerationException e) {
-              ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(), 
+              ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getContextName(),
                   e.getMessage()));
               if (failureCommand != null) {
                 failureCommand.execute();

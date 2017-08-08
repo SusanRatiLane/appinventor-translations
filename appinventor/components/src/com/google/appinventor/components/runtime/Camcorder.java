@@ -76,7 +76,7 @@ public class Camcorder extends AndroidNonvisibleComponent
       }
 
       Intent intent = new Intent(CAMCORDER_INTENT);
-      container.$context().startActivityForResult(intent, requestCode);
+      container.$form().startActivityForResult(intent, requestCode);
     } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
       form.dispatchErrorOccurredEvent(this, "RecordVideo",
         ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_READONLY);

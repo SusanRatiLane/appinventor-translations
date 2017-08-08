@@ -10,6 +10,7 @@ import java.util.Formatter;
 import java.security.MessageDigest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
@@ -46,7 +47,7 @@ import com.google.appinventor.components.runtime.ReplForm;
 @SimpleObject
 public class PhoneStatus extends AndroidNonvisibleComponent implements Component {
 
-  private static Activity activity;
+  private static Context context;
   private static final String LOG_TAG = "PhoneStatus";
   private final Form form;
   private static PhoneStatus mainInstance = null;
@@ -54,7 +55,7 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
   public PhoneStatus(ComponentContainer container) {
     super(container.$form());
     this.form = container.$form();
-    activity = container.$context();
+    context = container.$context();
     if (mainInstance == null) { // First one?
       mainInstance = this;
     }
@@ -63,7 +64,7 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
   @SimpleFunction(description = "Returns the IP address of the phone in the form of a String")
   public static String GetWifiIpAddress() {
     DhcpInfo ip;
-    Object wifiManager = activity.getSystemService("wifi");
+    Object wifiManager = context.getSystemService("wifi");
     ip = ((WifiManager) wifiManager).getDhcpInfo();
     int s_ipAddress= ip.ipAddress;
     String ipAddress;
@@ -76,7 +77,7 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
 
   @SimpleFunction(description = "Returns TRUE if the phone is on Wifi, FALSE otherwise")
   public static boolean isConnected() {
-    ConnectivityManager connectivityManager = (ConnectivityManager) activity.getSystemService("connectivity");
+    ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService("connectivity");
     NetworkInfo networkInfo = null;
     if (connectivityManager != null) {
       networkInfo =

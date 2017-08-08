@@ -156,22 +156,22 @@ public final class MockListView extends MockVisibleComponent {
     // Apply changed properties to the mock component
     if (propertyName.equals(PROPERTY_NAME_LISTVIEW)) {
       setElementsFromStringProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_SHOW_FILTER_BAR)) {
       setFilterShowBox(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_BACKGROUNDCOLOR)) {
       setBackgroundColorProperty(newValue);
       if (currentList != null) {
         setElementsFromStringProperty(currentElements);
       }
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXTCOLOR)) {
       textColor = newValue;
       if (currentList != null) {
         setElementsFromStringProperty(currentElements);
       }
-      refreshForm();
+      refreshContext();
     }
   }
 }

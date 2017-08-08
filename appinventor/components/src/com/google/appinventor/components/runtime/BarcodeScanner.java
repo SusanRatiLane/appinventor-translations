@@ -99,7 +99,7 @@ public class BarcodeScanner extends AndroidNonvisibleComponent
       requestCode = form.registerForActivityResult(this);
     }
     try {
-      container.$context().startActivityForResult(intent, requestCode);
+      container.$form().startActivityForResult(intent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
       container.$form().dispatchErrorOccurredEvent(this, "BarcodeScanner",

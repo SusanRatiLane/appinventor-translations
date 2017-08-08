@@ -60,13 +60,13 @@ abstract class MockButtonBase extends MockVisibleComponent {
         if (imagePropValue != null && !imagePropValue.isEmpty()) {
           OdeLog.elog("Error occurred while loading image " + imagePropValue);
         }
-        refreshForm();
+        refreshContext();
       }
     });
     image.addLoadHandler(new LoadHandler() {
       @Override
       public void onLoad(LoadEvent event) {
-        refreshForm();
+        refreshContext();
       }
     });
     DeckPanel deckPanel = new DeckPanel();
@@ -299,22 +299,22 @@ abstract class MockButtonBase extends MockVisibleComponent {
       setEnabledProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_FONTBOLD)) {
       setFontBoldProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTITALIC)) {
       setFontItalicProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTSIZE)) {
       setFontSizeProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_FONTTYPEFACE)) {
       setFontTypefaceProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_IMAGE)) {
       setImageProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXT)) {
       setTextProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_TEXTCOLOR)) {
       setTextColorProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_BUTTONSHAPE)){

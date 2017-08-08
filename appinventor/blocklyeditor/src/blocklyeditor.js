@@ -198,12 +198,12 @@ Blockly.unprefixName = function (name) {
 /**
  * Create a new Blockly workspace but without initializing its DOM.
  * @param container The container that will host the Blockly workspace
- * @param formName The projectId_formName identifier used to name the workspace
+ * @param fullContextName The projectId_contextName identifier used to name the workspace
  * @param readOnly True if the workspace should be created read-only
  * @param rtl True if the workspace is using a right-to-left language
  * @returns {Blockly.WorkspaceSvg} A newly created workspace
  */
-Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
+Blockly.BlocklyEditor['create'] = function(container, fullContextName, readOnly, rtl) {
   var options = new Blockly.Options({
     'readOnly': readOnly,
     'rtl': rtl,
@@ -230,8 +230,10 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   var workspaceDragSurface = new Blockly.workspaceDragSurfaceSvg(subContainer);
 
   var workspace = new Blockly.WorkspaceSvg(options, blockDragSurface, workspaceDragSurface);
-  Blockly.allWorkspaces[formName] = workspace;
-  workspace.formName = formName;
+  Blockly.allWorkspaces[fullContextName] = workspace;
+  var parts = fullContextName.split(/_/);
+  workspace.projectId = parts[0]
+  workspace.contextName = parts[1];
   workspace.rendered = false;
   workspace.componentDb_ = new Blockly.ComponentDatabase();
   workspace.procedureDb_ = new Blockly.ProcedureDatabase(workspace);
@@ -269,7 +271,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
  */
 Blockly.ai_inject = function(container, workspace) {
   Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
-  workspace.fireChangeListener(new AI.Events.ScreenSwitch(workspace.projectId, workspace.formName));
+  workspace.fireChangeListener(new AI.Events.ScreenSwitch(workspace.projectId, workspace.contextName));
   var gridEnabled = top.BlocklyPanel_getGridEnabled && top.BlocklyPanel_getGridEnabled();
   var gridSnap = top.BlocklyPanel_getSnapEnabled && top.BlocklyPanel_getSnapEnabled();
   if (workspace.injected) {

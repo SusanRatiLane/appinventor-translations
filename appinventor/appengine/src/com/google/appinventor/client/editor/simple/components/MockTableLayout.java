@@ -116,14 +116,14 @@ final class MockTableLayout extends MockLayout {
     this.nrows = nrows;
     rowTops = new int[nrows];
     rowHeights = new int[nrows];
-    container.refreshForm();
+    container.refreshContext();
   }
 
   public void setColumns(int ncols) {
     this.ncols = ncols;
     colLefts = new int[ncols];
     colWidths = new int[ncols];
-    container.refreshForm();
+    container.refreshContext();
   }
 
   // Drop target area

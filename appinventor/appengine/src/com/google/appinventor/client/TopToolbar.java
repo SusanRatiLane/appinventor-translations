@@ -817,7 +817,7 @@ public class TopToolbar extends Composite {
         Window.alert(MESSAGES.companionUpdateMustHaveProject());
         return;
       }
-      DesignToolbar.Screen screen = currentProject.screens.get(currentProject.currentScreen);
+      DesignToolbar.Context screen = currentProject.screens.get(currentProject.currentContext);
       screen.blocksEditor.updateCompanion();
     }
   }
@@ -902,8 +902,14 @@ public class TopToolbar extends Composite {
             + "Ignoring attempt to start the repl.");
       return;
     }
-    DesignToolbar.Screen screen = currentProject.screens.get(currentProject.currentScreen);
-    screen.blocksEditor.startRepl(!start, forEmulator, forUsb);
+//    // We need to startRepl for all tasks and the last opened screen
+//    // Look for all tasks
+//    for (DesignToolbar.Context task : currentProject.getTasks()) {
+//      task.blocksEditor.sendComponentData();
+//    }
+    // Look for the last opened Screen
+    DesignToolbar.Context lastScreen = currentProject.getContext(currentProject.lastScreen);
+    lastScreen.blocksEditor.startRepl(!start, forEmulator, forUsb);
     if (start) {
       if (forEmulator) {        // We are starting the emulator...
         updateConnectToDropDownButton(true, false, false);
@@ -924,7 +930,7 @@ public class TopToolbar extends Composite {
             + "Ignoring attempt to do hard reset.");
       return;
     }
-    DesignToolbar.Screen screen = currentProject.screens.get(currentProject.currentScreen);
+    DesignToolbar.Context screen = currentProject.screens.get(currentProject.currentContext);
     ((YaBlocksEditor)screen.blocksEditor).hardReset();
     updateConnectToDropDownButton(false, false, false);
   }

@@ -103,13 +103,13 @@ public class MockHVArrangement extends MockContainer {
           if (imagePropValue != null && !imagePropValue.isEmpty()) {
             OdeLog.elog("Error occurred while loading image " + imagePropValue);
           }
-          refreshForm();
+          refreshContext();
         }
       });
       image.addLoadHandler(new LoadHandler() {
         @Override
         public void onLoad(LoadEvent event) {
-          refreshForm();
+          refreshContext();
         }
       });
 
@@ -129,18 +129,18 @@ public class MockHVArrangement extends MockContainer {
     super.onPropertyChange(propertyName, newValue);
     if  (propertyName.equals(PROPERTY_NAME_HORIZONTAL_ALIGNMENT)) {
       myLayout.setHAlignmentFlags(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_VERTICAL_ALIGNMENT)) {
       myLayout.setVAlignmentFlags(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_IMAGE)) {
       setImageProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_BACKGROUNDCOLOR)) {
       setBackgroundColorProperty(newValue);
     } else {
       if (propertyName.equals(PROPERTY_NAME_WIDTH) || propertyName.equals(PROPERTY_NAME_HEIGHT)) {
-        refreshForm();
+        refreshContext();
       }
     }
   }
@@ -156,7 +156,7 @@ public class MockHVArrangement extends MockContainer {
         changeProperty(PROPERTY_NAME_HORIZONTAL_ALIGNMENT, ComponentConstants.GRAVITY_LEFT+ "");
         myHAlignmentPropertyEditor.disable();
       }
-      refreshForm();
+      refreshContext();
     } else {
       myVAlignmentPropertyEditor.enable();
       myHAlignmentPropertyEditor.enable();

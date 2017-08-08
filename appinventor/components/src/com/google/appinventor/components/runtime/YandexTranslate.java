@@ -66,7 +66,7 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
     // TODO (user) To provide users with this component you will need to obtain a key with the
     // Yandex.Translate service at http://api.yandex.com/translate/
     yandexKey = "";
-    activity = container.$context();
+    activity = container.$form();
   }
 
   /**

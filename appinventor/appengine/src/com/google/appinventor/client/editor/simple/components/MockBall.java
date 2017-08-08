@@ -142,7 +142,7 @@ public final class MockBall extends MockVisibleComponent implements MockSprite {
     super.onPropertyChange(propertyName, newValue);
     if (propertyName.equals(PROPERTY_NAME_RADIUS)) {
       setRadiusProperty(newValue);
-      refreshForm();
+      refreshContext();
     } else if (propertyName.equals(PROPERTY_NAME_PAINTCOLOR)) {
       setColorProperty(newValue);
     } else if (propertyName.equals(PROPERTY_NAME_Z)) {

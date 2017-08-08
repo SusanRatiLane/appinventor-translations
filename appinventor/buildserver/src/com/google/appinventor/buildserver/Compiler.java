@@ -129,6 +129,8 @@ public final class Compiler {
       RUNTIME_FILES_DIR + "acra-4.4.0.jar";
   private static final String ANDROID_RUNTIME =
       RUNTIME_FILES_DIR + "android.jar";
+  private static final String ANDROID_SUPPORT_V4_RUNTIME =
+          RUNTIME_FILES_DIR + "android-support-v4.jar";
   private static final String COMP_BUILD_INFO =
       RUNTIME_FILES_DIR + "simple_components_build_info.json";
   private static final String DX_JAR =
@@ -517,57 +519,62 @@ public final class Compiler {
       out.write(">\n");
 
       for (Project.SourceDescriptor source : project.getSources()) {
-        String formClassName = source.getQualifiedName();
-        // String screenName = formClassName.substring(formClassName.lastIndexOf('.') + 1);
-        boolean isMain = formClassName.equals(mainClass);
+        String contextClassName = source.getQualifiedName();
+        if (source.getSourceType() == Project.SourceDescriptor.SourceType.FORM) {
 
-        if (isMain) {
-          // The main activity of the application.
-          out.write("    <activity android:name=\"." + className + "\" ");
-        } else {
-          // A secondary activity of the application.
-          out.write("    <activity android:name=\"" + formClassName + "\" ");
-        }
+          // String screenName = formClassName.substring(formClassName.lastIndexOf('.') + 1);
+          boolean isMain = contextClassName.equals(mainClass);
 
-        // This line is here for NearField and NFC.   It keeps the activity from
-        // restarting every time NDEF_DISCOVERED is signaled.
-        // TODO:  Check that this doesn't screw up other components.  Also, it might be
-        // better to do this programmatically when the NearField component is created, rather
-        // than here in the manifest.
-        if (simpleCompTypes.contains("com.google.appinventor.components.runtime.NearField") &&
-            !isForCompanion && isMain) {
-          out.write("android:launchMode=\"singleTask\" ");
-        } else if (isMain && isForCompanion) {
-          out.write("android:launchMode=\"singleTop\" ");
-        }
+          if (isMain) {
+            // The main activity of the application.
+            out.write("    <activity android:name=\"." + className + "\" ");
+          } else {
+            // A secondary activity of the application.
+            out.write("    <activity android:name=\"" + contextClassName + "\" ");
+          }
 
-        out.write("android:windowSoftInputMode=\"stateHidden\" ");
+          // This line is here for NearField and NFC.   It keeps the activity from
+          // restarting every time NDEF_DISCOVERED is signaled.
+          // TODO:  Check that this doesn't screw up other components.  Also, it might be
+          // better to do this programmatically when the NearField component is created, rather
+          // than here in the manifest.
+          if (simpleCompTypes.contains("com.google.appinventor.components.runtime.NearField") &&
+              !isForCompanion && isMain) {
+            out.write("android:launchMode=\"singleTask\" ");
+          } else if (isMain && isForCompanion) {
+            out.write("android:launchMode=\"singleTop\" ");
+          }
 
-        // The keyboard option prevents the app from stopping when a external (bluetooth)
-        // keyboard is attached.
-        out.write("android:configChanges=\"orientation|keyboardHidden|keyboard\">\n");
+          out.write("android:windowSoftInputMode=\"stateHidden\" ");
+
+          // The keyboard option prevents the app from stopping when a external (bluetooth)
+          // keyboard is attached.
+          out.write("android:configChanges=\"orientation|keyboardHidden|keyboard\">\n");
 
 
-        out.write("      <intent-filter>\n");
-        out.write("        <action android:name=\"android.intent.action.MAIN\" />\n");
-        if (isMain) {
-          out.write("        <category android:name=\"android.intent.category.LAUNCHER\" />\n");
-        }
-        out.write("      </intent-filter>\n");
-
-        if (simpleCompTypes.contains("com.google.appinventor.components.runtime.NearField") &&
-            !isForCompanion && isMain) {
-          //  make the form respond to NDEF_DISCOVERED
-          //  this will trigger the form's onResume method
-          //  For now, we're handling text/plain only,but we can add more and make the Nearfield
-          // component check the type.
           out.write("      <intent-filter>\n");
-          out.write("        <action android:name=\"android.nfc.action.NDEF_DISCOVERED\" />\n");
-          out.write("        <category android:name=\"android.intent.category.DEFAULT\" />\n");
-          out.write("        <data android:mimeType=\"text/plain\" />\n");
+          out.write("        <action android:name=\"android.intent.action.MAIN\" />\n");
+          if (isMain) {
+            out.write("        <category android:name=\"android.intent.category.LAUNCHER\" />\n");
+          }
           out.write("      </intent-filter>\n");
+
+          if (simpleCompTypes.contains("com.google.appinventor.components.runtime.NearField") &&
+              !isForCompanion && isMain) {
+            //  make the form respond to NDEF_DISCOVERED
+            //  this will trigger the form's onResume method
+            //  For now, we're handling text/plain only,but we can add more and make the Nearfield
+            // component check the type.
+            out.write("      <intent-filter>\n");
+            out.write("        <action android:name=\"android.nfc.action.NDEF_DISCOVERED\" />\n");
+            out.write("        <category android:name=\"android.intent.category.DEFAULT\" />\n");
+            out.write("        <data android:mimeType=\"text/plain\" />\n");
+            out.write("      </intent-filter>\n");
+          }
+          out.write("    </activity>\n");
+        } else if (source.getSourceType() == Project.SourceDescriptor.SourceType.TASK) {
+          out.write("    <service android:name=\"" + contextClassName + "\"></service>");
         }
-        out.write("    </activity>\n");
       }
       
       // Collect any additional <application> subelements into a single set.
@@ -967,6 +974,8 @@ public final class Compiler {
       }
 
       classpath.append(getResource(ANDROID_RUNTIME));
+      classpath.append(COLON);
+      classpath.append(getResource(ANDROID_SUPPORT_V4_RUNTIME));
 
       System.out.println("Libraries Classpath = " + classpath);
 
@@ -1164,6 +1173,7 @@ public final class Compiler {
     List<File> class2List = new ArrayList<File>();
     inputList.add(classesDir); //this is a directory, and won't be cached into the dex cache
     inputList.add(new File(getResource(SIMPLE_ANDROID_RUNTIME_JAR)));
+    inputList.add(new File(getResource(ANDROID_SUPPORT_V4_RUNTIME)));
     inputList.add(new File(getResource(KAWA_RUNTIME)));
     inputList.add(new File(getResource(ACRA_RUNTIME)));
 

@@ -6,6 +6,7 @@
 
 package com.google.appinventor.components.runtime;
 
+import android.content.Context;
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.DesignerProperty;
 import com.google.appinventor.components.annotations.PropertyCategory;
@@ -128,7 +129,7 @@ public class GameClient extends AndroidNonvisibleComponent
   private String gameId;
   private GameInstance instance;
   private Handler androidUIHandler;
-  private Activity activityContext;
+  private Context context;
 
   private String userEmailAddress = "";
 
@@ -150,7 +151,7 @@ public class GameClient extends AndroidNonvisibleComponent
     // only one UI thread in an Android app and posting to this
     // handler queues up a Runnable for execution on that thread.
     androidUIHandler = new Handler();
-    activityContext = container.$context();
+    context = container.$context();
     form.registerForOnResume(this);
     form.registerForOnStop(this);
     gameId = "";

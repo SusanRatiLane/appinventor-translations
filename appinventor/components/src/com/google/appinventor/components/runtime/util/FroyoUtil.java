@@ -43,11 +43,11 @@ public class FroyoUtil {
   // Methods for Player Component
   /**
    * Utility method that returns and AudioManager for the Activity passed in
-   * @param activity the Activity that will be associated to the AudioManager
+   * @param context the Activity that will be associated to the AudioManager
    * @return the AudioManager object for the passed Activity
    */
-  public static AudioManager setAudioManager(Activity activity) {
-    return (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+  public static AudioManager setAudioManager(Context context) {
+    return (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
   }
 
   /**

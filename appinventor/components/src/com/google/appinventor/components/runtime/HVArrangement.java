@@ -8,6 +8,7 @@ package com.google.appinventor.components.runtime;
 
 import android.app.Activity;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import android.os.Handler;
@@ -87,7 +88,7 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
   */
   public HVArrangement(ComponentContainer container, int orientation, boolean scrollable) {
     super(container);
-    context = container.$context();
+    context = $form();
 
     this.orientation = orientation;
     this.scrollable = scrollable;
@@ -136,13 +137,43 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
   // ComponentContainer implementation
 
   @Override
-  public Activity $context() {
-    return context;
+  public Context $context() {
+    return container.$context();
   }
 
   @Override
   public Form $form() {
     return container.$form();
+  }
+
+  @Override
+  public Task $task() {
+    return container.$task();
+  }
+
+  @Override
+  public boolean isContext() {
+    return false;
+  }
+
+  @Override
+  public boolean isForm() {
+    return false;
+  }
+
+  @Override
+  public boolean isTask() {
+    return false;
+  }
+
+  @Override
+  public boolean inForm() {
+    return ($form() != null);
+  }
+
+  @Override
+  public boolean inTask() {
+    return ($task() != null);
   }
 
   @Override
@@ -204,6 +235,13 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
       ViewUtil.setChildHeightForHorizontalLayout(component.getView(), height);
     } else {
       ViewUtil.setChildHeightForVerticalLayout(component.getView(), height);
+    }
+  }
+
+  @Override
+  public void dispatchErrorOccurredEvent(Component component, String functionName, int errorNumber, Object... messageArgs) {
+    if (inForm()) {
+      $form().dispatchErrorOccurredEvent(component,functionName, errorNumber, messageArgs);
     }
   }
 

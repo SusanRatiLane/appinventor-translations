@@ -141,7 +141,7 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
       }
     };
     tts = useExternalLibrary ? new ExternalTextToSpeech(container, callback)
-                             : new InternalTextToSpeech(container.$context(), callback);
+                             : new InternalTextToSpeech(container.$form(), callback);
     // Set up listeners
     form.registerForOnStop(this);
     form.registerForOnResume(this);
