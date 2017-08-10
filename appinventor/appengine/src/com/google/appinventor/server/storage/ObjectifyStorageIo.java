@@ -1562,8 +1562,9 @@ public class ObjectifyStorageIo implements  StorageIo {
     final boolean useGCS = useGCSforFile(fileName, content.length);
     final Result<String> oldBlobstoreKey = new Result<String>();
     final boolean considerBackup = (useGcs?((fileName.contains("src/") && fileName.endsWith(".blk")) // AI1 Blocks Files
-        || (fileName.contains("src/") && fileName.endsWith(".bky")) // Blockly files
-        || (fileName.contains("src/") && fileName.endsWith(".scm"))) // Form Definitions
+        || (fileName.contains("src/") && fileName.endsWith(".bky"))  // Blockly files
+        || (fileName.contains("src/") && fileName.endsWith(".scm"))  // Form Definitions
+        || (fileName.contains("src/") && fileName.endsWith(".tsk"))) // Task Definitions
       :false);
 
     try {
