@@ -271,11 +271,11 @@ public final class ProjectBuilder {
 
     Set<String> componentTypes = Sets.newHashSet();
     for (String f : files) {
-      if (f.endsWith(".scm")) {
-        File scmFile = new File(f);
-        String scmContent = new String(Files.toByteArray(scmFile),
+      if (f.endsWith(".scm") || f.endsWith(".tsk")) {
+        File contextFile = new File(f);
+        String contextContent = new String(Files.toByteArray(contextFile),
             PathUtil.DEFAULT_CHARSET);
-        for (String compName : getTypesFromScm(scmContent)) {
+        for (String compName : getTypesFromContext(contextContent)) {
           componentTypes.add(nameTypeMap.get(compName));
         }
       }
@@ -367,8 +367,8 @@ public final class ProjectBuilder {
   }
 
   @VisibleForTesting
-  static Set<String> getTypesFromScm(String scm) {
-    return FormPropertiesAnalyzer.getComponentTypesFromFormFile(scm);
+  static Set<String> getTypesFromContext(String context) {
+    return ContextPropertiesAnalyzer.getComponentTypesFromContextFile(context);
   }
 
   @VisibleForTesting
