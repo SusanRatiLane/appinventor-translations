@@ -15,19 +15,19 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * Methods for analyzing the contents of a Young Android Form file.
+ * Methods for analyzing the contents of a Young Android Context file.
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-public class FormPropertiesAnalyzer {
+public class ContextPropertiesAnalyzer {
 
-  private static final String FORM_PROPERTIES_PREFIX = "#|\n";
-  private static final String FORM_PROPERTIES_SUFFIX = "\n|#";
+  private static final String CONTEXT_PROPERTIES_PREFIX = "#|\n";
+  private static final String CONTEXT_PROPERTIES_SUFFIX = "\n|#";
   
   // Logging support
-  private static final Logger LOG = Logger.getLogger(FormPropertiesAnalyzer.class.getName());
+  private static final Logger LOG = Logger.getLogger(ContextPropertiesAnalyzer.class.getName());
 
-  private FormPropertiesAnalyzer() {
+  private ContextPropertiesAnalyzer() {
   }
 
   /**
@@ -40,7 +40,7 @@ public class FormPropertiesAnalyzer {
     // First, locate the beginning of the $JSON section.
     // Older files have a $Properties before the $JSON section and we need to make sure we skip
     // that.
-    String jsonSectionPrefix = FORM_PROPERTIES_PREFIX + "$JSON\n";
+    String jsonSectionPrefix = CONTEXT_PROPERTIES_PREFIX + "$JSON\n";
     int beginningOfJsonSection = source.lastIndexOf(jsonSectionPrefix);
     if (beginningOfJsonSection == -1) {
       throw new IllegalArgumentException(
@@ -49,7 +49,7 @@ public class FormPropertiesAnalyzer {
     beginningOfJsonSection += jsonSectionPrefix.length();
 
     // Then, locate the end of the $JSON section;
-    String jsonSectionSuffix = FORM_PROPERTIES_SUFFIX;
+    String jsonSectionSuffix = CONTEXT_PROPERTIES_SUFFIX;
     int endOfJsonSection = source.lastIndexOf(jsonSectionSuffix);
     if (endOfJsonSection == -1) {
       throw new IllegalArgumentException(
@@ -66,9 +66,9 @@ public class FormPropertiesAnalyzer {
   }
 
   /**
-   * Returns the Set of component types used in the given form file source.
+   * Returns the Set of component types used in the given context file source.
    */
-  public static Set<String> getComponentTypesFromFormFile(String source) {
+  public static Set<String> getComponentTypesFromContextFile(String source) {
     Set<String> componentTypes = new HashSet<String>();
     JSONObject propertiesObject = parseSourceFile(source);
     try {
