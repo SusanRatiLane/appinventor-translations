@@ -172,53 +172,60 @@ public class AppInvHTTPD extends NanoHTTPD {
       try {
         JSONObject replInput = new JSONObject(repl_input);
         Log.d(LOG_TAG, "ReplInput : " + repl_input);
-        JSONObject _tasks = replInput.getJSONObject("tasks");
-        JSONObject _form = replInput.getJSONObject("form");
-        Iterator<String> taskNames = _tasks.keys();
+        JSONObject _tasks = null;
+        JSONObject _form = null;
+        if (replInput.has("tasks"))
+          _tasks = replInput.getJSONObject("tasks");
+        if (replInput.has("form"))
+          _form = replInput.getJSONObject("form");
         String contextName;
         String contextCode;
         String contextBlockId;
         String evalCode = "";
-        while(taskNames.hasNext()) {
-          String _taskName = taskNames.next();
-          JSONObject _task = _tasks.getJSONObject(_taskName);
-          contextName = _task.getString("name");
-          contextCode = _task.getString("code");
-          contextBlockId = _task.getString("blockid");
-          evalCode =  "(begin (require <com.google.youngandroid.runtime>) (process-repl-task-input \"" + contextName + "\" " + contextBlockId +
-                  " (begin " + contextCode + " )))";
-          Log.d(LOG_TAG, "To Eval Task[" + contextName + "]: " + evalCode);
+        if (_tasks != null) {
+          Iterator<String> taskNames = _tasks.keys();
+          while(taskNames.hasNext()) {
+            String _taskName = taskNames.next();
+            JSONObject _task = _tasks.getJSONObject(_taskName);
+            contextName = _task.getString("name");
+            contextCode = _task.getString("code");
+            contextBlockId = _task.getString("blockid");
+            evalCode =  "(begin (require <com.google.youngandroid.runtime>) (process-repl-task-input \"" + contextName + "\" " + contextBlockId +
+                    " (begin " + contextCode + " )))";
+            Log.d(LOG_TAG, "To Eval Task[" + contextName + "]: " + evalCode);
+            try {
+              // Don't evaluate a simple "#f" which is used by the poller
+              if (contextCode.equals("#f")) {
+                Log.e(LOG_TAG, "Skipping evaluation of #f for task :  " + contextName);
+              } else {
+                scheme.eval(evalCode);
+              }
+            } catch (Throwable ex) {
+              Log.e(LOG_TAG, "newblocks: Scheme Failure for task : " + contextName, ex);
+              RetValManager.appendReturnValue(contextName, RetValManager.CONTEXT_TYPE_TASK, contextBlockId, "BAD", ex.toString());
+            }
+          }
+        }
+        if (_form != null) {
+          contextName = _form.getString("name");
+          contextCode = _form.getString("code");
+          contextBlockId = _form.getString("blockid");
+          evalCode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-form-input \"" + contextName + "\" " + contextBlockId +
+                  " (begin " +  contextCode + " )))";
+          Log.d(LOG_TAG, "To Eval Form[" + contextName + "]: " + evalCode);
           try {
+
             // Don't evaluate a simple "#f" which is used by the poller
             if (contextCode.equals("#f")) {
-              Log.e(LOG_TAG, "Skipping evaluation of #f for task :  " + contextName);
+              Log.e(LOG_TAG, "Skipping evaluation of #f for form : " + contextName);
             } else {
               scheme.eval(evalCode);
             }
           } catch (Throwable ex) {
-            Log.e(LOG_TAG, "newblocks: Scheme Failure for task : " + contextName, ex);
-            RetValManager.appendReturnValue(contextName, RetValManager.CONTEXT_TYPE_TASK, contextBlockId, "BAD", ex.toString());
+            Log.e(LOG_TAG, "newblocks: Scheme Failure for form : " + contextName, ex);
+            RetValManager.appendReturnValue(contextName, RetValManager.CONTEXT_TYPE_FORM, contextBlockId, "BAD", ex.toString());
           }
         }
-        contextName = _form.getString("name");
-        contextCode = _form.getString("code");
-        contextBlockId = _form.getString("blockid");
-        evalCode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-form-input \"" + contextName + "\" " + contextBlockId +
-                " (begin " +  contextCode + " )))";
-        Log.d(LOG_TAG, "To Eval Form[" + contextName + "]: " + evalCode);
-        try {
-
-          // Don't evaluate a simple "#f" which is used by the poller
-          if (contextCode.equals("#f")) {
-            Log.e(LOG_TAG, "Skipping evaluation of #f for form : " + contextName);
-          } else {
-            scheme.eval(evalCode);
-          }
-        } catch (Throwable ex) {
-          Log.e(LOG_TAG, "newblocks: Scheme Failure for form : " + contextName, ex);
-          RetValManager.appendReturnValue(contextName, RetValManager.CONTEXT_TYPE_FORM, contextBlockId, "BAD", ex.toString());
-        }
-
       } catch (JSONException e) {
         e.printStackTrace();
       }

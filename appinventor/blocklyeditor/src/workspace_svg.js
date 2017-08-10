@@ -447,9 +447,10 @@ Blockly.WorkspaceSvg.prototype.saveBlocksFile = function() {
  * @returns String containing YAIL to be sent to the phone.
  */
 Blockly.WorkspaceSvg.prototype.getContextYail = function(contextJson, packageName, opt_repl) {
-  if (top.BlocklyPanel_isFormBlockly(this.contextName)) {
+  var fullContextName = this.projectId + "_" + this.contextName;
+  if (top.BlocklyPanel_isFormBlockly(fullContextName)) {
     return Blockly.Yail.getFormYail(contextJson, packageName, !!opt_repl, this);
-  } else if (top.BlocklyPanel_isTaskBlockly(this.contextName)) {
+  } else if (top.BlocklyPanel_isTaskBlockly(fullContextName)) {
     return Blockly.Yail.getTaskYail(contextJson, packageName, !!opt_repl, this);
   }
   return null;

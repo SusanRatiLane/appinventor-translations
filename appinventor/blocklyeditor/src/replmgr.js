@@ -423,10 +423,7 @@ Blockly.ReplMgr.putYail = (function() {
             if (!phonereceiving) {
                 engine.receivefromphone();
             }
-            var replInputData = {
-                tasks : {},
-                form : {}
-            };
+            var replInputData = {};
             var replInputWorks = {};
             var workExists = false;
             var pushToReplInput = function(context) {
@@ -503,6 +500,7 @@ Blockly.ReplMgr.putYail = (function() {
                 if (context.type == "Form") {
                     replInputData.form = replInputDataEntry;
                 } else if (context.type == "Task") {
+                    if (!replInputData.tasks)   replInputData.tasks = {};
                     replInputData.tasks[context.name] = replInputDataEntry;
                 }
                 replInputWorks[context.name] = replInputWork;

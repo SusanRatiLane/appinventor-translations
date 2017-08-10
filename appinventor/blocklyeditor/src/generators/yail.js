@@ -177,6 +177,84 @@ Blockly.Yail.getFormYail = function(formJson, packageName, forRepl, workspace) {
   return code.join('\n');  // Blank line between each section.
 };
 
+/**
+ * Generate the Yail code for this blocks workspace, given its associated form specification.
+ *
+ * @param {String} formJson JSON string describing the contents of the task. This is the JSON
+ *    content from the ".tsk" file for this task.
+ * @param {String} packageName the name of the package (to put in the define-form call)
+ * @param {Boolean} forRepl  true if the code is being generated for the REPL, false if for an apk
+ * @param {Blockly.WorkspaceSvg} workspace Workspace to use for generating code.
+ * @returns {String} the generated code if there were no errors.
+ */
+Blockly.Yail.getTaskYail = function(formJson, packageName, forRepl, workspace) {
+  var jsonObject = JSON.parse(formJson);
+  // TODO: check for JSON parse error
+  var componentNames = [];
+  var taskProperties;
+  var taskName;
+  var code = [];
+  var propertyNameConverter = function(input) {
+    return input;
+  };
+  if (jsonObject.Properties) {
+    taskProperties = jsonObject.Properties;
+    taskName = taskProperties.$Name;
+  } else {
+    throw "Cannot find task properties";
+  }
+  if (!taskName) {
+    throw "Unable to determine task name";
+  }
+
+  if (!forRepl) {
+    code.push(Blockly.Yail.getTaskYailPrelude(packageName, taskName));
+  }
+
+  var componentMap = workspace.buildComponentMap([], [], false, false);
+
+  for (var comp in componentMap.components)
+    if (componentMap.components.hasOwnProperty(comp))
+        componentNames.push(comp);
+
+  var globalBlocks = componentMap.globals;
+  for (var i = 0, block; block = globalBlocks[i]; i++) {
+    code.push(Blockly.Yail.blockToCode(block));
+  }
+
+  if (taskProperties) {
+    var sourceType = jsonObject.Source;
+    if (sourceType == "Task") {
+      code = code.concat(Blockly.Yail.getComponentLines(taskName, taskProperties, null /*parent*/,
+          componentMap, false /*forRepl*/, propertyNameConverter, workspace.getComponentDatabase()));
+    } else {
+      throw "Source type " + sourceType + " is invalid.";
+    }
+
+    // Fetch all of the components in the task, this may result in duplicates
+    componentNames = Blockly.Yail.getDeepNames(taskProperties, componentNames);
+    // Remove the duplicates
+    componentNames = componentNames.filter(function(elem, pos) {
+        return componentNames.indexOf(elem) == pos});
+
+    // Add runtime initializations
+    code.push(Blockly.Yail.YAIL_INIT_RUNTIME);
+
+    if (forRepl) {
+      code = Blockly.Yail.wrapTaskForRepl(taskName, code, componentNames);
+    }
+
+    // TODO?: get rid of empty property assignments? I'm not convinced this is necessary.
+    // The original code in YABlockCompiler.java attempts to do this, but it matches on
+    // "set-property" rather than "set-and-coerce-property" so I'm not sure it is actually
+    // doing anything. If we do need this, something like the call below might work.
+    //
+    // finalCode = code.join('\n').replace(/\\(set-property.*\"\"\\)\\n*/mg, "");
+  }
+
+  return code.join('\n');  // Blank line between each section.
+};
+
 Blockly.Yail.getDeepNames = function(componentJson, componentNames) {
   if (componentJson.$Components) {
     var children = componentJson.$Components;
@@ -262,7 +340,7 @@ Blockly.Yail.wrapTaskForRepl = function(taskName, code, componentNames) {
   replCode.push(Blockly.Yail.getComponentInitializationString(taskName, componentNames));
   replCode.push(Blockly.Yail.YAIL_CLOSE_BLOCK);
   return replCode;
-}
+};
 
 /**
  * Return code to initialize all components in componentMap.
@@ -415,7 +493,7 @@ Blockly.Yail.getFormPropertiesLines = function(formName, componentJson, includeC
  * @returns {Array} code strings
  * @private
  */
-Blockly.Yail.getTaskPropertiesLines = function(taskName, componentJson, includeComments) {
+Blockly.Yail.getTaskPropertiesLines = function(taskName, componentJson, includeComments, componentDb) {
   var code = [];
   if (includeComments) {
     code.push(Blockly.Yail.YAIL_COMMENT_MAJOR + taskName + Blockly.Yail.YAIL_LINE_FEED);
@@ -424,7 +502,7 @@ Blockly.Yail.getTaskPropertiesLines = function(taskName, componentJson, includeC
     + "(android-log \"yail do after creation\")"
     + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_REGISTER_TASK + Blockly.Yail.YAIL_QUOTE + taskName
     + Blockly.Yail.YAIL_CLOSE_BLOCK;
-  var yailForComponentProperties = Blockly.Yail.getPropertySettersLines(taskName, componentJson, taskName);
+  var yailForComponentProperties = Blockly.Yail.getPropertySettersLines(taskName, componentJson, taskName, componentDb);
   if (yailForComponentProperties.length > 0) {
     // getPropertySettersLine returns an array of lines.  So we need to
     // concatenate them (using join) before pushing them onto the Yail expression.
@@ -436,7 +514,7 @@ Blockly.Yail.getTaskPropertiesLines = function(taskName, componentJson, includeC
   doAfterCreation += Blockly.Yail.YAIL_CLOSE_BLOCK;
   code.push(doAfterCreation);
   return code;
-}
+};
 
 /**
  * Generate the code to set property values for the specifed component.

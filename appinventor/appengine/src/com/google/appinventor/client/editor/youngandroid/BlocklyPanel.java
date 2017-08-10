@@ -274,6 +274,14 @@ public class BlocklyPanel extends HTMLPanel {
     }
     try {
       if (myBlocksEditor.isFormBlocksEditor()) {
+        // Send all tasks first
+        // We do this every time a form sendComponentData is triggered
+        // TODO(justus) : do send tasks only when needed, possibly only the first time
+        YaProjectEditor projectEditor = (YaProjectEditor) this.myBlocksEditor.getProjectEditor();
+        for (YaBlocksEditor taskBlocksEditor : projectEditor.getAllTaskBlocksEditors()) {
+          taskBlocksEditor.sendComponentData();
+        }
+        // Finally send the form
         doSendFormJson(contextName, contextJson, packageName);
       } else if (myBlocksEditor.isTaskBlocksEditor()) {
         doSendTaskJson(contextName, contextJson, packageName);
