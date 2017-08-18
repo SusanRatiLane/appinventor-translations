@@ -2970,14 +2970,29 @@ list, use the make-yail-list constructor with no arguments.
                              (exception:getMessage)))))))))
 (define (in-bg task blockid promise)
   (set! *this-is-the-repl* #t)          ;; Should do this somewhere else...
-  (android-log (format #f "in BG called: ~A" (java.lang.Thread:currentThread)))
+  ;;(android-log (format #f "in BG called: ~A" (java.lang.Thread:currentThread)))  ;; TODO(justus): remove debug comments
   (SimpleReplTask:runTaskCode
    task
    (runnable (lambda ()
-               (android-log (format #f "in BG doing: ~A" (java.lang.Thread:currentThread)))
-               (force promise))))
-  (android-log (format #f "in BG done: ~A" (java.lang.Thread:currentThread)))
-  )
+               (send-to-block task "Task" blockid
+                (try-catch
+                 (try-catch
+                  (list "OK"
+                        (get-display-representation (force promise)))
+                  (exception YailRuntimeError
+                             (android-log (exception:getMessage))
+                             (list "NOK"
+                                   (exception:getMessage))))
+                 (exception java.lang.Exception
+                            (android-log (exception:getMessage))
+                            (exception:printStackTrace)
+                            (list
+                             "NOK"
+                             (exception:getMessage)))))))))
+  ;;             (android-log (format #f "in BG doing: ~A" (java.lang.Thread:currentThread)))
+  ;;             (force promise))))
+  ;;(android-log (format #f "in BG done: ~A" (java.lang.Thread:currentThread)))
+  ;;)
 ;; send-to-block is used for all communication back to the blocks editor
 ;; Calls on report are also generated for code from the blocks compiler
 ;; when a block is being watched.
