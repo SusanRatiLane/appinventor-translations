@@ -210,7 +210,13 @@ public final class ErrorMessages {
   // Extension errors are signalled from extensions
   public static final int ERROR_EXTENSION_ERROR = 3300;
 
-  // Start the next group of errors at 3400
+  // Component errors
+  public static final int ERROR_COMPONENT_UNSUPPORTED_IN_FORM = 3401;
+  public static final int ERROR_COMPONENT_UNSUPPORTED_IN_TASK = 3402;
+  public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_FORM = 3403;
+  public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK = 3404;
+
+  // Start the next group of errors at 3500
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -518,7 +524,14 @@ public final class ErrorMessages {
     // Extension errors
     errorMessages.put(ERROR_EXTENSION_ERROR,
         "Error %d in extension %s: %s");
-
+    errorMessages.put(ERROR_COMPONENT_UNSUPPORTED_IN_FORM,
+        "%s component is not supported in a screen.");
+    errorMessages.put(ERROR_COMPONENT_UNSUPPORTED_IN_TASK,
+        "%s component is not supported in a task.");
+    errorMessages.put(ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_FORM,
+            "%s method of %s component is not supported in a screen.");
+    errorMessages.put(ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
+            "%s method of %s component is not supported in a task.");
   }
 
   private ErrorMessages() {

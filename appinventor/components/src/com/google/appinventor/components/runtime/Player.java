@@ -67,7 +67,7 @@ import java.io.IOException;
     category = ComponentCategory.MEDIA,
     nonVisible = true,
     iconName = "images/player.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.VIBRATE, android.permission.INTERNET")
 public final class Player extends AndroidNonvisibleComponent
     implements Component, OnCompletionListener, OnPauseListener, OnResumeListener, OnDestroyListener, OnStopListener, Deleteable {
@@ -208,7 +208,7 @@ public final class Player extends AndroidNonvisibleComponent
     // Request permanent focus on music stream
     focusOn = (FroyoUtil.focusRequestGranted(am, afChangeListener)) ? true : false;
     if (!focusOn)
-      form.dispatchErrorOccurredEvent(this, "Source",
+      container.dispatchErrorOccurredEvent(this, "Source",
           ErrorMessages.ERROR_UNABLE_TO_FOCUS_MEDIA, sourcePath);
   }
 
@@ -399,7 +399,7 @@ public final class Player extends AndroidNonvisibleComponent
       player.release();
       player = null;
       playerState = State.INITIAL;
-      form.dispatchErrorOccurredEvent(this, "Source",
+      container.dispatchErrorOccurredEvent(this, "Source",
           ErrorMessages.ERROR_UNABLE_TO_PREPARE_MEDIA, sourcePath);
     }
   }

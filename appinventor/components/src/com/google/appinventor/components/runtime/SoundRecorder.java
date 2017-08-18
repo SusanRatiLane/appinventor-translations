@@ -111,7 +111,7 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
   private RecordingController controller;
 
   public SoundRecorder(final ComponentContainer container) {
-    super(container.$form());
+    super(container);
   }
 
 
@@ -154,14 +154,14 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
     }
     Log.i(TAG, "Start() called");
     if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-      form.dispatchErrorOccurredEvent(
+      container.dispatchErrorOccurredEvent(
           this, "Start", ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_NOT_AVAILABLE);
       return;
     }
     try {
       controller = new RecordingController(savedRecording);
     } catch (Throwable t) {
-      form.dispatchErrorOccurredEvent(
+      container.dispatchErrorOccurredEvent(
           this, "Start", ErrorMessages.ERROR_SOUND_RECORDER_CANNOT_CREATE, t.getMessage());
       return;
     }
@@ -172,7 +172,7 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
       // it's not clear to me how to handle that.
       // controller.stop();
       controller = null;
-      form.dispatchErrorOccurredEvent(
+      container.dispatchErrorOccurredEvent(
           this, "Start", ErrorMessages.ERROR_SOUND_RECORDER_CANNOT_CREATE, t.getMessage());
       return;
     }
@@ -185,7 +185,7 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
       Log.w(TAG, "onError called with wrong recorder. Ignoring.");
       return;
     }
-    form.dispatchErrorOccurredEvent(this, "onError", ErrorMessages.ERROR_SOUND_RECORDER);
+    container.dispatchErrorOccurredEvent(this, "onError", ErrorMessages.ERROR_SOUND_RECORDER);
     try {
       controller.stop();
     } catch (Throwable e) {
@@ -204,15 +204,15 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
     }
     switch (what) {
     case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED:
-      form.dispatchErrorOccurredEvent(this, "recording",
+      container.dispatchErrorOccurredEvent(this, "recording",
           ErrorMessages.ERROR_SOUND_RECORDER_MAX_DURATION_REACHED);
       break;
     case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED:
-      form.dispatchErrorOccurredEvent(this, "recording",
+      container.dispatchErrorOccurredEvent(this, "recording",
           ErrorMessages.ERROR_SOUND_RECORDER_MAX_FILESIZE_REACHED);
       break;
     case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN:
-      form.dispatchErrorOccurredEvent(this, "recording", ErrorMessages.ERROR_SOUND_RECORDER);
+      container.dispatchErrorOccurredEvent(this, "recording", ErrorMessages.ERROR_SOUND_RECORDER);
       break;
     default:
       // value of `what` is not valid, probably device-specific debugging. escape early to prevent
@@ -225,7 +225,7 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
       controller.recorder.stop();
     } catch(IllegalStateException e) {
       Log.i(TAG, "SoundRecorder was not in a recording state.", e);
-      form.dispatchErrorOccurredEventDialog(this, "Stop",
+      container.dispatchErrorOccurredEventDialog(this, "Stop",
           ErrorMessages.ERROR_SOUND_RECORDER_ILLEGAL_STOP);
     } finally {
       controller = null;
@@ -249,7 +249,7 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
       Log.i(TAG, "Firing AfterSoundRecorded with " + controller.file);
       AfterSoundRecorded(controller.file);
     } catch (Throwable t) {
-      form.dispatchErrorOccurredEvent(this, "Stop", ErrorMessages.ERROR_SOUND_RECORDER);
+      container.dispatchErrorOccurredEvent(this, "Stop", ErrorMessages.ERROR_SOUND_RECORDER);
     } finally {
       controller = null;
       StoppedRecording();

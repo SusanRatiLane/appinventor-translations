@@ -848,6 +848,13 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
     }
   }
 
+  @Override
+  public void dispatchErrorOccurredEventDialog(Component component, String functionName, int errorNumber, Object... messageArgs) {
+    if (inForm()) {
+      $form().dispatchErrorOccurredEventDialog(component,functionName, errorNumber, messageArgs);
+    }
+  }
+
   // Methods executed when a child sprite has changed its location or appearance
 
   /**

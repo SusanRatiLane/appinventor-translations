@@ -50,7 +50,6 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
   public static final String YANDEX_TRANSLATE_SERVICE_URL =
       "https://translate.yandex.net/api/v1.5/tr.json/translate?key=";
   private final String yandexKey;
-  private final Activity activity;
 
   /**
    * Creates a new component.
@@ -58,15 +57,16 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
    * @param container  container, component will be placed in
    */
   public YandexTranslate(ComponentContainer container) {
-    super(container.$form());
+    super(container);
 
-    // Set up the Yandex.Translate Tagline in the 'About' screen
-    form.setYandexTranslateTagline();
+    if (container.inForm()) {
+      // Set up the Yandex.Translate Tagline in the 'About' screen
+      form.setYandexTranslateTagline();
+    }
 
     // TODO (user) To provide users with this component you will need to obtain a key with the
     // Yandex.Translate service at http://api.yandex.com/translate/
     yandexKey = "";
-    activity = container.$form();
   }
 
   /**
@@ -83,7 +83,7 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
                                  final String textToTranslate) {
 
     if (yandexKey.equals("")){
-      form.dispatchErrorOccurredEvent(YandexTranslate.this, "RequestTranslation",
+      container.dispatchErrorOccurredEvent(YandexTranslate.this, "RequestTranslation",
           ErrorMessages.ERROR_TRANSLATE_NO_KEY_FOUND);
       return;
     }
@@ -94,10 +94,10 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
         try {
           performRequest(languageToTranslateTo, textToTranslate);
         } catch (IOException e) {
-          form.dispatchErrorOccurredEvent(YandexTranslate.this, "RequestTranslation",
+          container.dispatchErrorOccurredEvent(YandexTranslate.this, "RequestTranslation",
               ErrorMessages.ERROR_TRANSLATE_SERVICE_NOT_AVAILABLE);
         } catch (JSONException je) {
-          form.dispatchErrorOccurredEvent(YandexTranslate.this, "RequestTranslation",
+          container.dispatchErrorOccurredEvent(YandexTranslate.this, "RequestTranslation",
               ErrorMessages.ERROR_TRANSLATE_JSON_RESPONSE);
         }
       }
@@ -135,12 +135,14 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
         final String translation = (String)response.get(0);
 
         // Dispatch the event.
-        activity.runOnUiThread(new Runnable() {
-          @Override
-          public void run() {
-            GotTranslation(responseCode, translation);
-          }
-        });
+        if (container.inForm()) {
+          form.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              GotTranslation(responseCode, translation);
+            }
+          });
+        } // TODO(justus) : Handle Task
 
       } finally {
         connection.disconnect();

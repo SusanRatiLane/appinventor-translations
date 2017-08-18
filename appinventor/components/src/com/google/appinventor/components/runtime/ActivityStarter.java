@@ -96,7 +96,7 @@ import android.util.Log;
     category = ComponentCategory.CONNECTIVITY,
     nonVisible = true,
     iconName = "images/activityStarter.png")
-@SimpleObject(taskCompatible = false)
+@SimpleObject()
 public class ActivityStarter extends AndroidNonvisibleComponent
     implements ActivityResultListener, Component, Deleteable {
 

@@ -18,6 +18,7 @@ import com.google.appinventor.components.common.YaVersion;
 import android.app.Activity;
 import android.content.Intent;
 import android.speech.RecognizerIntent;
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 
 import java.util.ArrayList;
 
@@ -36,7 +37,6 @@ import java.util.ArrayList;
 public class SpeechRecognizer extends AndroidNonvisibleComponent
     implements Component, ActivityResultListener {
 
-  private final ComponentContainer container;
   private String result;
 
   /* Used to identify the call to startActivityForResult. Will be passed back
@@ -49,9 +49,13 @@ public class SpeechRecognizer extends AndroidNonvisibleComponent
    * @param container container, component will be placed in
    */
   public SpeechRecognizer(ComponentContainer container) {
-    super(container.$form());
-    this.container = container;
+    super(container);
     result = "";
+    if (container.inTask()) {
+      container.dispatchErrorOccurredEvent(this, "GetText",
+        ErrorMessages.ERROR_COMPONENT_UNSUPPORTED_IN_TASK,
+        this.getClass().getSimpleName()); // TODO(justus) : Internationalize component name ?
+    }
   }
 
   /**
@@ -76,7 +80,13 @@ public class SpeechRecognizer extends AndroidNonvisibleComponent
     if (requestCode == 0) {
       requestCode = form.registerForActivityResult(this);
     }
-    container.$form().startActivityForResult(intent, requestCode);
+    if (container.inForm()) {
+      form.startActivityForResult(intent, requestCode);
+    } else if (container.inTask()){
+      container.dispatchErrorOccurredEvent(this, "GetText",
+        ErrorMessages.ERROR_COMPONENT_UNSUPPORTED_IN_TASK,
+        this.getClass().getSimpleName()); // TODO(justus) : Internationalize component name ?
+    }
   }
 
   @Override

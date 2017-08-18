@@ -57,7 +57,7 @@ public class Camcorder extends AndroidNonvisibleComponent
    * @param container container, component will be placed in
    */
   public Camcorder(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     this.container = container;
   }
 

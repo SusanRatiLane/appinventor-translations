@@ -120,7 +120,7 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
    * @param container container, component will be placed in
    */
   public TextToSpeech(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     result = false;
     Language(Component.DEFAULT_VALUE_TEXT_TO_SPEECH_LANGUAGE);
     Country(Component.DEFAULT_VALUE_TEXT_TO_SPEECH_COUNTRY);
@@ -142,12 +142,14 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
     };
     tts = useExternalLibrary ? new ExternalTextToSpeech(container, callback)
                              : new InternalTextToSpeech(container.$form(), callback);
-    // Set up listeners
-    form.registerForOnStop(this);
-    form.registerForOnResume(this);
-    form.registerForOnDestroy(this);
-    // Make volume buttons control media, not ringer.
-    form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    if (container.inForm()) {
+      // Set up listeners
+      form.registerForOnStop(this);
+      form.registerForOnResume(this);
+      form.registerForOnDestroy(this);
+      // Make volume buttons control media, not ringer.
+      form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    }
 
     isTtsPrepared = false;
     languageList = new ArrayList<String>();
@@ -353,7 +355,7 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
   public void prepareLanguageAndCountryProperties() {
     if (!isTtsPrepared) {
       if (!tts.isInitialized()) {
-        form.dispatchErrorOccurredEvent(this, "TextToSpeech",
+        container.dispatchErrorOccurredEvent(this, "TextToSpeech",
             ErrorMessages.ERROR_TTS_NOT_READY);
         // Force the TTS engine to initialize by making it speak.
         // If it's not ready the user will have to try again.

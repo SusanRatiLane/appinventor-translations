@@ -18,6 +18,7 @@ import android.text.Html;
 import android.text.SpannableString;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.SdkLevel;
 
 /**
@@ -89,7 +91,6 @@ import com.google.appinventor.components.runtime.util.SdkLevel;
 public final class Notifier extends AndroidNonvisibleComponent implements Component {
 
   private static final String LOG_TAG = "Notifier";
-  private final Activity activity;
   private final Handler handler;
   private ProgressDialog progressDialog;
 
@@ -108,8 +109,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
    * @param container the enclosing component
    */
   public Notifier (ComponentContainer container) {
-    super(container.$form());
-    activity = container.$form();
+    super(container);
     handler = new Handler();
     progressDialog = null;
   }
@@ -127,7 +127,13 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     + "but must be dismissed by the App Inventor Program by using the DismissProgressDialog "
     + "block.")
   public void ShowProgressDialog(String message, String title) {
-    progressDialog(message, title);
+    if (container.inForm()) {
+      progressDialog(message, title);
+    } else if (container.inTask()) {
+      container.dispatchErrorOccurredEvent(this, "ShowProgressDialog",
+              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
+              "ShowProgressDialog", getClass().getSimpleName());
+    }
   }
 
   /**
@@ -151,7 +157,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     if (progressDialog != null) {
       DismissProgressDialog();
     }
-    progressDialog = ProgressDialog.show(activity, title, message);
+    progressDialog = ProgressDialog.show(context, title, message);
     // prevents the user from escaping the dialog by hitting the Back button
     progressDialog.setCancelable(false);
   }
@@ -165,12 +171,18 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
    */
   @SimpleFunction
   public void ShowMessageDialog(String message, String title, String buttonText) {
-    oneButtonAlert(activity, message, title, buttonText);
+    if (container.inForm()) {
+      oneButtonAlert(form, message, title, buttonText);
+    } else if (container.inTask()) {
+      container.dispatchErrorOccurredEvent(this, "ShowMessageDialog",
+              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
+              "ShowMessageDialog", getClass().getSimpleName());
+    }
   }
 
-  // This method is declared static, with an explicit activity input, so that other
+  // This method is declared static, with an explicit context input, so that other
   // components can use it
-  public static void oneButtonAlert(Activity activity,String message, String title, String buttonText) {
+  public static void oneButtonAlert(Activity activity, String message, String title, String buttonText) {
     Log.i(LOG_TAG, "One button alert " + message);
     AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
     alertDialog.setTitle(title);
@@ -209,26 +221,33 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
       + " CANCEL button was pressed.")
   public void ShowChooseDialog(String message, String title, final String button1Text,
       final String button2Text, boolean cancelable) {
-    twoButtonDialog(activity,
-        message,
-        title,
-        button1Text,
-        button2Text,
-        cancelable,
-        new Runnable() {public void run() {AfterChoosing(button1Text);}},
-        new Runnable() {public void run() {AfterChoosing(button2Text);}},
-        new Runnable() {public void run() {AfterChoosing(activity.getString(android.R.string.cancel));}}
-        );
+    if (container.inForm()) {
+      twoButtonDialog(context,
+              message,
+              title,
+              button1Text,
+              button2Text,
+              cancelable,
+              new Runnable() {public void run() {AfterChoosing(button1Text);}},
+              new Runnable() {public void run() {AfterChoosing(button2Text);}},
+              new Runnable() {public void run() {AfterChoosing(context.getString(android.R.string.cancel));}}
+      );
+    } else if (container.inTask()) {
+      container.dispatchErrorOccurredEvent(this, "ShowChooseDialog",
+              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
+              "ShowChooseDialog", getClass().getSimpleName());
+
+    }
   }
 
   // This method takes three runnables that specify the actions to be performed
-  // when the buttons are pressed.  It's declared static with an explicit activity input
+  // when the buttons are pressed.  It's declared static with an explicit context input
   // so that other components can use it.
-  public static void twoButtonDialog(Activity activity, String message,  String title,
+  public static void twoButtonDialog(Context context, String message,  String title,
       final String button1Text,  final String button2Text, boolean cancelable,
       final Runnable positiveAction, final Runnable negativeAction, final Runnable cancelAction) {
     Log.i(LOG_TAG, "ShowChooseDialog: " + message);
-    AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
+    AlertDialog alertDialog = new AlertDialog.Builder(context).create();
     alertDialog.setTitle(title);
     // prevents the user from escaping the dialog by hitting the Back button
     alertDialog.setCancelable(false);
@@ -255,7 +274,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     // and will raise AfterChoosing when pressed.
     if (cancelable)  {
       // TODO(hal): It would be safer and more consistent to pass in cancelButtonText as a parameter.
-      final String cancelButtonText = activity.getString(android.R.string.cancel);
+      final String cancelButtonText = context.getString(android.R.string.cancel);
       alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, cancelButtonText,
           new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
@@ -290,7 +309,13 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
      + "will be the text that was entered, or \"Cancel\" if the CANCEL button was pressed.")
 
   public void ShowTextDialog(String message, String title, boolean cancelable) {
-    textInputDialog(message, title, cancelable);
+    if (container.inForm()) {
+      textInputDialog(message, title, cancelable);
+    } else if (container.inTask()) {
+      container.dispatchErrorOccurredEvent(this, "ShowTextDialog",
+              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
+              "ShowTextDialog", getClass().getSimpleName());
+    }
   }
 
   /**
@@ -309,11 +334,11 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
   // oneButtonAlert so it can be used both for messages and text input.  We could have merged
   // this method into ShowTextDialog, but that would make it harder to do the generalization.
   private void textInputDialog(String message, String title, boolean cancelable) {
-    final AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
+    final AlertDialog alertDialog = new AlertDialog.Builder(context).create();
     alertDialog.setTitle(title);
     alertDialog.setMessage(stringToHTML(message));
     // Set an EditText view to get user input
-    final EditText input = new EditText(activity);
+    final EditText input = new EditText(context);
     alertDialog.setView(input);
     // prevents the user from escaping the dialog by hitting the Back button
     alertDialog.setCancelable(false);
@@ -327,7 +352,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
 
     //If cancelable, then add the CANCEL button
     if (cancelable)  {
-      final String cancelButtonText = activity.getString(android.R.string.cancel);
+      final String cancelButtonText = context.getString(android.R.string.cancel);
       alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, cancelButtonText,
           new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
@@ -345,7 +370,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
   */
   public void HideKeyboard(View view) {
     if (view != null) {
-      InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+      InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
       imm.hideSoftInputFromWindow(view.getWindowToken(),  0);
     }
   }
@@ -439,9 +464,9 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     // I (Hal) can't figure it out.
     int fontsize = (SdkLevel.getLevel() >= SdkLevel.LEVEL_ICE_CREAM_SANDWICH)
         ? 22 : 15;
-    Toast toast = Toast.makeText(activity, message, notifierLength);
+    Toast toast = Toast.makeText(context, message, notifierLength);
     toast.setGravity(Gravity.CENTER, toast.getXOffset() / 2, toast.getYOffset() / 2);
-    TextView textView = new TextView(activity);
+    TextView textView = new TextView(context);
     textView.setBackgroundColor(backgroundColor);
     textView.setTextColor(textColor);
     textView.setTextSize(fontsize);

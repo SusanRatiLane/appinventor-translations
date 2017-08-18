@@ -30,7 +30,7 @@ public @interface SimpleObject {
     /**
      * True if this component works on Task context
      */
-    boolean taskCompatible() default true;
+    boolean taskCompatible() default false;
 
     /**
      * True if this component is an external component.

@@ -189,6 +189,13 @@ public class TableArrangement extends AndroidViewComponent
     }
   }
 
+  @Override
+  public void dispatchErrorOccurredEventDialog(Component component, String functionName, int errorNumber, Object... messageArgs) {
+    if (inForm()) {
+      $form().dispatchErrorOccurredEventDialog(component,functionName, errorNumber, messageArgs);
+    }
+  }
+
   // AndroidViewComponent implementation
 
   @Override

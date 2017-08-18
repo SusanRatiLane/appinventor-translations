@@ -25,6 +25,7 @@ public interface ComponentContainer {
 
   /**
    * Returns the form that ultimately contains this container.
+   * Returns null if this container is not contained in a form.
    *
    * @return  form
    */
@@ -32,13 +33,14 @@ public interface ComponentContainer {
 
   /**
    * Returns the task that ultimately contains this container.
+   * Returns null if this container is not contained in a task.
    *
    * @return  task
    */
   Task $task();
 
   /**
-   * @return  Returns true only if the container is a context.
+   * @return  Returns true only if the container is a context (form or task).
    */
   boolean isContext();
 
@@ -85,4 +87,6 @@ public interface ComponentContainer {
   void dispatchErrorOccurredEvent(final Component component, final String functionName,
            final int errorNumber, final Object... messageArgs);
 
+  void dispatchErrorOccurredEventDialog(final Component component, final String functionName,
+                                  final int errorNumber, final Object... messageArgs);
 }
