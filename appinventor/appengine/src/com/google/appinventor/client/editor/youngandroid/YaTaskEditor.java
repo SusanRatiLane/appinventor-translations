@@ -523,6 +523,10 @@ public final class YaTaskEditor extends YaContextEditor implements ContextChange
   public String encodeContextAsJsonString(boolean forYail) {
     StringBuilder sb = new StringBuilder();
     sb.append("{");
+    // Include authURL in output if it is non-null
+    if (authURL != null) {
+      sb.append("\"authURL\":").append(authURL.toJson()).append(",");
+    }
     sb.append("\"YaVersion\":\"").append(YaVersion.YOUNG_ANDROID_VERSION).append("\",");
     sb.append("\"Source\":\"Task\",");
     sb.append("\"Properties\":");
@@ -531,7 +535,9 @@ public final class YaTaskEditor extends YaContextEditor implements ContextChange
     return sb.toString();
   }
 
-  public String preUpgradeJsonString() {
+  // [lyn, 2014/10/13] returns the *pre-upgraded* JSON for this task.
+  // needed to allow associated blocks editor to get this info.
+  protected String preUpgradeJsonString() {
     return preUpgradeJsonString;
   }
 
