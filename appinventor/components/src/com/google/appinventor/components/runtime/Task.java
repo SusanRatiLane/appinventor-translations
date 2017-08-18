@@ -207,7 +207,31 @@ public class Task extends Service
     if (!EventDispatcher.dispatchEvent(
         this, "ErrorOccurred", component, functionName, errorNumber, message)
         && taskInitialized) {
-      new Notifier(this).LogError(message);
+      // If dispatchEvent returned false, then no user-supplied error handler was run.
+      // If in addition, the screen initializer was run, then we assume that the
+      // user did not provide an error handler.   In this case, we run a default
+      // error handler, namely, showing a notification to the end user of the app.
+      // The app writer can override this by providing an error handler.
+      new Notifier(this).ShowAlert("Error " + errorNumber + ": " + message);
+    }
+  }
+
+  public void ErrorOccurredDialog(Component component, String functionName, int errorNumber,
+                            String message, String title, String buttonText) {
+    String componentType = component.getClass().getName();
+    componentType = componentType.substring(componentType.lastIndexOf(".") + 1);
+    Log.e(LOG_TAG, "Task " + taskName + " ErrorOccurred, errorNumber = " + errorNumber +
+            ", componentType = " + componentType + ", functionName = " + functionName +
+            ", messages = " + message);
+    if (!EventDispatcher.dispatchEvent(
+            this, "ErrorOccurred", component, functionName, errorNumber, message)
+            && taskInitialized) {
+      // If dispatchEvent returned false, then no user-supplied error handler was run.
+      // If in addition, the screen initializer was run, then we assume that the
+      // user did not provide an error handler.   In this case, we run a default
+      // error handler, namely, showing a notification to the end user of the app.
+      // The app writer can override this by providing an error handler.
+      new Notifier(this).ShowMessageDialog("Error " + errorNumber + ": " + message, title, buttonText);
     }
   }
 
@@ -217,6 +241,13 @@ public class Task extends Service
     Log.i(LOG_TAG, "TASK dispatchErrorOccurredEvent");
     String message = ErrorMessages.formatMessage(errorNumber, messageArgs);
     ErrorOccurred(component, functionName, errorNumber, message);
+  }
+
+  public void dispatchErrorOccurredEventDialog(final Component component, final String functionName,
+                                         final int errorNumber, final Object... messageArgs) {
+    Log.i(LOG_TAG, "TASK dispatchErrorOccurredEventDialog");
+    String message = ErrorMessages.formatMessage(errorNumber, messageArgs);
+    ErrorOccurredDialog(component, functionName, errorNumber, message, "Error in " + functionName, "Dismiss");
   }
 
   @Override
@@ -247,7 +278,7 @@ public class Task extends Service
    * {@link com.google.appinventor.components.scripts.LangDefXmlGenerator},
    * respectively.  The actual implementation appears in {@code runtime.scm}.
    */
-  protected void $define() {    // This must be declared protected because we are called from Screen1 which subclasses
+  protected void $define() {    // This must be declared protected because we are called from Task1 which subclasses
     // us and isn't in our package.
     throw new UnsupportedOperationException();
   }
@@ -484,9 +515,13 @@ public class Task extends Service
       // We are not called on a TaskThread
       return null;
     }
+    if (thread instanceof ReplTask.ReplTaskThread) {
+      return ReplTask.replTask;
+    }
     String taskName = thread.getName();
     Task currentTask = taskMap.get(taskName);
     if (currentTask == null) {
+      Log.d(LOG_TAG, "There is no task for TaskThread : " + taskName );
       throw new IllegalThreadStateException("There is No Task for the TaskThread : " + taskName);
     }
     return currentTask;
@@ -498,16 +533,7 @@ public class Task extends Service
    * @return
    */
   public static String getCurrentTaskName() {
-    Thread thread = Thread.currentThread();
-    if (!(thread instanceof TaskThread)) {
-      // We are not called on a TaskThread
-      return null;
-    }
-    String taskName = thread.getName();
-    Task currentTask = taskMap.get(taskName);
-    if (currentTask == null) {
-      throw new IllegalThreadStateException("There is No Task for the TaskThread : " + taskName);
-    }
+    Task currentTask = Task.getCurrentTask();
     return currentTask.getTaskName();
   }
 

@@ -18,10 +18,10 @@ public class ReplTask extends Task {
 
   public static ReplTask replTask;
   private static final String LOG_TAG = "ReplTask";
-  private static final HashMap<String, TaskThread> taskThreads = new HashMap<String, TaskThread>();
+  private static final HashMap<String, ReplTaskThread> taskThreads = new HashMap<String, ReplTaskThread>();
   private boolean assetsLoaded = true;
 
-  final protected class ReplTaskHandler extends Task.TaskHandler {
+  protected static class ReplTaskHandler extends Task.TaskHandler {
 
     protected ReplTaskHandler(Looper looper) {
       super(looper);
@@ -32,6 +32,14 @@ public class ReplTask extends Task {
 
     }
   }
+
+  protected static class ReplTaskThread extends TaskThread {
+
+    protected ReplTaskThread(String taskName, ReplTask task) {
+      super(taskName, task);
+    }
+  }
+
 
 
   public ReplTask() {
@@ -67,9 +75,9 @@ public class ReplTask extends Task {
 
   public static void runTaskCode(String taskName, Runnable runnable) {
     Log.d("ReplTask", "Got executed. Thank God");
-    TaskThread taskThread = taskThreads.get(taskName);
+    ReplTaskThread taskThread = taskThreads.get(taskName);
     if (taskThread == null) {
-      taskThread = new TaskThread(taskName, ReplTask.replTask);
+      taskThread = new ReplTaskThread(taskName, ReplTask.replTask);
       taskThreads.put(taskName, taskThread);
     }
     TaskHandler taskHandler = taskThread.getTaskHandler();
@@ -93,7 +101,7 @@ public class ReplTask extends Task {
 
   @Override
   public String getDispatchContext() {
-    Log.d(LOG_TAG, "getDispatchContext called" + Thread.currentThread().getName());
+    Log.d(LOG_TAG, "getDispatchContext called " + Thread.currentThread().getName());
     return Thread.currentThread().getName();
   }
 
