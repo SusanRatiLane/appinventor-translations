@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.view.View.OnClickListener;
 
 /**
  * Check box with the ability to detect initialization, focus
@@ -34,7 +35,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
     category = ComponentCategory.USERINTERFACE)
 @SimpleObject
 public final class CheckBox extends AndroidViewComponent
-    implements OnCheckedChangeListener, OnFocusChangeListener {
+    implements OnCheckedChangeListener, OnFocusChangeListener, OnClickListener {
 
   private final android.widget.CheckBox view;
 
@@ -64,6 +65,7 @@ public final class CheckBox extends AndroidViewComponent
 
     // Listen to focus changes
     view.setOnFocusChangeListener(this);
+    view.setOnClickListener(this);
     view.setOnCheckedChangeListener(this);
 
     // Adds the component to its designated container
@@ -92,8 +94,17 @@ public final class CheckBox extends AndroidViewComponent
   }
 
   /**
-   * Default GotFocus event handler.
+   * Indicates a user has clicked on the checkbox.
    */
+  @SimpleEvent
+  public void Click() {
+    EventDispatcher.dispatchEvent(this, "Click");
+  }
+
+
+    /**
+     * Default GotFocus event handler.
+     */
   @SimpleEvent
   public void GotFocus() {
     EventDispatcher.dispatchEvent(this, "GotFocus");
@@ -356,6 +367,12 @@ public final class CheckBox extends AndroidViewComponent
 
   public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
     Changed();
+  }
+
+  // OnClickListener implementation
+
+  public void onClick(View buttonView) {
+    Click();
   }
 
   // OnFocusChangeListener implementation
