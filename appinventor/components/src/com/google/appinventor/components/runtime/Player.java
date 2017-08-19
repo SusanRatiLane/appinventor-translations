@@ -72,6 +72,8 @@ import java.io.IOException;
 public final class Player extends AndroidNonvisibleComponent
     implements Component, OnCompletionListener, OnPauseListener, OnResumeListener, OnDestroyListener, OnStopListener, Deleteable {
 
+  private static final int DEFAULT_VOLUME = 50;
+
   private MediaPlayer player;
   private final Vibrator vibe;
 
@@ -81,6 +83,9 @@ public final class Player extends AndroidNonvisibleComponent
 
   // determines if playing should loop
   private boolean loop;
+
+  // tracks the volume of player
+  private int volume;
 
   // choices on player policy: Foreground, Always
   private boolean playOnlyInForeground;
@@ -141,6 +146,7 @@ public final class Player extends AndroidNonvisibleComponent
     focusOn = false;
     am = (audioFocusSupported) ? FroyoUtil.setAudioManager(context) : null;
     afChangeListener = (audioFocusSupported) ? FroyoUtil.setAudioFocusChangeListener(this) : null;
+    Volume(Player.DEFAULT_VOLUME);
   }
 
   /**
@@ -262,16 +268,23 @@ public final class Player extends AndroidNonvisibleComponent
    */
   @DesignerProperty(
       editorType = PropertyTypeConstants.PROPERTY_TYPE_NON_NEGATIVE_FLOAT,
-      defaultValue = "50")
+      defaultValue = "" + Player.DEFAULT_VOLUME)
   @SimpleProperty(
-      description = "Sets the volume to a number between 0 and 100")
+      description = "The volume of the Player is a number between 0 and 100")
   public void Volume(int vol) {
     if (playerState == State.PREPARED || playerState == State.PLAYING || playerState == State.PAUSED_BY_USER) {
       if (vol > 100 || vol < 0) {
         throw new IllegalArgumentError("Volume must be set to a number between 0 and 100");
       }
+      this.volume = vol;
       player.setVolume(((float) vol) / 100, ((float) vol) / 100);
+
     }
+  }
+
+  @SimpleProperty
+  public int Volume() {
+    return this.volume;
   }
 
   /**
