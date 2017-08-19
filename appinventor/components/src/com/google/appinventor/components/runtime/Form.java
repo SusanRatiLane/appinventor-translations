@@ -255,11 +255,12 @@ public class Form extends Activity
   private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
-        String taskName = intent.getStringExtra("task");
-        String resultString = intent.getStringExtra("message");
-        Log.d(LOG_TAG,"Received from Task: " + taskName + " message: " + resultString);
-        Object resultObject = Form.decodeJSONStringForForm(resultString, "receive from task");
-        ReceivedFromTask(taskName, resultObject);
+        String taskName = intent.getStringExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME);
+        String title = intent.getStringExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE);
+        String stringMessage = intent.getStringExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE);
+        Log.d(LOG_TAG,"Received from Task: " + taskName + " title: " + title " message: " + stringMessage);
+        Object message = Form.decodeJSONStringForForm(stringMessage, "receive from task");
+        ReceivedFromTask(taskName, title, message);
 
     }
   };
@@ -1634,9 +1635,9 @@ public class Form extends Activity
 
   // Task
   @SimpleEvent(description = "Event raised when a Task sends a message")
-  public void ReceivedFromTask(String task, Object message) {
+  public void ReceivedFromTask(String task, String title, Object message) {
     Log.i(LOG_TAG, "Form " + formName + " ReceiveFromTask, task = " + task + ", message = " + message.toString());
-    EventDispatcher.dispatchEvent(this,"ReceivedFromTask", task, message);
+    EventDispatcher.dispatchEvent(this,"ReceivedFromTask", task, title, message);
   }
 
 

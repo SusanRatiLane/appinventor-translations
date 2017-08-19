@@ -55,6 +55,9 @@ public class Task extends Service
   private static final String LOG_TAG = "Task";
 
   public static final String LOCAL_ACTION_SEND_MESSAGE = "SendMessage";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME = "Task";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE = "Title";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE = "Message";
 
   protected static Map<String, Task> taskMap = new HashMap<String, Task>();
 
@@ -325,11 +328,12 @@ public class Task extends Service
   }
 
   @SimpleFunction(description = "Send a message to the screen")
-  public void SendToScreen(Object message) {
+  public void SendToScreen(String title, Object message) {
     Log.i(LOG_TAG, "Sending from Task : " + this.getTaskName() + " message : " + message.toString());
     Intent intent = new Intent(Task.LOCAL_ACTION_SEND_MESSAGE);
-    intent.putExtra("task", this.getTaskName());
-    intent.putExtra("message", message.toString());
+    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME, this.getTaskName());
+    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE, title.toString());
+    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, message.toString());
     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
   }
 
