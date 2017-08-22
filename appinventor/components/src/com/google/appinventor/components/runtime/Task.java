@@ -6,13 +6,13 @@
 package com.google.appinventor.components.runtime;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 
 import android.support.v4.content.LocalBroadcastManager;
@@ -54,7 +54,7 @@ public class Task extends Service
 
   private static final String LOG_TAG = "Task";
 
-  public static final String LOCAL_ACTION_SEND_MESSAGE = "SendMessage";
+  public static final String LOCAL_ACTION_SEND_MESSAGE = "TaskSendMessage";
   public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME = "Task";
   public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE = "Title";
   public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE = "Message";
@@ -64,22 +64,10 @@ public class Task extends Service
   protected String taskName;
   protected int taskType;
 
-  public static class TaskHandler extends Handler {
-
-    protected TaskHandler(Looper looper) {
-      super(looper);
-    }
-
-    @Override
-    public void handleMessage(Message msg) {
-
-    }
-
-  }
 
   public static class TaskThread extends HandlerThread {
 
-    protected TaskHandler taskHandler;
+    protected Handler taskHandler;
     protected final Task task;
 
     public TaskThread(String taskName, Task task) {
@@ -94,21 +82,21 @@ public class Task extends Service
       prepareHandler(); // Prepares our Handler for communication
     }
 
-    public void start(TaskHandler taskHandler) {
+    public void start(Handler taskHandler) {
       super.start();
       prepareHandler(taskHandler);
     }
 
     protected void prepareHandler() {
-      taskHandler = new TaskHandler(getLooper());
+      taskHandler = new Handler(getLooper());
     }
 
-    protected void prepareHandler(TaskHandler taskHandler) {
+    protected void prepareHandler(Handler taskHandler) {
       this.taskHandler = taskHandler;
     }
 
 
-    public TaskHandler getTaskHandler() {
+    public Handler getTaskHandler() {
       return taskHandler;
     }
 
@@ -129,6 +117,21 @@ public class Task extends Service
 
   private boolean taskInitialized = false;
 
+  private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      String taskName = intent.getStringExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME);
+      String formName = intent.getStringExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_FORM_NAME);
+      String title = intent.getStringExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE);
+      String stringMessage = intent.getStringExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE);
+      Log.d(LOG_TAG,"Received from Form : form : " + formName + " taskName : " + taskName + " title: " + title + " message: " + stringMessage);
+      Object message = Form.decodeJSONStringForForm(stringMessage, "receive from task");
+      triggerReceivedFromScreen(taskName, title, message);
+
+    }
+  };
+
   @Override
   public void onCreate() {
 
@@ -138,7 +141,6 @@ public class Task extends Service
     Log.d(LOG_TAG, "Task " + taskName + " got onCreate");
 
     taskThread = new TaskThread(taskName,this);
-
     taskMap.put(taskName, this);
 
     Runnable initialize = new Runnable() {
@@ -148,6 +150,9 @@ public class Task extends Service
         $define();
 
         Initialize();
+
+        // Listen messages from Forms
+        LocalBroadcastManager.getInstance(Task.this).registerReceiver(broadcastReceiver, new IntentFilter(Form.LOCAL_ACTION_SEND_MESSAGE));
       }
     };
 
@@ -176,13 +181,13 @@ public class Task extends Service
     Log.d("Task", "Task onStartCommand Called");
     String startValue = intent.getStringExtra(Form.SERVICE_ARG);
     final Object decodedStartVal = Form.decodeJSONStringForForm(startValue, "get start value");
-    Runnable command = new Runnable() {
+    Runnable runnable = new Runnable() {
       @Override
       public void run() {
         TaskStarted(decodedStartVal);
       }
     };
-    taskThread.getTaskHandler().post(command);
+    taskThread.getTaskHandler().post(runnable);
     Log.d("Task", "Done Dispatch about to Return");
     return START_NOT_STICKY;
   }
@@ -190,6 +195,25 @@ public class Task extends Service
   @SimpleEvent(description = "Task has been started")
   public void TaskStarted(Object startValue) {
     EventDispatcher.dispatchEvent(this, "TaskStarted", startValue);
+  }
+
+  protected void triggerReceivedFromScreen(String taskName, final String title, final Object message) {
+    if (!this.taskName.equals(taskName)) {
+      return;
+    }
+    Runnable runnable = new Runnable() {
+      @Override
+      public void run() {
+        ReceivedFromScreen(title, message);
+      }
+    };
+    taskThread.getTaskHandler().post(runnable);
+    return;
+  }
+
+  @SimpleEvent(description = "Task has received a message from a screen")
+  public void ReceivedFromScreen(String title, Object message) {
+    EventDispatcher.dispatchEvent(this, "ReceivedFromScreen", title, message);
   }
 
   /**
@@ -264,6 +288,8 @@ public class Task extends Service
     // for debugging and future growth
     Log.i(LOG_TAG, "Task " + taskName + " got onDestroy");
 
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+
     // Unregister events for components in this task.
     EventDispatcher.removeDispatchContext(this.getDispatchContext());
   }
@@ -329,10 +355,10 @@ public class Task extends Service
 
   @SimpleFunction(description = "Send a message to the screen")
   public void SendToScreen(String title, Object message) {
-    Log.i(LOG_TAG, "Sending from Task : " + this.getTaskName() + " message : " + message.toString());
+    Log.i(LOG_TAG, "Sending from Task to Screen : " + this.getTaskName() + " title : " + title + " message : " + message.toString());
     Intent intent = new Intent(Task.LOCAL_ACTION_SEND_MESSAGE);
     intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME, this.getTaskName());
-    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE, title.toString());
+    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE, title);
     intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, message.toString());
     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
   }

@@ -115,6 +115,13 @@ public class Form extends Activity
 
   public static final String APPINVENTOR_URL_SCHEME = "appinventor";
 
+
+  public static final String LOCAL_ACTION_SEND_MESSAGE = "FormSendMessage";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME = "Task";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_FORM_NAME = "Form";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE = "Title";
+  public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE = "Message";
+
   // Keep track of the current form object.
   // activeForm always holds the Form that is currently handling event dispatching so runtime.scm
   // can lookup symbols in the correct environment.
@@ -597,6 +604,7 @@ public class Form extends Activity
     Log.i(LOG_TAG, "Form " + formName + " got onResume");
     activeForm = this;
 
+    // Listen to messages from Tasks
     LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Task.LOCAL_ACTION_SEND_MESSAGE));
 
     // If applicationIsBeingClosed is true, call closeApplication() immediately to continue
@@ -2213,5 +2221,17 @@ public class Form extends Activity
       dispatchErrorOccurredEvent(this, "StopService",
           ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
     }
+  }
+
+
+  @SimpleFunction(description = "Sends a message to the specified task")
+  public void SendToTask(String taskName, String title, Object message) {
+    Log.i(LOG_TAG, "Sending from Form to Task : form :  " + this.getFormName() + " task : " + taskName + " title : " + title + " message : " + message.toString());
+    Intent intent = new Intent(Form.LOCAL_ACTION_SEND_MESSAGE);
+    intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME, taskName);
+    intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_FORM_NAME, this.getFormName());
+    intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE, title);
+    intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, message.toString());
+    LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
   }
 }

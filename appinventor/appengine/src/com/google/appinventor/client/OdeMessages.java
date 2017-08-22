@@ -4818,6 +4818,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String ReceivedFromTaskEvents();
 
+  @DefaultMessage("ReceivedFromScreen")
+  @Description("")
+  String ReceivedFromScreenEvents();
+
 
   //Methods
   @DefaultMessage("ResolveActivity")
@@ -5835,6 +5839,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("SendToScreen")
   @Description("")
   String SendToScreenMethods();
+
+  @DefaultMessage("SendToTask")
+  @Description("")
+  String SendToTaskMethods();
 
 
   //Mock Components

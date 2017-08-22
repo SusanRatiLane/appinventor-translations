@@ -7,8 +7,7 @@ package com.google.appinventor.components.runtime;
 
 import java.util.HashMap;
 
-import android.os.Looper;
-import android.os.Message;
+import android.os.Handler;
 
 import android.content.Intent;
 import android.util.Log;
@@ -21,17 +20,6 @@ public class ReplTask extends Task {
   private static final HashMap<String, ReplTaskThread> taskThreads = new HashMap<String, ReplTaskThread>();
   private boolean assetsLoaded = true;
 
-  protected static class ReplTaskHandler extends Task.TaskHandler {
-
-    protected ReplTaskHandler(Looper looper) {
-      super(looper);
-    }
-
-    @Override
-    public void handleMessage(Message msg) {
-
-    }
-  }
 
   protected static class ReplTaskThread extends TaskThread {
 
@@ -80,8 +68,19 @@ public class ReplTask extends Task {
       taskThread = new ReplTaskThread(taskName, ReplTask.replTask);
       taskThreads.put(taskName, taskThread);
     }
-    TaskHandler taskHandler = taskThread.getTaskHandler();
+    Handler taskHandler = taskThread.getTaskHandler();
     taskHandler.post(runnable);
+  }
+
+  @Override
+  protected void triggerReceivedFromScreen(String taskName, final String title, final Object message) {
+    Runnable runnable = new Runnable() {
+      @Override
+      public void run() {
+        ReceivedFromScreen(title, message);
+      }
+    };
+    runTaskCode(taskName, runnable);
   }
 
 
