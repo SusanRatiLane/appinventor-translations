@@ -131,6 +131,8 @@ public final class Compiler {
       RUNTIME_FILES_DIR + "android.jar";
   private static final String ANDROID_SUPPORT_V4_RUNTIME =
           RUNTIME_FILES_DIR + "android-support-v4.jar";
+  private static final String ANDROID_SUPPORT_V4_INTERNAL_IMPL =
+          RUNTIME_FILES_DIR + "android-support-v4-impl.jar";
   private static final String COMP_BUILD_INFO =
       RUNTIME_FILES_DIR + "simple_components_build_info.json";
   private static final String DX_JAR =
@@ -976,6 +978,8 @@ public final class Compiler {
       classpath.append(getResource(ANDROID_RUNTIME));
       classpath.append(COLON);
       classpath.append(getResource(ANDROID_SUPPORT_V4_RUNTIME));
+      classpath.append(COLON);
+      classpath.append(getResource(ANDROID_SUPPORT_V4_INTERNAL_IMPL));
 
       System.out.println("Libraries Classpath = " + classpath);
 
@@ -1174,6 +1178,7 @@ public final class Compiler {
     inputList.add(classesDir); //this is a directory, and won't be cached into the dex cache
     inputList.add(new File(getResource(SIMPLE_ANDROID_RUNTIME_JAR)));
     inputList.add(new File(getResource(ANDROID_SUPPORT_V4_RUNTIME)));
+    inputList.add(new File(getResource(ANDROID_SUPPORT_V4_INTERNAL_IMPL)));
     inputList.add(new File(getResource(KAWA_RUNTIME)));
     inputList.add(new File(getResource(ACRA_RUNTIME)));
 
