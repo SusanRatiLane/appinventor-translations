@@ -33,6 +33,11 @@ public class SdkLevel {
   public static final int LEVEL_JELLYBEAN_MR2 = 18;       // a.k.a. 4.3
   public static final int LEVEL_KITKAT = 19;              // a.k.a. 4.4
   public static final int LEVEL_LOLLIPOP = 21;            // a.k.a. 5.0
+  public static final int LEVEL_LOLLIPOP_MR1 = 22;        // a.k.a. 5.1
+  public static final int LEVEL_MARSHMALLOW = 23;         // a.k.a. 6.0
+  public static final int LEVEL_NOUGAT = 24;              // a.k.a. 7.0
+  public static final int LEVEL_NOUGAT_MR1 = 25;          // a.k.a. 7.1
+  public static final int LEVEL_OREO = 26;                // a.k.a. 8.0
 
   private SdkLevel() {
   }
