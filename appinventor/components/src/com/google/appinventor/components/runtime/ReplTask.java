@@ -6,29 +6,44 @@
 package com.google.appinventor.components.runtime;
 
 import java.util.HashMap;
+import java.util.Set;
 
+import android.content.IntentFilter;
 import android.os.Handler;
 
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import com.google.appinventor.components.runtime.util.EclairUtil;
+import com.google.appinventor.components.runtime.util.OnInitializeListener;
+import com.google.appinventor.components.runtime.util.SdkLevel;
 
 
 public class ReplTask extends Task {
 
-  public static ReplTask replTask;
   private static final String LOG_TAG = "ReplTask";
+
+  public static ReplTask replTask;
   private static final HashMap<String, ReplTaskThread> taskThreads = new HashMap<String, ReplTaskThread>();
-  private boolean assetsLoaded = true;
+
+  private TaskNotification replNotification;
 
 
+  // We create this class to identify ReplTaskThreads from TaskThread
   protected static class ReplTaskThread extends TaskThread {
-
-    protected ReplTaskThread(String taskName, ReplTask task) {
+    public ReplTaskThread(String taskName, ReplTask task) {
       super(taskName, task);
     }
+
+    public void clear() {
+      this.taskInitialized = false;
+      this.onInitializeListeners.clear();
+      this.onStopListeners.clear();
+      this.onDestroyListeners.clear();
+      this.getTaskNotification().reset();
+
+    }
   }
-
-
 
   public ReplTask() {
     super();
@@ -37,32 +52,68 @@ public class ReplTask extends Task {
 
   @Override
   public void onCreate() {
-    super.onCreate();
+    Log.d(LOG_TAG, "ReplTask got onCreate");
+    $define();
+    LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+            new IntentFilter(Form.LOCAL_ACTION_SEND_MESSAGE));
+    replNotification = new TaskNotification("ReplTask", this);
+    replNotification.setContentTitle("MIT AI2 Companion");
+    replNotification.setContentText("Live Development");
   }
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.d("ReplTask", "ReplTask onStartCommand Called");
+    if (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR) {
+      EclairUtil.startForegroundTask(this, replNotification.getId(),
+              replNotification.getNotification());
+      replNotification.setShowing(true);
+    } else {
+      replNotification.showNotification();
+    }
+    onStartTask(intent, startId);
+    // ReplTask is always essentially a Sticky Screen Task
+    return START_REDELIVER_INTENT;
+  }
+
+  @Override
+  protected void onStartTask(Intent intent, int startId) {
     String taskName = intent.getStringExtra(Form.SERVICE_NAME);
     String startValue = intent.getStringExtra(Form.SERVICE_ARG);
     final Object decodedStartVal = Form.decodeJSONStringForForm(startValue, "get start value");
     if (taskName == null) { // This is ReplTask itself Starting
-      return START_STICKY;
+      return;
     }
-    Runnable runnable = new Runnable() {
+    // We need to put the same ReplTask in the TaskMap with different taskNames so that Task.runOnTaskThread
+    // can find us and call us.
+    if (taskMap.get(taskName) == null) {
+      taskMap.put(taskName, this);
+    }
+    ReplTaskThread taskThread = taskThreads.get(taskName);
+    if (taskThread != null) {
+      if (!taskThread.getTaskInitiliazed()) {
+        if (taskThread.getTaskType() == TASK_TYPE_STICKY) {
+          taskThread.getTaskNotification().showNotification();
+        }
+      }
+    }
+
+    Runnable onStart = new Runnable() {
       @Override
       public void run() {
+        if (!getTaskInitiliazed()) {
+          $Initialize();
+        }
+        if (getTaskType() == TASK_TYPE_STICKY) {
+          getNotification().showNotification();
+        }
         TaskStarted(decodedStartVal);
       }
     };
-    runTaskCode(taskName, runnable);
-    Log.d("Task", "Done Dispatch about to Return");
-    return START_NOT_STICKY;
+    runOnTaskThread(taskName, onStart);
   }
 
-
-  public static void runTaskCode(String taskName, Runnable runnable) {
-    Log.d("ReplTask", "Got executed. Thank God");
+  public static void runOnTaskThread(String taskName, Runnable runnable) {
     ReplTaskThread taskThread = taskThreads.get(taskName);
     if (taskThread == null) {
       taskThread = new ReplTaskThread(taskName, ReplTask.replTask);
@@ -72,50 +123,121 @@ public class ReplTask extends Task {
     taskHandler.post(runnable);
   }
 
+
+
   @Override
-  protected void triggerReceivedFromScreen(String taskName, final String title, final Object message) {
-    Runnable runnable = new Runnable() {
-      @Override
-      public void run() {
-        ReceivedFromScreen(title, message);
-      }
-    };
-    runTaskCode(taskName, runnable);
+  protected void doStop() {
+    Log.d(LOG_TAG, "Task " + getTaskName() + " got doStop");
+    // Invoke all onStopListeners
+    Set<OnStopListener> onStopListeners = getOnStopListeners();
+    for (OnStopListener onStopListener : onStopListeners) {
+      onStopListener.onStop();
+    }
+    this.onStop();
   }
 
+  @Override
+  public void onStop() {
+    getCurrentReplTaskThread().clear();
+    taskMap.remove(getTaskName());
+  }
 
   @Override
   public void onDestroy() {
-    super.onDestroy();
-
-    stopSelf();
-  }
-
-
-
-  public boolean isAssetsLoaded() {
-    return assetsLoaded;
-  }
-
-
-  @Override
-  public String getDispatchContext() {
-    Log.d(LOG_TAG, "getDispatchContext called " + Thread.currentThread().getName());
-    return Thread.currentThread().getName();
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    replNotification.hideNotification();
   }
 
   @Override
-  public boolean canDispatchEvent(Component component, String eventName) {
-    Log.i(LOG_TAG, "canDispatch true"  );
-    return true;
+  public String getContextName() {
+    return getTaskName();
   }
 
-  /**
-   * Returns the Task of the Thread this function is called on.
-   * @return
-   */
+
+  // Helper functions to interface to TaskThread
+  // These functions must be called on a TaskThread for Repl
+
+  // We allow getTaskName() to be called on any thread.
   @Override
   public String getTaskName() {
-    return Thread.currentThread().getName();
+    if (Thread.currentThread() instanceof ReplTaskThread) {
+      return Thread.currentThread().getName();
+    }
+    return "ReplTask";
+
   }
+
+  public void setTaskType(int type) {
+    getCurrentReplTaskThread().setTaskType(type);
+  }
+
+  public int getTaskType() {
+    return getCurrentReplTaskThread().getTaskType();
+  }
+
+  public void setTaskInitiliazed(boolean initiliazed) {
+    getCurrentReplTaskThread().setTaskInitiliazed(initiliazed);
+  }
+
+  public boolean getTaskInitiliazed() {
+    return getCurrentReplTaskThread().getTaskInitiliazed();
+  }
+
+  public TaskNotification getNotification() {
+    return getCurrentReplTaskThread().getTaskNotification();
+  }
+
+  public Set<OnDestroyListener> getOnDestroyListeners() {
+    return getCurrentReplTaskThread().getOnDestroyListeners();
+  }
+
+  public Set<OnInitializeListener> getOnInitiliazeListeners() {
+    return getCurrentReplTaskThread().getOnInitializeListeners();
+  }
+
+  public Set<OnStopListener> getOnStopListeners() {
+    return getCurrentReplTaskThread().getOnStopListeners();
+  }
+
+  private ReplTaskThread getCurrentReplTaskThread() {
+    // we identify current Task by Thread Name
+    ReplTaskThread taskThread = taskThreads.get(Thread.currentThread().getName());
+    if (taskThread == null) {
+      throw new IllegalThreadStateException("getCurrentReplTaskThread() can be called only in a initialized TaskThread");
+    }
+    return taskThread;
+  }
+
+  public boolean isAssetsLoaded() {
+    if (ReplForm.topform != null) {
+      return ReplForm.topform.isAssetsLoaded();
+    }
+    return false;
+  }
+
+
+  public static void clearSingleTask(String taskName) {
+    Log.d(LOG_TAG, "ReplTask.clearSingleTask : " + taskName + " is called");
+    ReplTaskThread taskThread = taskThreads.get(taskName);
+    if (taskThread == null ) {
+      return;
+    }
+    Runnable doStop = new Runnable() {
+      @Override
+      public void run() {
+        replTask.doStop();
+      }
+    };
+    runOnTaskThread(taskName, doStop);
+  }
+
+  public static void clearAllTasks() {
+    for (String taskName : taskThreads.keySet()) {
+      clearSingleTask(taskName);
+    }
+    // We should have a callback to GC after all those runnables are finished
+    // For testing this will do
+    System.gc();
+  }
+
 }

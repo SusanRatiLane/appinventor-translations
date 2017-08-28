@@ -5,6 +5,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 package com.google.appinventor.components.runtime.util;
 
+import android.app.Notification;
+import com.google.appinventor.components.runtime.Task;
 import com.google.appinventor.components.runtime.WebViewer;
 
 import android.app.Activity;
@@ -116,6 +118,18 @@ public class EclairUtil {
    */
   public static void disableSuggestions(EditText textview) {
     textview.setInputType(textview.getInputType() | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+  }
+
+  /**
+   * Promote a Task as Foreground. This marks the task as important to the system.
+   * This requires a notification identified by a numeric integer.
+   *
+   * @param task to be promoted
+   * @param notificationId of the notification
+   * @param notification notification to be displayed to the user
+   */
+  public static void startForegroundTask(Task task, int notificationId, Notification notification) {
+      task.startForeground(notificationId, notification);
   }
 
 }

@@ -68,7 +68,8 @@ Blockly.Yail.YAIL_AND_DELAYED = "(and-delayed ";
 Blockly.Yail.YAIL_OR_DELAYED = "(or-delayed ";
 Blockly.Yail.YAIL_IF = "(if ";
 Blockly.Yail.YAIL_INIT_RUNTIME = "(init-runtime)";
-Blockly.Yail.YAIL_INITIALIZE_COMPONENTS = "(call-Initialize-of-components ";
+Blockly.Yail.YAIL_CALL_INITIALIZE_COMPONENTS = "(call-Initialize-of-components ";
+Blockly.Yail.YAIL_SET_INITIALIZE_COMPONENTS = "(set-Initialize-of-components ";
 Blockly.Yail.YAIL_LET = "(let ";
 Blockly.Yail.YAIL_LEXICAL_VALUE = "(lexical-value ";
 Blockly.Yail.YAIL_SET_LEXICAL_VALUE = "(set-lexical! ";
@@ -326,7 +327,7 @@ Blockly.Yail.wrapFormForRepl = function(formName, code, componentNames) {
     replCode.push(Blockly.Yail.getComponentRenameString("Screen1", formName));
   }
   replCode = replCode.concat(code);
-  replCode.push(Blockly.Yail.getComponentInitializationString(formName, componentNames));
+  replCode.push(Blockly.Yail.getComponentInitializationString(formName, "Form", componentNames));
   replCode.push(Blockly.Yail.YAIL_CLOSE_BLOCK);
   return replCode;
 };
@@ -337,7 +338,7 @@ Blockly.Yail.wrapTaskForRepl = function(taskName, code, componentNames) {
   replCode.push(Blockly.Yail.YAIL_BEGIN);
   replCode.push(Blockly.Yail.YAIL_CLEAR_TASK + taskName + Blockly.Yail.YAIL_CLOSE_BLOCK);
   replCode = replCode.concat(code);
-  replCode.push(Blockly.Yail.getComponentInitializationString(taskName, componentNames));
+  replCode.push(Blockly.Yail.getComponentInitializationString(taskName, "Task", componentNames));
   replCode.push(Blockly.Yail.YAIL_CLOSE_BLOCK);
   return replCode;
 };
@@ -345,13 +346,26 @@ Blockly.Yail.wrapTaskForRepl = function(taskName, code, componentNames) {
 /**
  * Return code to initialize all components in componentMap.
  *
+ * We call Initialize for Form since they are started by the Repl.
+ * We don't call Initialize for Task since they are started by a Form.
+ * We only set Initialization components waiting to be initialized by the Form.
+ *
  * @param {string} contextName name of the current context
+ * @param {string} contextType type of the current context
  * @param {Array} componentNames array of names of components in the workspace
  * @returns {Array} code strings
  * @private
  */
-Blockly.Yail.getComponentInitializationString = function(contextName, componentNames) {
-  var code = Blockly.Yail.YAIL_INITIALIZE_COMPONENTS + Blockly.Yail.YAIL_QUOTE + contextName;
+Blockly.Yail.getComponentInitializationString = function(contextName, contextType, componentNames) {
+  var start = "";
+  if (contextType == "Form") {
+    start = Blockly.Yail.YAIL_CALL_INITIALIZE_COMPONENTS;
+  } else if (contextType == "Task") {
+    start = Blockly.Yail.YAIL_SET_INITIALIZE_COMPONENTS;
+  } else {
+    throw "Invalid contextType for Component Initialization";
+  }
+  var code = start + Blockly.Yail.YAIL_QUOTE + contextName;
   code += " " + Blockly.Yail.YAIL_QUOTE + contextName;
   for (var i = 0, cName; cName = componentNames[i]; i++) {  // TODO: will we get non-component fields this way?
     if (cName != contextName)                                  // Avoid duplicate initialization of the context
@@ -498,10 +512,11 @@ Blockly.Yail.getTaskPropertiesLines = function(taskName, componentJson, includeC
   if (includeComments) {
     code.push(Blockly.Yail.YAIL_COMMENT_MAJOR + taskName + Blockly.Yail.YAIL_LINE_FEED);
   }
-  var doAfterCreation = Blockly.Yail.YAIL_DO_AFTER_TASK_CREATION + taskName + Blockly.Yail.YAIL_LINE_FEED
-    + "(android-log \"yail do after creation\")"
-    + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_REGISTER_TASK + Blockly.Yail.YAIL_QUOTE + taskName
-    + Blockly.Yail.YAIL_CLOSE_BLOCK;
+  // TODO (justtus) : if we place register-task outside will we work on compiled apks?
+  var registerTask = Blockly.Yail.YAIL_REGISTER_TASK + Blockly.Yail.YAIL_QUOTE + taskName
+    + Blockly.Yail.YAIL_CLOSE_BLOCK + Blockly.Yail.YAIL_LINE_FEED;
+  var doAfterCreation = Blockly.Yail.YAIL_DO_AFTER_TASK_CREATION + taskName + Blockly.Yail.YAIL_SPACER
+    + "(android-log \"yail do after creation\") ";
   var yailForComponentProperties = Blockly.Yail.getPropertySettersLines(taskName, componentJson, taskName, componentDb);
   if (yailForComponentProperties.length > 0) {
     // getPropertySettersLine returns an array of lines.  So we need to
@@ -512,7 +527,7 @@ Blockly.Yail.getTaskPropertiesLines = function(taskName, componentJson, includeC
     doAfterCreation += Blockly.Yail.YAIL_SPACER + yailForComponentProperties.join(" ");
   }
   doAfterCreation += Blockly.Yail.YAIL_CLOSE_BLOCK;
-  code.push(doAfterCreation);
+  code.push(registerTask + doAfterCreation);
   return code;
 };
 

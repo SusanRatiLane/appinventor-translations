@@ -122,6 +122,9 @@ public class Form extends Activity
   public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE = "Title";
   public static final String LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE = "Message";
 
+
+  public static String appName = "";
+
   // Keep track of the current form object.
   // activeForm always holds the Form that is currently handling event dispatching so runtime.scm
   // can lookup symbols in the correct environment.
@@ -649,7 +652,6 @@ public class Form extends Activity
   @Override
   protected void onPause() {
     super.onPause();
-    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     Log.i(LOG_TAG, "Form " + formName + " got onPause");
     for (OnPauseListener onPauseListener : onPauseListeners) {
       onPauseListener.onPause();
@@ -667,6 +669,8 @@ public class Form extends Activity
     for (OnStopListener onStopListener : onStopListeners) {
       onStopListener.onStop();
     }
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    Task.onFormStop(); // Notify all tasks we are closing
   }
 
   public void registerForOnStop(OnStopListener component) {
@@ -1516,6 +1520,7 @@ public class Form extends Activity
       "If the AppName is blank, it will be set to the name of the project when the project is built.")
   public void AppName(String aName) {
     // We don't actually need to do anything.
+    Form.appName = aName;
   }
 
   /**
@@ -1671,6 +1676,11 @@ public class Form extends Activity
   @Override
   public Task $task() {
     return null;
+  }
+
+  @Override
+  public String getContextName() {
+    return getFormName();
   }
 
   @Override
@@ -2082,7 +2092,7 @@ public class Form extends Activity
   }
 
   // This is used by runtime.scm to call the Initialize of a component.
-  public void callInitialize(Object component) throws Throwable {
+  public static void callInitialize(Object component) throws Throwable {
     Method method;
     try {
       method = component.getClass().getMethod("Initialize", (Class<?>[]) null);
@@ -2203,9 +2213,9 @@ public class Form extends Activity
     serviceIntent.putExtra(SERVICE_ARG, jValue);
     try {
       startService(serviceIntent);
-    } catch (ActivityNotFoundException e) {
+    } catch (SecurityException e) {
       dispatchErrorOccurredEvent(this, functionName,
-          ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
+          ErrorMessages.ERROR_TASK_NOT_FOUND, taskName);
     }
   }
 
@@ -2217,9 +2227,9 @@ public class Form extends Activity
     serviceIntent.setClassName(this, getPackageName() + "." + taskName);
     try {
       stopService(serviceIntent);
-    } catch (ActivityNotFoundException e) {
+    } catch (SecurityException e) {
       dispatchErrorOccurredEvent(this, "StopService",
-          ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
+          ErrorMessages.ERROR_TASK_NOT_FOUND, taskName);
     }
   }
 

@@ -1,0 +1,6 @@
+#|
+$Source $Yail
+|#
+
+(require <com.google.youngandroid.runtime>)
+(define-repl-task edu.mit.appinventor.aicompanion3.ReplTask ReplTask)

@@ -306,8 +306,8 @@ public class ReplForm extends Form {
     // Note that the following is dependent on task generated class names being the same as
     // their task names and all tasks being in the same package.
     String packageName = getPackageName();
-    serviceIntent.setClassName(this, packageName + "." + "Task1");
-    Log.d(LOG_TAG, "serviceClass=" + packageName + "." + "Task1");
+    serviceIntent.setClassName(this, packageName + "." + "ReplTask");
+    Log.d(LOG_TAG, "serviceClass=" + packageName + "." + "ReplTask");
     String functionName = "open another service";
     String jValue = "";
     if (startValue != null) {
@@ -319,9 +319,9 @@ public class ReplForm extends Form {
       Log.d(LOG_TAG, "Starting in Repl Task : " );
       Log.d(LOG_TAG, "Task : " + taskName);
       startService(serviceIntent);
-    } catch (ActivityNotFoundException e) {
+    } catch (SecurityException e) {
       dispatchErrorOccurredEvent(this, functionName,
-              ErrorMessages.ERROR_SCREEN_NOT_FOUND, taskName);
+              ErrorMessages.ERROR_TASK_NOT_FOUND, taskName);
     }
   }
 
@@ -338,8 +338,8 @@ public class ReplForm extends Form {
     // Note that the following is dependent on task generated class names being the same as
     // their task names and all tasks being in the same package.
     String packageName = getPackageName();
-    serviceIntent.setClassName(this, packageName + "." + "Task1");
-    Log.d(LOG_TAG, "stopping ReplService : serviceClass=" + packageName + "." + "Task1");
+    serviceIntent.setClassName(this, packageName + "." + "ReplTask");
+    Log.d(LOG_TAG, "stopping ReplService : serviceClass=" + packageName + "." + "ReplTask");
     this.stopService(serviceIntent);
   }
 

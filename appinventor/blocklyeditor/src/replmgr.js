@@ -260,7 +260,7 @@ Blockly.ReplMgr.buildYail = function(workspace) {
 
     // need to do this after the blocks have been defined
     if (needinitialize) {
-        this.putYail(contextInfo, Blockly.Yail.getComponentInitializationString(contextName, componentNames));
+        this.putYail(contextInfo, Blockly.Yail.getComponentInitializationString(contextName, contextInfo.type, componentNames));
     }
 };
 
