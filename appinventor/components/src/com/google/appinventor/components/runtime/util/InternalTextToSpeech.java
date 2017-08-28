@@ -43,6 +43,7 @@ public class InternalTextToSpeech implements ITextToSpeech {
   private final TextToSpeechCallback callback;
   private TextToSpeech tts;
   private volatile boolean isTtsInitialized;
+  private final String contextName;
 
   private Handler mHandler = new Handler();
 
@@ -61,6 +62,7 @@ public class InternalTextToSpeech implements ITextToSpeech {
     this.context = container.$context();
     this.callback = callback;
     initializeTts();
+    contextName = container.getContextName();
   }
 
   private void initializeTts() {
@@ -105,14 +107,16 @@ public class InternalTextToSpeech implements ITextToSpeech {
             public void onUtteranceCompleted(String utteranceId) {
               // onUtteranceCompleted is not called on the UI thread, so we use
               // Activity.runOnUiThread() to call callback.onSuccess().
+              Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                  callback.onSuccess();
+                }
+              };
               if (container.inForm()) {
-                container.$form().runOnUiThread(new Runnable() {
-                  public void run() {
-                    callback.onSuccess();
-                  }
-                });
+                container.$form().runOnUiThread(runnable);
               } else if (container.inTask()) {
-                  // TODO(justus) : Handle task
+                container.$task().runOnTaskThread(contextName, runnable);
               }
             }
           });

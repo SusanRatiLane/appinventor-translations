@@ -40,6 +40,13 @@ public interface ComponentContainer {
   Task $task();
 
   /**
+   * It is important to call this method on the correct thread to return
+   * the correct name.
+   * @return Returns the contextName of the form or task
+   */
+  String getContextName();
+
+  /**
    * @return  Returns true only if the container is a context (form or task).
    */
   boolean isContext();

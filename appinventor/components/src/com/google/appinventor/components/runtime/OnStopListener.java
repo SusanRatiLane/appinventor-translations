@@ -7,7 +7,7 @@
 package com.google.appinventor.components.runtime;
 
 /**
- * Listener for distributing the Activity onStop() method to interested components.
+ * Listener for distributing the Activity and Task onStop() methods to interested components.
  *
  * @author markf@google.com (Mark Friedman)
  */

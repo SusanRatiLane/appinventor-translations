@@ -110,9 +110,13 @@ public class AccelerometerSensor extends AndroidNonvisibleComponent
    * @param container  ignored (because this is a non-visible component)
    */
   public AccelerometerSensor(ComponentContainer container) {
-    super(container.$form());
-    form.registerForOnResume(this);
-    form.registerForOnStop(this);
+    super(container);
+    if (container.inForm()) {
+      form.registerForOnResume(this);
+      form.registerForOnStop(this);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+    }
 
     enabled = true;
     sensorManager = (SensorManager) container.$context().getSystemService(Context.SENSOR_SERVICE);
@@ -184,7 +188,7 @@ public class AccelerometerSensor extends AndroidNonvisibleComponent
     if ((sensitivity == 1) || (sensitivity == 2) || (sensitivity == 3)) {
       this.sensitivity = sensitivity;
     } else {
-      form.dispatchErrorOccurredEvent(this, "Sensitivity",
+      container.dispatchErrorOccurredEvent(this, "Sensitivity",
           ErrorMessages.ERROR_BAD_VALUE_FOR_ACCELEROMETER_SENSITIVITY, sensitivity);
     }
   }

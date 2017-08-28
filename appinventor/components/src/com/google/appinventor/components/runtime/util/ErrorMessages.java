@@ -111,6 +111,7 @@ public final class ErrorMessages {
   public static final int ERROR_SCREEN_BAD_VALUE_FOR_SENDING = 904;
   public static final int ERROR_SCREEN_INVALID_ANIMATION = 905;
   public static final int ERROR_NO_FOCUSABLE_VIEW_FOUND = 906;
+  public static final int ERROR_SENDING_MESSAGE_TO_UNAVAILABLE_TASK = 907;
   // Canvas errors
   public static final int ERROR_CANVAS_BITMAP_ERROR = 1001;
   public static final int ERROR_CANVAS_WIDTH_ERROR = 1002;
@@ -210,11 +211,14 @@ public final class ErrorMessages {
   // Extension errors are signalled from extensions
   public static final int ERROR_EXTENSION_ERROR = 3300;
 
+  // Task errors
+  public static final int ERROR_TASK_NOT_FOUND = 3400;
+
   // Component errors
-  public static final int ERROR_COMPONENT_UNSUPPORTED_IN_FORM = 3401;
-  public static final int ERROR_COMPONENT_UNSUPPORTED_IN_TASK = 3402;
-  public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_FORM = 3403;
-  public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK = 3404;
+  public static final int ERROR_COMPONENT_UNSUPPORTED_IN_FORM = 3501;
+  public static final int ERROR_COMPONENT_UNSUPPORTED_IN_TASK = 3502;
+  public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_FORM = 3503;
+  public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK = 3504;
 
   // Start the next group of errors at 3500
 
@@ -415,6 +419,8 @@ public final class ErrorMessages {
         "Bad value for screen open/close animation: %s");
     errorMessages.put(ERROR_NO_FOCUSABLE_VIEW_FOUND,
         "No Focusable View Found");
+    errorMessages.put(ERROR_SENDING_MESSAGE_TO_UNAVAILABLE_TASK,
+        "Could not send to unavailable Task : %s");
     // Canvas errors
     errorMessages.put(ERROR_CANVAS_BITMAP_ERROR, "Error getting Canvas contents to save");
     errorMessages.put(ERROR_CANVAS_WIDTH_ERROR, "Canvas width cannot be set to non-positive number");
@@ -524,6 +530,10 @@ public final class ErrorMessages {
     // Extension errors
     errorMessages.put(ERROR_EXTENSION_ERROR,
         "Error %d in extension %s: %s");
+    // Task errors
+    errorMessages.put(ERROR_TASK_NOT_FOUND,
+        "Task not found : %s");
+    // Component errors
     errorMessages.put(ERROR_COMPONENT_UNSUPPORTED_IN_FORM,
         "%s component is not supported in a screen.");
     errorMessages.put(ERROR_COMPONENT_UNSUPPORTED_IN_TASK,

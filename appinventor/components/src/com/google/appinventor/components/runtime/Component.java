@@ -156,8 +156,8 @@ public interface Component {
   /*
    * Task Types.
    */
-  static final int TASK_TYPE_QUICK = 0;
-  static final int TASK_TYPE_PERSISTENT = 1;
+  static final int TASK_TYPE_SCREEN = 0;
+  static final int TASK_TYPE_STICKY = 1;
   static final int TASK_TYPE_REPEATING = 2;
 
 }

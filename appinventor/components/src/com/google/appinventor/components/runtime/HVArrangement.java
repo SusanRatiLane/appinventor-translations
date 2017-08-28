@@ -152,6 +152,14 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
   }
 
   @Override
+  public String getContextName() {
+    if (inForm()) {
+      return $form().getContextName();
+    }
+    return null;
+  }
+
+  @Override
   public boolean isContext() {
     return false;
   }

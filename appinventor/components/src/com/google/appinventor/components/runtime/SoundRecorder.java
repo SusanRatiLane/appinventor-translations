@@ -225,8 +225,13 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
       controller.recorder.stop();
     } catch(IllegalStateException e) {
       Log.i(TAG, "SoundRecorder was not in a recording state.", e);
-      container.dispatchErrorOccurredEventDialog(this, "Stop",
-          ErrorMessages.ERROR_SOUND_RECORDER_ILLEGAL_STOP);
+      if (container.inForm()) {
+        container.dispatchErrorOccurredEventDialog(this, "Stop",
+                ErrorMessages.ERROR_SOUND_RECORDER_ILLEGAL_STOP);
+      } else if (container.inTask()) {
+        container.dispatchErrorOccurredEvent(this, "Stop",
+                ErrorMessages.ERROR_SOUND_RECORDER_ILLEGAL_STOP);
+      }
     } finally {
       controller = null;
       StoppedRecording();

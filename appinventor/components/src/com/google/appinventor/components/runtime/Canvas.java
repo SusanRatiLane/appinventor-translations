@@ -802,6 +802,14 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
   }
 
   @Override
+  public String getContextName() {
+    if (inForm()) {
+      return $form().getContextName();
+    }
+    return null;
+  }
+
+  @Override
   public boolean isContext() {
     return false;
   }

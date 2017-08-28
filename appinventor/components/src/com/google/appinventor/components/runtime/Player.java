@@ -140,6 +140,10 @@ public final class Player extends AndroidNonvisibleComponent
       form.registerForOnStop(this);
       // Make volume buttons control media, not ringer.
       form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+      task.registerForOnDestroy(this);
+
     }
     loop = false;
     playOnlyInForeground = false;
@@ -466,8 +470,12 @@ public final class Player extends AndroidNonvisibleComponent
   @Override
   public void onStop() {
     if (player == null) return; //Do nothing if the player is not
-    if (playOnlyInForeground && player.isPlaying()) {
-      pause();
+    if (container.inForm()) {
+      if (playOnlyInForeground && player.isPlaying()) {
+        pause();
+      }
+    } else if (container.inTask()) {
+      prepareToDie();
     }
   }
 

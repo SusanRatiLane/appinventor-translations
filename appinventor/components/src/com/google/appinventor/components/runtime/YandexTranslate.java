@@ -51,6 +51,8 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
       "https://translate.yandex.net/api/v1.5/tr.json/translate?key=";
   private final String yandexKey;
 
+  private final String contextName;
+
   /**
    * Creates a new component.
    *
@@ -58,6 +60,7 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
    */
   public YandexTranslate(ComponentContainer container) {
     super(container);
+    contextName = container.getContextName();
 
     if (container.inForm()) {
       // Set up the Yandex.Translate Tagline in the 'About' screen
@@ -134,15 +137,18 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
         org.json.JSONArray response = jsonResponse.getJSONArray("text");
         final String translation = (String)response.get(0);
 
+        Runnable runnable = new Runnable() {
+          @Override
+          public void run() {
+            GotTranslation(responseCode, translation);
+          }
+        };
         // Dispatch the event.
         if (container.inForm()) {
-          form.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-              GotTranslation(responseCode, translation);
-            }
-          });
-        } // TODO(justus) : Handle Task
+          form.runOnUiThread(runnable);
+        } else if (container.inTask()) {
+          task.runOnTaskThread(contextName, runnable);
+        }
 
       } finally {
         connection.disconnect();

@@ -112,6 +112,14 @@ public class TableArrangement extends AndroidViewComponent
   }
 
   @Override
+  public String getContextName() {
+    if (inForm()) {
+      return $form().getContextName();
+    }
+    return null;
+  }
+
+  @Override
   public boolean isContext() {
     return false;
   }

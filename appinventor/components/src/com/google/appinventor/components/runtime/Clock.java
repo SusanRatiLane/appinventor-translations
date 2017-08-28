@@ -18,6 +18,7 @@ import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.errors.YailRuntimeError;
 import com.google.appinventor.components.runtime.util.Dates;
+import com.google.appinventor.components.runtime.util.OnInitializeListener;
 import com.google.appinventor.components.runtime.util.TimerInternal;
 
 import java.util.Calendar;
@@ -54,19 +55,24 @@ public final class Clock extends AndroidNonvisibleComponent
    * @param container ignored (because this is a non-visible component)
    */
   public Clock(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     timerInternal = new TimerInternal(this, DEFAULT_ENABLED, DEFAULT_INTERVAL);
 
     // Set up listeners
-    form.registerForOnResume(this);
-    form.registerForOnStop(this);
-    form.registerForOnDestroy(this);
-
-    if (form instanceof ReplForm) {
-      // In REPL, if this Clock component was added to the project after the onResume call occurred,
-      // then onScreen would be false, but the REPL app is, in fact, on screen.
-      onScreen = true;
+    if (container.inForm()) {
+      form.registerForOnResume(this);
+      form.registerForOnStop(this);
+      form.registerForOnDestroy(this);
+      if (form instanceof ReplForm) {
+        // In REPL, if this Clock component was added to the project after the onResume call occurred,
+        // then onScreen would be false, but the REPL app is, in fact, on screen.
+        onScreen = true;
+      }
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+      task.registerForOnDestroy(this);
     }
+
   }
 
   // Only the above constructor should be used in practice.
@@ -508,6 +514,10 @@ public final class Clock extends AndroidNonvisibleComponent
   @Override
   public void onStop() {
     onScreen = false;
+    // If we are in Task we were stopped
+    if (container.inTask()) {
+        timerInternal.Enabled(false);
+    }
   }
 
   @Override
