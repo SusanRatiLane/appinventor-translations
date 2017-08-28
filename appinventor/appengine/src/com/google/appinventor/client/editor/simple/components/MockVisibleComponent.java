@@ -82,6 +82,11 @@ public abstract class MockVisibleComponent extends MockComponent {
   }
 
   protected void addWidthHeightProperties() {
+    // Task is a special case of MockVisibleComponent which doesn't have
+    // width or height
+    if (isTask()) {
+      return;
+    }
     addProperty(PROPERTY_NAME_WIDTH, "" + LENGTH_PREFERRED, MESSAGES.widthPropertyCaption(),
         new YoungAndroidLengthPropertyEditor());
     addProperty(PROPERTY_NAME_HEIGHT, "" + LENGTH_PREFERRED, MESSAGES.heightPropertyCaption(),

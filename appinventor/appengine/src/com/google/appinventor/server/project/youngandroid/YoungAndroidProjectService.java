@@ -241,8 +241,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
         "{\"authURL\":[]," +
         "\"YaVersion\":\"" + YaVersion.YOUNG_ANDROID_VERSION + "\",\"Source\":\"Task\"," +
         "\"Properties\":{\"$Name\":\"" + taskName + "\",\"$Type\":\"Task\"," +
-        "\"$Version\":\"" + YaVersion.FORM_COMPONENT_VERSION + "\",\"Uuid\":\"" + 0 + "\"," +
-        "\"Title\":\"" + taskName + "\"}}\n|#";
+        "\"$Version\":\"" + YaVersion.TASK_COMPONENT_VERSION + "\",\"Uuid\":\"" + 0 + "\"," +
+        "\"NotificationTitle\":\"" + taskName + "\"}}\n|#";
   }
 
   /**

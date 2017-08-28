@@ -1345,9 +1345,9 @@ public interface OdeMessages extends Messages {
 
   // Used in editor/youngandroid/properties/YoungAndroidTaskTypeChoicePropertyEditor.java
 
-  @DefaultMessage("Quick Task")
-  @Description("Text for task type choice 'Quick Task'")
-  String quickTaskType();
+  @DefaultMessage("Screen Task")
+  @Description("Text for task type choice 'Screen Task'")
+  String screenTaskType();
 
   @DefaultMessage("Sticky Task")
   @Description("Text for task type choice 'Sticky Task'")
@@ -3668,6 +3668,14 @@ public interface OdeMessages extends Messages {
   @Description("")
   String TaskTypeProperties();
 
+  @DefaultMessage("NotificationTitle")
+  @Description("")
+  String NotificationTitleProperties();
+
+  @DefaultMessage("NotificationText")
+  @Description("")
+  String NotificationTextProperties();
+
   //Params
   @DefaultMessage("xAccel")
   @Description("")
@@ -5843,6 +5851,14 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("SendToTask")
   @Description("")
   String SendToTaskMethods();
+
+  @DefaultMessage("ShowNotification")
+  @Description("")
+  String ShowNotificationMethods();
+
+  @DefaultMessage("HideNotification")
+  @Description("")
+  String HideNotificationMethods();
 
 
   //Mock Components

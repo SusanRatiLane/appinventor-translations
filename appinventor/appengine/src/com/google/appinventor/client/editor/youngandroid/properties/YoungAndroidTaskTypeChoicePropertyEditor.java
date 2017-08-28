@@ -11,11 +11,11 @@ import static com.google.appinventor.client.Ode.MESSAGES;
 
 public class YoungAndroidTaskTypeChoicePropertyEditor extends ChoicePropertyEditor {
 
-  // Button shape choices
+  // Task type choices
   private static final Choice[] types = new Choice[] {
-      new Choice(MESSAGES.quickTaskType(), "0"),
-      new Choice(MESSAGES.stickyTaskType(), "1"),
-      new Choice(MESSAGES.repeatingTaskType(), "2")
+      new Choice(MESSAGES.screenTaskType(), "0"),
+      new Choice(MESSAGES.stickyTaskType(), "1")
+//      new Choice(MESSAGES.repeatingTaskType(), "2")
   };
 
   /**

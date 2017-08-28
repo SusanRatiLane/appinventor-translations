@@ -73,6 +73,10 @@ public final class MockTask extends MockContext {
     return true;
   }
 
+  @Override
+  public String getVisibleTypeName() {
+    return VISIBLE_TYPE;
+  }
 
 
   /**
