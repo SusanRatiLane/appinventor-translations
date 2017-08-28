@@ -44,14 +44,12 @@ import java.net.URLEncoder;
     nonVisible = true,
     iconName = "images/yandex.png")
 @UsesPermissions(permissionNames = "android.permission.INTERNET")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public final class YandexTranslate extends AndroidNonvisibleComponent {
 
   public static final String YANDEX_TRANSLATE_SERVICE_URL =
       "https://translate.yandex.net/api/v1.5/tr.json/translate?key=";
   private final String yandexKey;
-
-  private final String contextName;
 
   /**
    * Creates a new component.
@@ -60,7 +58,6 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
    */
   public YandexTranslate(ComponentContainer container) {
     super(container);
-    contextName = container.getContextName();
 
     if (container.inForm()) {
       // Set up the Yandex.Translate Tagline in the 'About' screen
@@ -137,7 +134,7 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
         org.json.JSONArray response = jsonResponse.getJSONArray("text");
         final String translation = (String)response.get(0);
 
-        Runnable runnable = new Runnable() {
+        Runnable gotTranslation = new Runnable() {
           @Override
           public void run() {
             GotTranslation(responseCode, translation);
@@ -145,9 +142,9 @@ public final class YandexTranslate extends AndroidNonvisibleComponent {
         };
         // Dispatch the event.
         if (container.inForm()) {
-          form.runOnUiThread(runnable);
+          form.runOnUiThread(gotTranslation);
         } else if (container.inTask()) {
-          task.runOnTaskThread(contextName, runnable);
+          task.runOnTaskThread(task, gotTranslation);
         }
 
       } finally {

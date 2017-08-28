@@ -67,7 +67,7 @@ import java.util.Map;
     category = ComponentCategory.CONNECTIVITY,
     nonVisible = true,
     iconName = "images/web.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.INTERNET," +
   "android.permission.WRITE_EXTERNAL_STORAGE," +
   "android.permission.READ_EXTERNAL_STORAGE")
@@ -176,7 +176,6 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     // TODO(lizlooney) - consider adding more mime types.
   }
 
-  private final Activity activity;
   private final CookieHandler cookieHandler;
 
   private String urlString = "";
@@ -188,11 +187,10 @@ public class Web extends AndroidNonvisibleComponent implements Component {
   /**
    * Creates a new Web component.
    *
-   * @param container the Form that this component is contained in.
+   * @param container the Context that this component is contained in.
    */
   public Web(ComponentContainer container) {
-    super(container.$form());
-    activity = container.$form();
+    super(container);
 
     cookieHandler = (SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD)
         ? GingerbreadUtil.newCookieManager()
@@ -204,7 +202,6 @@ public class Web extends AndroidNonvisibleComponent implements Component {
    */
   protected Web() {
     super(null);
-    activity = null;
     cookieHandler = null;
   }
 
@@ -252,7 +249,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
       processRequestHeaders(list);
       requestHeaders = list;
     } catch (InvalidRequestHeadersException e) {
-      form.dispatchErrorOccurredEvent(this, "RequestHeaders", e.errorNumber, e.index);
+      container.dispatchErrorOccurredEvent(this, "RequestHeaders", e.errorNumber, e.index);
     }
   }
 
@@ -275,7 +272,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
   public void AllowCookies(boolean allowCookies) {
     this.allowCookies = allowCookies;
     if (allowCookies && cookieHandler == null) {
-      form.dispatchErrorOccurredEvent(this, "AllowCookies",
+      container.dispatchErrorOccurredEvent(this, "AllowCookies",
           ErrorMessages.ERROR_FUNCTIONALITY_NOT_SUPPORTED_WEB_COOKIES);
     }
   }
@@ -328,7 +325,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     if (cookieHandler != null) {
       GingerbreadUtil.clearCookies(cookieHandler);
     } else {
-      form.dispatchErrorOccurredEvent(this, "ClearCookies",
+      container.dispatchErrorOccurredEvent(this, "ClearCookies",
           ErrorMessages.ERROR_FUNCTIONALITY_NOT_SUPPORTED_WEB_COOKIES);
     }
   }
@@ -347,7 +344,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     // Capture property values in local variables before running asynchronously.
     final CapturedProperties webProps = capturePropertyValues("Get");
     if (webProps == null) {
-      // capturePropertyValues has already called form.dispatchErrorOccurredEvent
+      // capturePropertyValues has already called container.dispatchErrorOccurredEvent
       return;
     }
 
@@ -357,11 +354,11 @@ public class Web extends AndroidNonvisibleComponent implements Component {
         try {
           performRequest(webProps, null, null, "GET");
         } catch (FileUtil.FileException e) {
-          form.dispatchErrorOccurredEvent(Web.this, "Get",
+          container.dispatchErrorOccurredEvent(Web.this, "Get",
               e.getErrorMessageNumber());
         } catch (Exception e) {
           Log.e(LOG_TAG, "ERROR_UNABLE_TO_GET", e);
-          form.dispatchErrorOccurredEvent(Web.this, "Get",
+          container.dispatchErrorOccurredEvent(Web.this, "Get",
               ErrorMessages.ERROR_WEB_UNABLE_TO_GET, webProps.urlString);
         }
       }
@@ -418,7 +415,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     // Capture property values before running asynchronously.
     final CapturedProperties webProps = capturePropertyValues("PostFile");
     if (webProps == null) {
-      // capturePropertyValues has already called form.dispatchErrorOccurredEvent
+      // capturePropertyValues has already called container.dispatchErrorOccurredEvent
       return;
     }
 
@@ -428,10 +425,10 @@ public class Web extends AndroidNonvisibleComponent implements Component {
         try {
           performRequest(webProps, null, path, "POST");
         } catch (FileUtil.FileException e) {
-          form.dispatchErrorOccurredEvent(Web.this, "PostFile",
+          container.dispatchErrorOccurredEvent(Web.this, "PostFile",
               e.getErrorMessageNumber());
         } catch (Exception e) {
-          form.dispatchErrorOccurredEvent(Web.this, "PostFile",
+          container.dispatchErrorOccurredEvent(Web.this, "PostFile",
               ErrorMessages.ERROR_WEB_UNABLE_TO_POST_OR_PUT_FILE, path, webProps.urlString);
         }
       }
@@ -488,7 +485,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     // Capture property values before running asynchronously.
     final CapturedProperties webProps = capturePropertyValues("PutFile");
     if (webProps == null) {
-      // capturePropertyValues has already called form.dispatchErrorOccurredEvent
+      // capturePropertyValues has already called container.dispatchErrorOccurredEvent
       return;
     }
 
@@ -498,10 +495,10 @@ public class Web extends AndroidNonvisibleComponent implements Component {
         try {
           performRequest(webProps, null, path, "PUT");
         } catch (FileUtil.FileException e) {
-          form.dispatchErrorOccurredEvent(Web.this, "PutFile",
+          container.dispatchErrorOccurredEvent(Web.this, "PutFile",
               e.getErrorMessageNumber());
         } catch (Exception e) {
-          form.dispatchErrorOccurredEvent(Web.this, "PutFile",
+          container.dispatchErrorOccurredEvent(Web.this, "PutFile",
               ErrorMessages.ERROR_WEB_UNABLE_TO_POST_OR_PUT_FILE, path, webProps.urlString);
         }
       }
@@ -522,7 +519,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     // Capture property values in local variables before running asynchronously.
     final CapturedProperties webProps = capturePropertyValues("Delete");
     if (webProps == null) {
-      // capturePropertyValues has already called form.dispatchErrorOccurredEvent
+      // capturePropertyValues has already called container.dispatchErrorOccurredEvent
       return;
     }
 
@@ -532,10 +529,10 @@ public class Web extends AndroidNonvisibleComponent implements Component {
         try {
           performRequest(webProps, null, null, "DELETE");
         } catch (FileUtil.FileException e) {
-          form.dispatchErrorOccurredEvent(Web.this, "Delete",
+          container.dispatchErrorOccurredEvent(Web.this, "Delete",
               e.getErrorMessageNumber());
         } catch (Exception e) {
-          form.dispatchErrorOccurredEvent(Web.this, "Delete",
+          container.dispatchErrorOccurredEvent(Web.this, "Delete",
               ErrorMessages.ERROR_WEB_UNABLE_TO_DELETE, webProps.urlString);
         }
       }
@@ -563,7 +560,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     // Capture property values before running asynchronously.
     final CapturedProperties webProps = capturePropertyValues(functionName);
     if (webProps == null) {
-      // capturePropertyValues has already called form.dispatchErrorOccurredEvent
+      // capturePropertyValues has already called container.dispatchErrorOccurredEvent
       return;
     }
 
@@ -579,7 +576,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
             requestData = text.getBytes(encoding);
           }
         } catch (UnsupportedEncodingException e) {
-          form.dispatchErrorOccurredEvent(Web.this, functionName,
+          container.dispatchErrorOccurredEvent(Web.this, functionName,
               ErrorMessages.ERROR_WEB_UNSUPPORTED_ENCODING, encoding);
           return;
         }
@@ -587,10 +584,10 @@ public class Web extends AndroidNonvisibleComponent implements Component {
         try {
           performRequest(webProps, requestData, null, httpVerb);
         } catch (FileUtil.FileException e) {
-          form.dispatchErrorOccurredEvent(Web.this, functionName,
+          container.dispatchErrorOccurredEvent(Web.this, functionName,
               e.getErrorMessageNumber());
         } catch (Exception e) {
-          form.dispatchErrorOccurredEvent(Web.this, functionName,
+          container.dispatchErrorOccurredEvent(Web.this, functionName,
               ErrorMessages.ERROR_WEB_UNABLE_TO_POST_OR_PUT, text, webProps.urlString);
         }
       }
@@ -640,7 +637,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     try {
       return buildRequestData(list);
     } catch (BuildRequestDataException e) {
-      form.dispatchErrorOccurredEvent(this, "BuildRequestData", e.errorNumber, e.index);
+      container.dispatchErrorOccurredEvent(this, "BuildRequestData", e.errorNumber, e.index);
       return "";
     }
   }
@@ -721,7 +718,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     try {
       return decodeJsonText(jsonText);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, "JsonTextDecode",
+      container.dispatchErrorOccurredEvent(this, "JsonTextDecode",
           ErrorMessages.ERROR_WEB_JSON_TEXT_DECODE_FAILED, jsonText);
       return "";
     }
@@ -778,7 +775,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
       // versus the decoding of that JSON, but showing the actual error message should
       // be good enough.
       Log.e("Exception in XMLTextDecode", e.getMessage());
-      form.dispatchErrorOccurredEvent(this, "XMLTextDecode",
+      container.dispatchErrorOccurredEvent(this, "XMLTextDecode",
           ErrorMessages.ERROR_WEB_JSON_TEXT_DECODE_FAILED, e.getMessage());
       // This XMLTextDecode should always return a list, even in the case of an error
       return YailList.makeEmptyList();
@@ -805,7 +802,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     try {
       return HtmlEntities.decodeHtmlText(htmlText);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, "HtmlTextDecode",
+      container.dispatchErrorOccurredEvent(this, "HtmlTextDecode",
           ErrorMessages.ERROR_WEB_HTML_TEXT_DECODE_FAILED, htmlText);
       return "";
     }
@@ -855,23 +852,33 @@ public class Web extends AndroidNonvisibleComponent implements Component {
           final String path = saveResponseContent(connection, webProps.responseFileName,
               responseType);
 
-          // Dispatch the event.
-          activity.runOnUiThread(new Runnable() {
+          Runnable gotFile = new Runnable() {
             @Override
             public void run() {
               GotFile(webProps.urlString, responseCode, responseType, path);
             }
-          });
+          };
+          // Dispatch the event.
+          if (container.inForm()) {
+            form.runOnUiThread(gotFile);
+          } else if (container.inTask()) {
+            task.runOnTaskThread(task, gotFile);
+          }
         } else {
           final String responseContent = getResponseContent(connection);
 
-          // Dispatch the event.
-          activity.runOnUiThread(new Runnable() {
+          Runnable gotText = new Runnable() {
             @Override
             public void run() {
               GotText(webProps.urlString, responseCode, responseType, responseContent);
             }
-          });
+          };
+          // Dispatch the event.
+          if (container.inForm()) {
+            form.runOnUiThread(gotText);
+          } else if (container.inTask()) {
+            task.runOnTaskThread(task, gotText);
+          }
         }
 
       } finally {
@@ -944,7 +951,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
       throws IOException {
     // Use MediaUtil.openMedia to open the file. This means that path could be file on the SD card,
     // an asset, a contact picture, etc.
-    BufferedInputStream in = new BufferedInputStream(MediaUtil.openMedia(form, path));
+    BufferedInputStream in = new BufferedInputStream(MediaUtil.openMedia(context, path));
     try {
       // Write the file's data.
       // According to the documentation at
@@ -1129,7 +1136,7 @@ public class Web extends AndroidNonvisibleComponent implements Component {
   /*
    * Captures the current property values that are needed for an HTTP request. If an error occurs
    * while validating the Url or RequestHeaders property values, this method calls
-   * form.dispatchErrorOccurredEvent and returns null.
+   * container.dispatchErrorOccurredEvent and returns null.
    *
    * @param functionName the name of the function, used when dispatching errors
    */
@@ -1137,10 +1144,10 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     try {
       return new CapturedProperties(this);
     } catch (MalformedURLException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_WEB_MALFORMED_URL, urlString);
     } catch (InvalidRequestHeadersException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, e.errorNumber, e.index);
+      container.dispatchErrorOccurredEvent(this, functionName, e.errorNumber, e.index);
     }
     return null;
   }

@@ -958,7 +958,7 @@
        ;; Initializes components properties
        ;; Calls Initialize() of Task and components
        (define ($Initialize) :: void
-         (android-log-task "$Initialize is calleddd")
+         (android-log-task (format #f "~A.$Initialize() is called" (get-current-context-name)))
          (when isrepl
            (let ((task-do-after-creation (lookup-in-context-init-thunk-environment (get-current-context-symbol)
                                                                                    '$task-do-after-creation '())))

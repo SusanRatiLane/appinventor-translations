@@ -20,11 +20,7 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.FileUtil;
-import com.google.appinventor.components.runtime.Form;
-import com.google.appinventor.components.runtime.ReplForm;
 
-import android.app.Activity;
-import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
@@ -51,11 +47,10 @@ import java.io.StringWriter;
     category = ComponentCategory.STORAGE,
     nonVisible = true,
     iconName = "images/file.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.WRITE_EXTERNAL_STORAGE, android.permission.READ_EXTERNAL_STORAGE")
 public class File extends AndroidNonvisibleComponent implements Component {
   public static final String NO_ASSETS = "No_Assets";
-  private final Activity activity;
   private boolean isRepl = false;
   private final int BUFFER_LENGTH = 4096;
   private static final String LOG_TAG = "FileComponent";
@@ -65,11 +60,10 @@ public class File extends AndroidNonvisibleComponent implements Component {
    * @param container the Form that this component is contained in.
    */
   public File(ComponentContainer container) {
-    super(container.$form());
-    if (form instanceof ReplForm) { // Note: form is defined in our superclass
+    super(container);
+    if (form instanceof ReplForm || task instanceof ReplTask) { // Note: form/task is defined in our superclass
       isRepl = true;
     }
-    activity = (Activity) container.$context();
   }
 
   /**
@@ -134,7 +128,7 @@ public class File extends AndroidNonvisibleComponent implements Component {
           inputStream = new FileInputStream(Environment.getExternalStorageDirectory().getPath() +
               "/AppInventor/assets/" + fileName);
         } else {
-          inputStream = form.getAssets().open(fileName.substring(2));
+          inputStream = context.getAssets().open(fileName.substring(2));
         }
       } else {
         String filepath = AbsoluteFileName(fileName);
@@ -151,11 +145,11 @@ public class File extends AndroidNonvisibleComponent implements Component {
         });
     } catch (FileNotFoundException e) {
       Log.e(LOG_TAG, "FileNotFoundException", e);
-      form.dispatchErrorOccurredEvent(File.this, "ReadFrom",
+      container.dispatchErrorOccurredEvent(File.this, "ReadFrom",
           ErrorMessages.ERROR_CANNOT_FIND_FILE, fileName);
     } catch (IOException e) {
       Log.e(LOG_TAG, "IOException", e);
-      form.dispatchErrorOccurredEvent(File.this, "ReadFrom",
+      container.dispatchErrorOccurredEvent(File.this, "ReadFrom",
           ErrorMessages.ERROR_CANNOT_FIND_FILE, fileName);
     }
   }
@@ -173,7 +167,7 @@ public class File extends AndroidNonvisibleComponent implements Component {
       "because assets files cannot be deleted.")
   public void Delete(String fileName) {
     if (fileName.startsWith("//")) {
-      form.dispatchErrorOccurredEvent(File.this, "DeleteFile",
+      container.dispatchErrorOccurredEvent(File.this, "DeleteFile",
           ErrorMessages.ERROR_CANNOT_DELETE_ASSET, fileName);
       return;
     }
@@ -192,10 +186,10 @@ public class File extends AndroidNonvisibleComponent implements Component {
   private void Write(final String filename, final String text, final boolean append) {
     if (filename.startsWith("//")) {
       if (append) {
-        form.dispatchErrorOccurredEvent(File.this, "AppendTo",
+        container.dispatchErrorOccurredEvent(File.this, "AppendTo",
             ErrorMessages.ERROR_CANNOT_WRITE_ASSET, filename);
       } else {
-        form.dispatchErrorOccurredEvent(File.this, "SaveFile",
+        container.dispatchErrorOccurredEvent(File.this, "SaveFile",
             ErrorMessages.ERROR_CANNOT_WRITE_ASSET, filename);
       }
       return;
@@ -211,10 +205,10 @@ public class File extends AndroidNonvisibleComponent implements Component {
             file.createNewFile();
           } catch (IOException e) {
             if (append) {
-              form.dispatchErrorOccurredEvent(File.this, "AppendTo",
+              container.dispatchErrorOccurredEvent(File.this, "AppendTo",
                   ErrorMessages.ERROR_CANNOT_CREATE_FILE, filepath);
             } else {
-              form.dispatchErrorOccurredEvent(File.this, "SaveFile",
+              container.dispatchErrorOccurredEvent(File.this, "SaveFile",
                   ErrorMessages.ERROR_CANNOT_CREATE_FILE, filepath);
             }
             return;
@@ -228,18 +222,23 @@ public class File extends AndroidNonvisibleComponent implements Component {
           out.close();
           fileWriter.close();
 
-          activity.runOnUiThread(new Runnable() {
+          Runnable afterSaved = new Runnable() {
             @Override
             public void run() {
               AfterFileSaved(filename);
             }
-          });
+          };
+          if (container.inForm()) {
+            form.runOnUiThread(afterSaved);
+          } else if (container.inTask()) {
+            task.runOnTaskThread(task, afterSaved);
+          }
         } catch (IOException e) {
           if (append) {
-            form.dispatchErrorOccurredEvent(File.this, "AppendTo",
+            container.dispatchErrorOccurredEvent(File.this, "AppendTo",
                 ErrorMessages.ERROR_CANNOT_WRITE_TO_FILE, filepath);
           } else {
-            form.dispatchErrorOccurredEvent(File.this, "SaveFile",
+            container.dispatchErrorOccurredEvent(File.this, "SaveFile",
                 ErrorMessages.ERROR_CANNOT_WRITE_TO_FILE, filepath);
           }
         }
@@ -289,19 +288,24 @@ public class File extends AndroidNonvisibleComponent implements Component {
 
       final String text = normalizeNewLines(output.toString());
 
-      activity.runOnUiThread(new Runnable() {
+      Runnable gotText = new Runnable() {
         @Override
         public void run() {
           GotText(text);
         }
-      });
+      };
+      if (container.inForm()) {
+        form.runOnUiThread(gotText);
+      } else if (container.inTask()) {
+        task.runOnTaskThread(task, gotText);
+      }
     } catch (FileNotFoundException e) {
       Log.e(LOG_TAG, "FileNotFoundException", e);
-      form.dispatchErrorOccurredEvent(File.this, "ReadFrom",
+      container.dispatchErrorOccurredEvent(File.this, "ReadFrom",
           ErrorMessages.ERROR_CANNOT_FIND_FILE, fileName);
     } catch (IOException e) {
       Log.e(LOG_TAG, "IOException", e);
-      form.dispatchErrorOccurredEvent(File.this, "ReadFrom",
+      container.dispatchErrorOccurredEvent(File.this, "ReadFrom",
           ErrorMessages.ERROR_CANNOT_READ_FILE, fileName);
     } finally {
       if (input != null) {
@@ -345,7 +349,7 @@ public class File extends AndroidNonvisibleComponent implements Component {
     if (filename.startsWith("/")) {
       return Environment.getExternalStorageDirectory().getPath() + filename;
     } else {
-      java.io.File dirPath = activity.getFilesDir();
+      java.io.File dirPath = context.getFilesDir();
       if (isRepl) {
         String path = Environment.getExternalStorageDirectory().getPath() + "/AppInventor/data/";
         dirPath = new java.io.File(path);
