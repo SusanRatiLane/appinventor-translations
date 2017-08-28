@@ -205,7 +205,7 @@ Blockly.ReplMgr.buildYail = function(workspace) {
             if (!phoneState.tasks[contextName]) {
                 throw new Error("Invalid PhoneState : No task \"" + contextName + "\" is found");
             }
-            if (!phoneState.tasks[contextName].componentYail != code) {
+            if (phoneState.tasks[contextName].componentYail != code) {
                 needinitialize = true;
                 phoneState.tasks[contextName].blocksYail = {};
                 this.putYail(contextInfo, Blockly.Yail.YAIL_CLEAR_TASK + Blockly.Yail.YAIL_QUOTE + contextName + Blockly.Yail.YAIL_CLOSE_COMBINATION);
@@ -273,7 +273,9 @@ Blockly.ReplMgr.sendFormData = function(formName, formJson, packageName, workspa
     this.preparePhoneState();
     top.ReplState.phoneState.packageName = packageName;
     formName = formName.split(/_/)[1];
-    top.ReplState.phoneState.form = new Blockly.ContextPhoneState();
+    if (!top.ReplState.phoneState.form) {
+        top.ReplState.phoneState.form = new Blockly.ContextPhoneState();
+    }
     top.ReplState.phoneState.form.name = formName;
     top.ReplState.phoneState.form.type = "Form";
     top.ReplState.phoneState.form.json = formJson;
@@ -290,7 +292,9 @@ Blockly.ReplMgr.sendTaskData = function(taskName, taskJson, packageName, workspa
     this.preparePhoneState();
     top.ReplState.phoneState.packageName = packageName;
     taskName = taskName.split(/_/)[1];
-    top.ReplState.phoneState.tasks[taskName] = new Blockly.ContextPhoneState();
+    if (!top.ReplState.phoneState.tasks[taskName]) {
+        top.ReplState.phoneState.tasks[taskName] = new Blockly.ContextPhoneState();
+    }
     top.ReplState.phoneState.tasks[taskName].name = taskName;
     top.ReplState.phoneState.tasks[taskName].type = "Task";
     top.ReplState.phoneState.tasks[taskName].json = taskJson;
