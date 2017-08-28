@@ -647,8 +647,8 @@ public class DesignToolbar extends Toolbar {
     OdeLog.log("DesignToolbar: got removeContext for project " + projectId
         + ", context " + name);
     DesignProject project = projectMap.get(projectId);
-    if (!project.screens.containsKey(name)) {
-      // already removed this screen
+    if (!project.screens.containsKey(name) && !project.tasks.containsKey(name)) {
+      // already removed this context
       return;
     }
     if (currentProject == project) {
