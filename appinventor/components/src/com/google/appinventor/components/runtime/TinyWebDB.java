@@ -76,7 +76,6 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
   private static final String GETVALUE_COMMAND = "getvalue";
 
   private String serviceURL;
-  private Handler androidUIHandler;
 
   /**
    * Creates a new TinyWebDB component.
@@ -84,13 +83,8 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
    * @param container the Form that this component is contained in.
    */
   public TinyWebDB(ComponentContainer container) {
-    super(container.$form());
-    // We use androidUIHandler when we set up operations (like
-    // postStoreVaue and getStoreValue) that run asynchronously in a
-    // separate thread, but which themselves want to cause actions
-    // back in the UI thread.  They do this by posting those actions
-    // to androidUIHandler.
-    androidUIHandler = new Handler();
+    super(container);
+
     // We set the initial value of serviceURL to be the
     // demo Web service.
     serviceURL = "http://tinywebdb.appinventor.mit.edu/";
@@ -186,24 +180,36 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
         // the result here will be the JSON-encoded list ["STORED", tag, value]
         // but the component ignores this
         // Log.w(LOG_TAG, "postStoreValue: got result " + result);
-        androidUIHandler.post(new Runnable() {
-            public void run() {
-              // Signal an event to indicate that the value was
-              // stored.  We post this to run in the Applcation's main
-              // UI thread, rather than in the separate thread where
-              // postStoreValue is running.
-              ValueStored();
-            }
-          });
+        Runnable valueStored = new Runnable() {
+          @Override
+          public void run() {
+            // Signal an event to indicate that the value was
+            // stored.  We post this to run in the Applcation's main
+            // UI thread, rather than in the separate thread where
+            // postStoreValue is running.
+            ValueStored();
+          }
+        };
+        if (container.inForm()) {
+          form.runOnUiThread(valueStored);
+        } else if (container.inTask()) {
+          task.runOnTaskThread(task, valueStored);
+        }
       }
       public void onFailure(final String message) {
         // Pass any failure message from the Web service command back
         // to the error handler.
-        androidUIHandler.post(new Runnable() {
+        Runnable webServiceError = new Runnable() {
+          @Override
           public void run() {
             WebServiceError(message);
           }
-        });
+        };
+        if (container.inForm()) {
+          form.runOnUiThread(webServiceError);
+        } else if (container.inTask()) {
+          task.runOnTaskThread(task, webServiceError);
+        }
       }
     };
     try {
@@ -269,12 +275,18 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
         if (result == null) {
           // Signal a Web error event to indicate that there was no response
           // to this request for a value.
-          androidUIHandler.post(new Runnable() {
-              public void run() {
-                WebServiceError("The Web server did not respond to the get value request " +
-                                "for the tag " + tag + ".");
-              }
-            });
+          Runnable webServiceError = new Runnable() {
+            @Override
+            public void run() {
+              WebServiceError("The Web server did not respond to the get value request " +
+                      "for the tag " + tag + ".");
+            }
+          };
+          if (container.inForm()) {
+            form.runOnUiThread(webServiceError);
+          } else if (container.inTask()) {
+            task.runOnTaskThread(task, webServiceError);
+          }
           return;
         } else {
           try {
@@ -285,24 +297,36 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
             // If there's no entry with tag as a key then return the empty string.
             final Object valueFromWebDB = (value.length() == 0) ? "" :
                 JsonUtil.getObjectFromJson(value);
-            androidUIHandler.post(new Runnable() {
+            Runnable gotValue = new Runnable() {
+              @Override
               public void run() {
                 // signal an event to indicate that a good value was returned.  Note
                 // that the event handler takes the value as an argument.
                 GotValue(tagFromWebDB, valueFromWebDB);
               }
-            });
+            };
+            if (container.inForm()) {
+              form.runOnUiThread(gotValue);
+            } else if (container.inTask()) {
+              task.runOnTaskThread(task, gotValue);
+            }
           } catch (JSONException e) {
             // Signal a Web error event to indicate the the server
             // returned a garbled value.  From the user's perspective, there may be no practical
             // difference between this and the "no response" error above, but application
             // writers can create handlers to use these events as they choose.
-            androidUIHandler.post(new Runnable() {
+            Runnable webServiceError = new Runnable() {
+              @Override
               public void run() {
                 WebServiceError("The Web server returned a garbled value " +
-                    "for the tag " + tag + ".");
+                        "for the tag " + tag + ".");
               }
-            });
+            };
+            if (container.inForm()) {
+              form.runOnUiThread(webServiceError);
+            } else if (container.inTask()) {
+              task.runOnTaskThread(task, webServiceError);
+            }
             return;
           }
         }
@@ -311,11 +335,17 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
         // Signal a Web error event to indicate that there was no response
         // to this request for a value.  Note that this needs to be posted to the UI
         // thread to avoid a subsequent UI event causing an exception.
-        androidUIHandler.post(new Runnable() {
+        Runnable webServiceError = new Runnable() {
+          @Override
           public void run() {
             WebServiceError(message);
           }
-        });
+        };
+        if (container.inForm()) {
+          form.runOnUiThread(webServiceError);
+        } else if (container.inTask()) {
+          task.runOnTaskThread(task, webServiceError);
+        }
         return;
       }
     };
