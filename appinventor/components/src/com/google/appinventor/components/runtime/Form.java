@@ -1648,9 +1648,9 @@ public class Form extends Activity
 
   // Task
   @SimpleEvent(description = "Event raised when a Task sends a message")
-  public void ReceivedFromTask(String task, String title, Object message) {
-    Log.i(LOG_TAG, "Form " + formName + " ReceiveFromTask, task = " + task + ", title = " + title + ", message = " + message.toString());
-    EventDispatcher.dispatchEvent(this,"ReceivedFromTask", task, title, message);
+  public void ReceivedFromTask(String taskName, String title, Object message) {
+    Log.i(LOG_TAG, "Form " + formName + " ReceiveFromTask, task = " + taskName + ", title = " + title + ", message = " + message.toString());
+    EventDispatcher.dispatchEvent(this,"ReceivedFromTask", taskName, title, message);
   }
 
 
