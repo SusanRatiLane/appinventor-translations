@@ -73,7 +73,9 @@ public class ReplTask extends Task {
     }
     onStartTask(intent, startId);
     // ReplTask is always essentially a Sticky Screen Task
-    return START_REDELIVER_INTENT;
+    // We return NOT_STICKY here because the OS restarts us a
+    // and we don't want that.
+    return START_NOT_STICKY;
   }
 
   @Override
