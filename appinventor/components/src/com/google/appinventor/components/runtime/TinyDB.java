@@ -60,22 +60,20 @@ import org.json.JSONException;
     nonVisible = true,
     iconName = "images/tinyDB.png")
 
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class TinyDB extends AndroidNonvisibleComponent implements Component, Deleteable {
 
   private SharedPreferences sharedPreferences;
 
-  private Context context;  // this was a local in constructor and final not private
 
 
   /**
    * Creates a new TinyDB component.
    *
-   * @param container the Form that this component is contained in.
+   * @param container the Form/Task that this component is contained in.
    */
   public TinyDB(ComponentContainer container) {
-    super(container.$form());
-    context = (Context) container.$context();
+    super(container);
     sharedPreferences = context.getSharedPreferences("TinyDB1", Context.MODE_PRIVATE);
   }
 
