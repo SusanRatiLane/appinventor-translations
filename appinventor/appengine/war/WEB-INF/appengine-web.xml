@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-  <application></application>
+  <application>mit-appinventor-services</application>
   <version>1</version>
 
   <!-- Configure serving/caching of GWT files -->
@@ -67,7 +67,7 @@
     <property name="use.whitelist" value="false"/>
 
     <!-- Name of storage bucket in Google Cloud Store -->
-    <property name="gcs.bucket" value="" />
+    <property name="gcs.bucket" value="mit-ai-services" />
     <!-- Whether or not to use GCS for storage -->
     <property name="use.gcs" value="true" />
 
@@ -82,7 +82,7 @@
 
     <!-- set to true if users need to accept a Terms of Service the first time
       they access App Inventor -->
-    <property name="require.tos" value="true" />
+    <property name="require.tos" value="false" />
 
     <!-- Flags that select authentication method
          set auth.usegoogle to true to use Google Accounts
@@ -94,14 +94,14 @@
      -->
 
     <property name="auth.usegoogle" value="true" />
-    <property name="auth.uselocal" value="true" />
+    <property name="auth.uselocal" value="false" />
 
     <!-- Flags associated with localauth code -->
     <property name="localauth.mailserver" value="https://osiris.mit.edu/passmail/" />
     <property name="localauth.mailserver.password" value="changeme" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="localhost:9990" />
+    <property name="build.server.host" value="servicesbuildserver.appinventor.mit.edu:9990" />
 
     <!-- host[:port] to tell build server the app host url to callback
          when deploy AppInventor on other GAE implementation such as
