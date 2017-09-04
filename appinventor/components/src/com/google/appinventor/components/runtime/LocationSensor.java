@@ -56,7 +56,7 @@ import java.util.List;
     category = ComponentCategory.SENSORS,
     nonVisible = true,
     iconName = "images/locationSensor.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames =
                  "android.permission.ACCESS_FINE_LOCATION," +
                  "android.permission.ACCESS_COARSE_LOCATION," +
@@ -204,18 +204,22 @@ public class LocationSensor extends AndroidNonvisibleComponent
    * @param container  ignored (because this is a non-visible component)
    */
   public LocationSensor(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     handler = new Handler();
-    // Set up listener
-    form.registerForOnResume(this);
-    form.registerForOnStop(this);
+    // Set up listeners
+    if (container.inForm()) {
+      form.registerForOnResume(this);
+      form.registerForOnStop(this);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+    }
+
 
     // Initialize sensor properties (60 seconds; 5 meters)
     timeInterval = 60000;
     distanceInterval = 5;
 
     // Initialize location-related fields
-    Context context = container.$context();
     geocoder = new Geocoder(context);
     locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
     locationCriteria = new Criteria();
@@ -500,7 +504,7 @@ public class LocationSensor extends AndroidNonvisibleComponent
       }
       return addressObjs.get(0).getLatitude();
     } catch (IOException e) {
-      form.dispatchErrorOccurredEvent(this, "LatitudeFromAddress",
+      container.dispatchErrorOccurredEvent(this, "LatitudeFromAddress",
           ErrorMessages.ERROR_LOCATION_SENSOR_LATITUDE_NOT_FOUND, locationName);
       return 0;
     }
@@ -522,7 +526,7 @@ public class LocationSensor extends AndroidNonvisibleComponent
       }
       return addressObjs.get(0).getLongitude();
     } catch (IOException e) {
-      form.dispatchErrorOccurredEvent(this, "LongitudeFromAddress",
+      container.dispatchErrorOccurredEvent(this, "LongitudeFromAddress",
           ErrorMessages.ERROR_LOCATION_SENSOR_LONGITUDE_NOT_FOUND, locationName);
       return 0;
     }
