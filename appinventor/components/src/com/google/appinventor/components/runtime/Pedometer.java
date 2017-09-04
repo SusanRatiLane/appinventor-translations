@@ -37,9 +37,9 @@ import android.util.Log;
   category = ComponentCategory.SENSORS,
   nonVisible = true,
   iconName = "images/pedometer.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class Pedometer extends AndroidNonvisibleComponent
-    implements Component, SensorEventListener, Deleteable {
+    implements Component, SensorEventListener, Deleteable, OnStopListener {
   private static final String TAG = "Pedometer";
   private static final String PREFS_NAME = "PedometerPrefs";
 
@@ -49,7 +49,6 @@ public class Pedometer extends AndroidNonvisibleComponent
   private static final float STRIDE_LENGTH = (float) 0.73;
   private static final float PEAK_VALLEY_RANGE = (float) 40.0;
 
-  private final Context context;
   private final SensorManager sensorManager;
 
   private int       stopDetectionTimeout = 2000;
@@ -72,8 +71,13 @@ public class Pedometer extends AndroidNonvisibleComponent
 
   /** Constructor. */
   public Pedometer(ComponentContainer container) {
-    super(container.$form());
-    context = container.$context();
+    super(container);
+    // register listeners
+    if (container.inForm()) {
+      form.registerForOnStop(this);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+    }
     // some initialization
     winPos = 0;
     startPeaking = false;
@@ -434,6 +438,12 @@ public class Pedometer extends AndroidNonvisibleComponent
   // Deleteable implementation
   @Override
   public void onDelete() {
+    sensorManager.unregisterListener(this);
+  }
+
+  // OnStopListener implementation
+  @Override
+  public void onStop() {
     sensorManager.unregisterListener(this);
   }
 
