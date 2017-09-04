@@ -72,16 +72,22 @@ public class Camcorder extends AndroidNonvisibleComponent
       Log.i("CamcorderComponent", "External storage is available and writable");
 
       if (requestCode == 0) {
-        requestCode = form.registerForActivityResult(this);
+        if (container.inForm()) {
+          requestCode = form.registerForActivityResult(this);
+        }
       }
 
       Intent intent = new Intent(CAMCORDER_INTENT);
-      container.$form().startActivityForResult(intent, requestCode);
+      if (container.inForm()) {
+        form.startActivityForResult(intent, requestCode);
+      } else {
+        notifyIfUnsupportedInContext();
+      }
     } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-      form.dispatchErrorOccurredEvent(this, "RecordVideo",
+      container.dispatchErrorOccurredEvent(this, "RecordVideo",
         ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_READONLY);
     } else {
-      form.dispatchErrorOccurredEvent(this, "RecordVideo",
+      container.dispatchErrorOccurredEvent(this, "RecordVideo",
         ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_NOT_AVAILABLE);
     }
   }
@@ -98,12 +104,12 @@ public class Camcorder extends AndroidNonvisibleComponent
         AfterRecording(tryClipUri.toString());
       } else {
         Log.i("CamcorderComponent", "Couldn't find a clip file from the Camcorder result");
-        form.dispatchErrorOccurredEvent(this, "TakeVideo",
+        container.dispatchErrorOccurredEvent(this, "TakeVideo",
           ErrorMessages.ERROR_CAMCORDER_NO_CLIP_RETURNED);
       }
     } else {
       Log.i("CamcorderComponent", "No clip filed rerturn; request failed");
-      form.dispatchErrorOccurredEvent(this, "TakeVideo",
+      container.dispatchErrorOccurredEvent(this, "TakeVideo",
         ErrorMessages.ERROR_CAMCORDER_NO_CLIP_RETURNED);
     }
   }
