@@ -42,12 +42,12 @@ import java.io.File;
         "<li><code>\"/storage/Appinventor/assets/arrow.gif\"</code></li></ul>",
     category = ComponentCategory.SOCIAL,
     nonVisible = true, iconName = "images/sharing.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.READ_EXTERNAL_STORAGE")
 public class Sharing extends AndroidNonvisibleComponent {
 
   public Sharing(ComponentContainer container) {
-    super(container.$form());
+    super(container);
   }
 
   /**
@@ -64,7 +64,7 @@ public class Sharing extends AndroidNonvisibleComponent {
 
     // We cannot use Intent.createChooser(shareIntent, "Send using...") because it creates an
     // oversized pop up sharing window.
-    this.form.startActivity(shareIntent);
+    context.startActivity(shareIntent);
   }
 
   /**
@@ -103,13 +103,13 @@ public class Sharing extends AndroidNonvisibleComponent {
       }
       // We cannot use Intent.createChooser(shareIntent, "Send using...") because it creates an
       // oversized pop up sharing window.
-      this.form.startActivity(shareIntent);
+      context.startActivity(shareIntent);
     }
     else {
       String eventName = "ShareFile";
       if (message.equals(""))
         eventName = "ShareFileWithMessage";
-      form.dispatchErrorOccurredEvent(Sharing.this, eventName,
+      container.dispatchErrorOccurredEvent(Sharing.this, eventName,
           ErrorMessages.ERROR_FILE_NOT_FOUND_FOR_SHARING, file);
     }
   }
