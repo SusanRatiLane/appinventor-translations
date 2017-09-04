@@ -69,7 +69,7 @@ public class Camera extends AndroidNonvisibleComponent
    * @param container container, component will be placed in
    */
   public Camera(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     this.container = container;
 
     // Default property values
@@ -125,7 +125,9 @@ public class Camera extends AndroidNonvisibleComponent
       values.put(MediaStore.Images.Media.TITLE, imageFile.getLastPathSegment());
 
       if (requestCode == 0) {
-        requestCode = form.registerForActivityResult(this);
+        if (container.inForm()) {
+          requestCode = form.registerForActivityResult(this);
+        }
       }
 
       Uri imageUri = container.$context().getContentResolver().insert(
@@ -139,12 +141,16 @@ public class Camera extends AndroidNonvisibleComponent
         intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
       }
 
-      container.$form().startActivityForResult(intent, requestCode);
+      if (container.inForm()) {
+        form.startActivityForResult(intent, requestCode);
+      } else {
+        notifyIfUnsupportedInContext();
+      }
     } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-      form.dispatchErrorOccurredEvent(this, "TakePicture",
+      container.dispatchErrorOccurredEvent(this, "TakePicture",
           ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_READONLY);
     } else {
-      form.dispatchErrorOccurredEvent(this, "TakePicture",
+      container.dispatchErrorOccurredEvent(this, "TakePicture",
           ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_NOT_AVAILABLE);
     }
   }
@@ -168,7 +174,7 @@ public class Camera extends AndroidNonvisibleComponent
           AfterPicture(tryImageUri.toString());
         } else {
           Log.i("CameraComponent", "Couldn't find an image file from the Camera result");
-          form.dispatchErrorOccurredEvent(this, "TakePicture",
+          container.dispatchErrorOccurredEvent(this, "TakePicture",
               ErrorMessages.ERROR_CAMERA_NO_IMAGE_RETURNED);
         }
       }
