@@ -37,7 +37,7 @@ import java.io.IOException;
     category = ComponentCategory.MEDIA,
     nonVisible = true,
     iconName = "images/soundRecorder.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.RECORD_AUDIO," +
   "android.permission.WRITE_EXTERNAL_STORAGE," +
   "android.permission.READ_EXTERNAL_STORAGE")
@@ -226,10 +226,10 @@ public final class SoundRecorder extends AndroidNonvisibleComponent
     } catch(IllegalStateException e) {
       Log.i(TAG, "SoundRecorder was not in a recording state.", e);
       if (container.inForm()) {
-        container.dispatchErrorOccurredEventDialog(this, "Stop",
+        form.dispatchErrorOccurredEventDialog(this, "Stop",
                 ErrorMessages.ERROR_SOUND_RECORDER_ILLEGAL_STOP);
       } else if (container.inTask()) {
-        container.dispatchErrorOccurredEvent(this, "Stop",
+        task.dispatchErrorOccurredEvent(this, "Stop",
                 ErrorMessages.ERROR_SOUND_RECORDER_ILLEGAL_STOP);
       }
     } finally {
