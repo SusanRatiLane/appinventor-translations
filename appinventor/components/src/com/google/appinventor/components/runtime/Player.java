@@ -142,8 +142,6 @@ public final class Player extends AndroidNonvisibleComponent
       form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
     } else if (container.inTask()) {
       task.registerForOnStop(this);
-      task.registerForOnDestroy(this);
-
     }
     loop = false;
     playOnlyInForeground = false;
@@ -475,7 +473,7 @@ public final class Player extends AndroidNonvisibleComponent
         pause();
       }
     } else if (container.inTask()) {
-      prepareToDie();
+      this.onDestroy();
     }
   }
 
