@@ -53,12 +53,11 @@ import android.telephony.TelephonyManager;
     category = ComponentCategory.SOCIAL,
     nonVisible = true,
     iconName = "images/phoneCall.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.CALL_PHONE, android.permission.READ_PHONE_STATE, android.permission.PROCESS_OUTGOING_CALLS")
-public class PhoneCall extends AndroidNonvisibleComponent implements Component, OnDestroyListener {
+public class PhoneCall extends AndroidNonvisibleComponent implements Component, OnDestroyListener, OnStopListener {
 
   private String phoneNumber;
-  private final Context context;
   private final CallStateReceiver callStateReceiver;
 
   /**
@@ -67,9 +66,12 @@ public class PhoneCall extends AndroidNonvisibleComponent implements Component, 
    * @param container container, component will be placed in
    */
   public PhoneCall(ComponentContainer container) {
-    super(container.$form());
-    context = container.$context();
-    form.registerForOnDestroy(this);
+    super(container);
+    if (container.inForm()) {
+      form.registerForOnDestroy(this);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+    }
     PhoneNumber("");
     callStateReceiver = new CallStateReceiver();
     registerCallStateMonitor();
@@ -223,6 +225,11 @@ public class PhoneCall extends AndroidNonvisibleComponent implements Component, 
    */
   private void unregisterCallStateMonitor(){
     context.unregisterReceiver(callStateReceiver);
+  }
+
+  @Override
+  public void onStop() {
+    unregisterCallStateMonitor();
   }
 
   @Override
