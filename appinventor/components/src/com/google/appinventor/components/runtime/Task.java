@@ -88,6 +88,7 @@ public class Task extends Service
     protected final Set<OnStopListener> onStopListeners = Sets.newHashSet();
 
     protected boolean taskInitialized = false;
+    protected boolean taskStopped = false;
 
     public TaskThread(String taskName, Task task) {
       super(taskName);
@@ -132,12 +133,20 @@ public class Task extends Service
       return taskType;
     }
 
-    public void setTaskInitiliazed(boolean initiliazed) {
+    public void setTaskInitialized(boolean initiliazed) {
       this.taskInitialized = initiliazed;
     }
 
-    public boolean getTaskInitiliazed() {
+    public boolean isTaskInitialized() {
       return taskInitialized;
+    }
+
+    public void setTaskStopped(boolean stopped) {
+      this.taskStopped = stopped;
+    }
+
+    public boolean isTaskStopped() {
+      return taskStopped;
     }
 
     public TaskNotification getTaskNotification() {
@@ -342,7 +351,7 @@ public class Task extends Service
   @SimpleEvent(description = "Service starting")
   public void Initialize() {
     EventDispatcher.dispatchEvent(this, "Initialize");
-    setTaskInitiliazed(true);
+    this.setInitialized(true);
 
     //  Call all apps registered to be notified when Initialize Event is dispatched
     Set<OnInitializeListener> onInitializeListeners = getOnInitiliazeListeners();
@@ -373,13 +382,13 @@ public class Task extends Service
     Log.d("Task", "Task onStartCommand Called");
     onStartTask(intent, startId);
     int returnConstant = START_NOT_STICKY;
-    if (this.getTaskType() == Component.TASK_TYPE_SCREEN) {
+    if (this.getType() == Component.TASK_TYPE_SCREEN) {
       returnConstant = START_REDELIVER_INTENT;  // Restart us with the last intent if we are killed.
-    } else if (this.getTaskType() == Component.TASK_TYPE_STICKY) {
+    } else if (this.getType() == Component.TASK_TYPE_STICKY) {
       returnConstant = START_REDELIVER_INTENT;  // If we are killed restart us with last intent. We are less likely
                                                 // to be killed because we are foreground. Theoretically we can be
                                                 // killed though.
-    } else if (this.getTaskType() == Component.TASK_TYPE_REPEATING) {
+    } else if (this.getType() == Component.TASK_TYPE_REPEATING) {
       returnConstant = START_NOT_STICKY;        // It is okay if we are killed, we will probably get called again.
     }
     return returnConstant;
@@ -387,7 +396,7 @@ public class Task extends Service
 
   protected void onStartTask(Intent intent, int startId) {
     // Go foreground if we are sticky and supported
-    if (this.getTaskType() == TASK_TYPE_STICKY) {
+    if (this.getType() == TASK_TYPE_STICKY) {
       TaskNotification notification = getNotification();
       if (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR) {
         EclairUtil.startForegroundTask(this, notification.getId(),
@@ -433,7 +442,7 @@ public class Task extends Service
           Task.runOnTaskThread(taskName, onStop);
           continue;
         }
-        if (task.getTaskType() == TASK_TYPE_SCREEN) {
+        if (task.getType() == TASK_TYPE_SCREEN) {
           Task.runOnTaskThread(taskName, onStop);
         }
       }
@@ -442,25 +451,33 @@ public class Task extends Service
 
   protected void doStop() {
     Log.d(LOG_TAG, "Task " + getTaskName() + " got doStop");
-    // Invoke all onStopListeners
-    Set<OnStopListener> onStopListeners = getOnStopListeners();
-    for (OnStopListener onStopListener : onStopListeners) {
-      onStopListener.onStop();
-    }
     this.onStop();
     stopSelf();
   }
 
   // Note(justus) : Apparently it seemed to me that the system does not
-  // destroy us when we stop, so we add a new fake onStop lifecycle
-  // callback and call it on our own.
+  // always call onDestroy when we stop, so we add a new fake onStop lifecycle
+  // callback and call it on our own when we stop. Our components really stop
+  // in this callback.
   public void onStop() {
+    Log.d(LOG_TAG, "Task " + getTaskName() + " got onStop");
+    if (this.isStopped()) return;
+    this.setStopped(true);
+    // Invoke all onStopListeners
+    Set<OnStopListener> onStopListeners = getOnStopListeners();
+    for (OnStopListener onStopListener : onStopListeners) {
+      onStopListener.onStop();
+    }
     getNotification().hideNotification();
   }
 
   @Override
   public void onDestroy() {
     Log.i(LOG_TAG, "Task " + getTaskName() + " got onDestroy");
+    // We stop ourselves in case we weren't stopped
+    if (!this.isStopped()) {
+      this.onStop();
+    }
     Set<OnDestroyListener> onDestroyListeners = getOnDestroyListeners();
     for (OnDestroyListener onDestroyListener : onDestroyListeners) {
       onDestroyListener.onDestroy();
@@ -517,14 +534,14 @@ public class Task extends Service
   /**
    * Specifies the Task Behaviour.
    *
-   * @param tType the type of Task
+   * @param type the type of Task
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_TASK_TYPE,
           defaultValue = Component.TASK_TYPE_SCREEN + "")
   @SimpleProperty(userVisible = false,
           description = "This property determines the basic behaviour of a Task")
-  public void TaskType(int tType) {
-    setTaskType(tType);
+  public void TaskType(int type) {
+    this.setType(type);
   }
 
   /**
@@ -534,7 +551,7 @@ public class Task extends Service
   @SimpleProperty(userVisible = true,
           description = "This property determines the basic behaviour of a Task")
   public int TaskType() {
-    return getTaskType();
+    return this.getType();
   }
 
 
@@ -630,7 +647,7 @@ public class Task extends Service
   @Override
   public boolean canDispatchEvent(Component component, String eventName) {
     // Events can only be dispatched after the screen initialized event has completed.
-    boolean canDispatch = getTaskInitiliazed() || (component == this && eventName.equals("Initialize"));
+    boolean canDispatch = this.isInitialized() || (component == this && eventName.equals("Initialize"));
     Log.e(LOG_TAG, "canDispatch " + canDispatch);
     return canDispatch;
   }
@@ -697,7 +714,7 @@ public class Task extends Service
             ", messages = " + message);
     if (!EventDispatcher.dispatchEvent(
             this, "ErrorOccurred", component, functionName, errorNumber, message)
-            && getTaskInitiliazed()) {
+            && this.isInitialized()) {
       // If dispatchEvent returned false, then no user-supplied error handler was run.
       // If in addition, the screen initializer was run, then we assume that the
       // user did not provide an error handler.   In this case, we run a default
@@ -812,39 +829,47 @@ public class Task extends Service
 
   //Helper functions to interface to TaskThread
 
-  public String getTaskName() {
+  protected String getTaskName() {
     return taskThread.getTaskName();
   }
 
-  public void setTaskType(int type) {
+  protected void setType(int type) {
     taskThread.setTaskType(type);
   }
 
-  public int getTaskType() {
+  protected int getType() {
     return taskThread.getTaskType();
   }
 
-  public void setTaskInitiliazed(boolean initiliazed) {
-    taskThread.setTaskInitiliazed(initiliazed);
+  protected void setInitialized(boolean initialized) {
+    taskThread.setTaskInitialized(initialized);
   }
 
-  public boolean getTaskInitiliazed() {
-    return taskThread.getTaskInitiliazed();
+  protected boolean isInitialized() {
+    return taskThread.isTaskInitialized();
   }
 
-  public TaskNotification getNotification() {
+  protected void setStopped(boolean stopped) {
+    taskThread.setTaskStopped(stopped);
+  }
+
+  protected boolean isStopped() {
+    return taskThread.isTaskStopped();
+  }
+
+  protected TaskNotification getNotification() {
     return taskThread.getTaskNotification();
   }
 
-  public Set<OnDestroyListener> getOnDestroyListeners() {
+  protected Set<OnDestroyListener> getOnDestroyListeners() {
     return taskThread.getOnDestroyListeners();
   }
 
-  public Set<OnInitializeListener> getOnInitiliazeListeners() {
+  protected Set<OnInitializeListener> getOnInitiliazeListeners() {
     return taskThread.getOnInitializeListeners();
   }
 
-  public Set<OnStopListener> getOnStopListeners() {
+  protected Set<OnStopListener> getOnStopListeners() {
     return taskThread.getOnStopListeners();
   }
 

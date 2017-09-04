@@ -34,7 +34,7 @@ public @interface SimpleObject {
 
     /**
      * True if this component is an external component.
-     * Setting to True is mandatory for packing Extensions (aix)
+     * Setting to true is mandatory for packing Extensions (aix)
      */
     boolean external() default false;
 

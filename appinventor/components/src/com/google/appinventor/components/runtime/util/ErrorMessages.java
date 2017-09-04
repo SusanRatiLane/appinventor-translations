@@ -219,6 +219,8 @@ public final class ErrorMessages {
   public static final int ERROR_COMPONENT_UNSUPPORTED_IN_TASK = 3502;
   public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_FORM = 3503;
   public static final int ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK = 3504;
+  public static final int ERROR_COMPONENT_FEATURE_UNSUPPORTED_IN_FORM = 3505;
+  public static final int ERROR_COMPONENT_FEATURE_UNSUPPORTED_IN_TASK = 3506;
 
   // Start the next group of errors at 3500
 
@@ -542,6 +544,10 @@ public final class ErrorMessages {
             "%s method of %s component is not supported in a screen.");
     errorMessages.put(ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
             "%s method of %s component is not supported in a task.");
+    errorMessages.put(ERROR_COMPONENT_FEATURE_UNSUPPORTED_IN_FORM,
+            "%s feature of %s component is not supported in a screen.");
+    errorMessages.put(ERROR_COMPONENT_FEATURE_UNSUPPORTED_IN_TASK,
+            "%s feature of %s component is not supported in a task.");
   }
 
   private ErrorMessages() {

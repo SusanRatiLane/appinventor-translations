@@ -35,8 +35,9 @@ public class ReplTask extends Task {
       super(taskName, task);
     }
 
-    public void clear() {
+    public void reset() {
       this.taskInitialized = false;
+      this.taskStopped = false;
       this.onInitializeListeners.clear();
       this.onStopListeners.clear();
       this.onDestroyListeners.clear();
@@ -93,7 +94,7 @@ public class ReplTask extends Task {
     }
     ReplTaskThread taskThread = taskThreads.get(taskName);
     if (taskThread != null) {
-      if (!taskThread.getTaskInitiliazed()) {
+      if (!taskThread.isTaskInitialized()) {
         if (taskThread.getTaskType() == TASK_TYPE_STICKY) {
           taskThread.getTaskNotification().showNotification();
         }
@@ -103,10 +104,10 @@ public class ReplTask extends Task {
     Runnable onStart = new Runnable() {
       @Override
       public void run() {
-        if (!getTaskInitiliazed()) {
+        if (!isInitialized()) {
           $Initialize();
         }
-        if (getTaskType() == TASK_TYPE_STICKY) {
+        if (getType() == TASK_TYPE_STICKY) {
           getNotification().showNotification();
         }
         TaskStarted(decodedStartVal);
@@ -130,22 +131,25 @@ public class ReplTask extends Task {
   @Override
   protected void doStop() {
     Log.d(LOG_TAG, "Task " + getTaskName() + " got doStop");
-    // Invoke all onStopListeners
-    Set<OnStopListener> onStopListeners = getOnStopListeners();
-    for (OnStopListener onStopListener : onStopListeners) {
-      onStopListener.onStop();
-    }
     this.onStop();
   }
 
   @Override
   public void onStop() {
-    getCurrentReplTaskThread().clear();
+    if (this.isStopped()) return;
+    this.setStopped(true);
+    // Invoke all onStopListeners
+    Set<OnStopListener> onStopListeners = getOnStopListeners();
+    for (OnStopListener onStopListener : onStopListeners) {
+      onStopListener.onStop();
+    }
+    getCurrentReplTaskThread().reset();
     taskMap.remove(getTaskName());
   }
 
   @Override
   public void onDestroy() {
+    clearAllTasks();
     LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     replNotification.hideNotification();
   }
@@ -166,38 +170,55 @@ public class ReplTask extends Task {
       return Thread.currentThread().getName();
     }
     return "ReplTask";
-
   }
 
-  public void setTaskType(int type) {
+  @Override
+  protected void setType(int type) {
     getCurrentReplTaskThread().setTaskType(type);
   }
 
-  public int getTaskType() {
+  @Override
+  protected int getType() {
     return getCurrentReplTaskThread().getTaskType();
   }
 
-  public void setTaskInitiliazed(boolean initiliazed) {
-    getCurrentReplTaskThread().setTaskInitiliazed(initiliazed);
+  @Override
+  protected void setInitialized(boolean initialized) {
+    getCurrentReplTaskThread().setTaskInitialized(initialized);
   }
 
-  public boolean getTaskInitiliazed() {
-    return getCurrentReplTaskThread().getTaskInitiliazed();
+  @Override
+  protected boolean isInitialized() {
+    return getCurrentReplTaskThread().isTaskInitialized();
   }
 
-  public TaskNotification getNotification() {
+  @Override
+  protected void setStopped(boolean stopped) {
+    getCurrentReplTaskThread().setTaskStopped(stopped);
+  }
+
+  @Override
+  protected boolean isStopped() {
+    return getCurrentReplTaskThread().isTaskStopped();
+  }
+
+  @Override
+  protected TaskNotification getNotification() {
     return getCurrentReplTaskThread().getTaskNotification();
   }
 
-  public Set<OnDestroyListener> getOnDestroyListeners() {
+  @Override
+  protected Set<OnDestroyListener> getOnDestroyListeners() {
     return getCurrentReplTaskThread().getOnDestroyListeners();
   }
 
-  public Set<OnInitializeListener> getOnInitiliazeListeners() {
+  @Override
+  protected Set<OnInitializeListener> getOnInitiliazeListeners() {
     return getCurrentReplTaskThread().getOnInitializeListeners();
   }
 
-  public Set<OnStopListener> getOnStopListeners() {
+  @Override
+  protected Set<OnStopListener> getOnStopListeners() {
     return getCurrentReplTaskThread().getOnStopListeners();
   }
 
