@@ -57,7 +57,7 @@ description = "The TestToSpeech component speaks a given text aloud.  You can se
     category = ComponentCategory.MEDIA,
     nonVisible = true,
     iconName = "images/textToSpeech.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class TextToSpeech extends AndroidNonvisibleComponent
 implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, ActivityResultListener  */{
 
@@ -125,8 +125,6 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
     Language(Component.DEFAULT_VALUE_TEXT_TO_SPEECH_LANGUAGE);
     Country(Component.DEFAULT_VALUE_TEXT_TO_SPEECH_COUNTRY);
     /* Determine which TTS library to use */
-    boolean useExternalLibrary = SdkLevel.getLevel() < SdkLevel.LEVEL_DONUT;
-    Log.v(LOG_TAG, "Using " + (useExternalLibrary ? "external" : "internal") + " TTS library.");
     ITextToSpeech.TextToSpeechCallback callback = new ITextToSpeech.TextToSpeechCallback() {
       @Override
       public void onSuccess() {
@@ -140,8 +138,7 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
         AfterSpeaking(false);
       }
     };
-    tts = useExternalLibrary ? new ExternalTextToSpeech(container, callback)
-                             : new InternalTextToSpeech(container.$form(), callback);
+    tts = new InternalTextToSpeech(container, callback);
     if (container.inForm()) {
       // Set up listeners
       form.registerForOnStop(this);
@@ -149,6 +146,8 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
       form.registerForOnDestroy(this);
       // Make volume buttons control media, not ringer.
       form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
     }
 
     isTtsPrepared = false;
@@ -438,6 +437,9 @@ implements Component, OnStopListener, OnResumeListener, OnDestroyListener /*, Ac
   public void onStop() {
     // tts.onStop in fact does nothing, but we'll keep this onStop here for flexibility
     tts.onStop();
+    if (container.inTask()) {
+      this.onDestroy();
+    }
   }
 
   @Override

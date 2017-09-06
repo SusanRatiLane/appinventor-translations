@@ -38,7 +38,7 @@ import java.util.Calendar;
     category = ComponentCategory.SENSORS,
     nonVisible = true,
     iconName = "images/clock.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public final class Clock extends AndroidNonvisibleComponent
     implements Component, AlarmHandler, OnStopListener, OnResumeListener, OnDestroyListener,
                Deleteable {
@@ -70,7 +70,6 @@ public final class Clock extends AndroidNonvisibleComponent
       }
     } else if (container.inTask()) {
       task.registerForOnStop(this);
-      task.registerForOnDestroy(this);
     }
 
   }
@@ -514,9 +513,9 @@ public final class Clock extends AndroidNonvisibleComponent
   @Override
   public void onStop() {
     onScreen = false;
-    // If we are in Task we were stopped
+
     if (container.inTask()) {
-        timerInternal.Enabled(false);
+      this.onDestroy();
     }
   }
 

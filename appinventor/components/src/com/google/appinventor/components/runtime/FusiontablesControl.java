@@ -5,6 +5,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 package com.google.appinventor.components.runtime;
 
+import android.widget.Toast;
 import com.google.api.client.extensions.android2.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -200,8 +201,6 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
   private String errorMessage;
 
 
-  private final Activity activity;
-  private final ComponentContainer container;
   private final IClientLoginHelper requestHelper;
 
   /**
@@ -222,9 +221,7 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
   private String scope = "https://www.googleapis.com/auth/fusiontables";
 
   public FusiontablesControl(ComponentContainer componentContainer) {
-    super(componentContainer.$form());
-    this.container = componentContainer;
-    this.activity = componentContainer.$form();
+    super(componentContainer);
     requestHelper = createClientLoginHelper(DIALOG_TEXT, FUSIONTABLE_SERVICE);
     query = DEFAULT_QUERY;
 
@@ -250,14 +247,18 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
 
   // show a notification and kill the app when the button is pressed
   private void showNoticeAndDie(String message, String title, String buttonText){
-    AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
+    AlertDialog alertDialog = new AlertDialog.Builder(form).create();
     alertDialog.setTitle(title);
     // prevents the user from escaping the dialog by hitting the Back button
     alertDialog.setCancelable(false);
     alertDialog.setMessage(message);
     alertDialog.setButton(buttonText, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
-        activity.finish();
+        form.finish();
       }});
     alertDialog.show();
   }
@@ -369,7 +370,11 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
    */
   @SimpleFunction(description = "Send the query to the Fusiontables server.")
   public void SendQuery() {
-    new QueryProcessorV2(activity).execute(query);
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
+    new QueryProcessorV2(form).execute(query);
   }
 
   //Deprecated  -- Won't work after 12/2012
@@ -378,10 +383,14 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
   @SimpleFunction(
       description = "DEPRECATED. This block is deprecated as of the end of 2012.  Use SendQuery.")
   public void DoQuery() {
+    if (!container.inForm()) {
+        notifyIfUnsupportedInContext();
+        return;
+    }
     if (requestHelper != null) {
       new QueryProcessor().execute(query);
     } else {
-      form.dispatchErrorOccurredEvent(this, "DoQuery",
+      container.dispatchErrorOccurredEvent(this, "DoQuery",
           ErrorMessages.ERROR_FUNCTIONALITY_NOT_SUPPORTED_FUSIONTABLES_CONTROL);
     }
   }
@@ -401,7 +410,11 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
   @SimpleFunction(
       description = "Forget end-users login credentials. Has no effect on service authentication")
   public void ForgetLogin() {
-    OAuth2Helper.resetAccountCredential(activity);
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
+    OAuth2Helper.resetAccountCredential(form);
   }
 
   @SimpleFunction(
@@ -409,8 +422,12 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
       "fusion table. The columns is a comma-separated list of the columns to insert values into. The" +
       " values field specifies what values to insert into each column.")
   public void InsertRow(String tableId, String columns, String values) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     query = "INSERT INTO " + tableId + " (" + columns + ")" + " VALUES " + "(" + values + ")";
-    new QueryProcessorV2(activity).execute(query);
+    new QueryProcessorV2(form).execute(query);
   }
 
 
@@ -418,8 +435,12 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
     description="Gets all the rows from a specified fusion table. The tableId field is the id of the" +
       "required fusion table. The columns field is a comma-separeted list of the columns to retrieve.")
   public void GetRows(String tableId, String columns) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     query = "SELECT " + columns + " FROM " + tableId;
-    new QueryProcessorV2(activity).execute(query);
+    new QueryProcessorV2(form).execute(query);
   }
 
   @SimpleFunction(
@@ -428,18 +449,26 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
     "retrieve. The conditions field specifies what rows to retrieve from the table, for example the rows in which" +
     "a particular column value is not null.")
   public void GetRowsWithConditions(String tableId, String columns, String conditions) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     query = "SELECT " + columns + " FROM " + tableId + " WHERE " + conditions;
-    new QueryProcessorV2(activity).execute(query);
+    new QueryProcessorV2(form).execute(query);
   }
 
 
   // To be Deprecated, based on the old API
   private IClientLoginHelper createClientLoginHelper(String accountPrompt, String service) {
+    if (!container.inForm()) {
+        notifyIfUnsupportedInContext();
+        return null;
+    }
     if (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR) {
       HttpClient httpClient = new DefaultHttpClient();
       HttpConnectionParams.setSoTimeout(httpClient.getParams(), SERVER_TIMEOUT_MS);
       HttpConnectionParams.setConnectionTimeout(httpClient.getParams(), SERVER_TIMEOUT_MS);
-      return new ClientLoginHelper(activity, service, accountPrompt, httpClient);
+      return new ClientLoginHelper(form, service, accountPrompt, httpClient);
     }
     return null;
   }
@@ -468,7 +497,11 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
 
     @Override
     protected void onPreExecute() {
-      progress = ProgressDialog.show(activity, "Fusiontables", "processing query...", true);
+      if (!container.inForm()) {
+        notifyIfUnsupportedInContext();
+        return;
+      }
+      progress = ProgressDialog.show(form, "Fusiontables", "processing query...", true);
     }
 
     /**
@@ -852,7 +885,7 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
           // copyMediaToTempFile will copy the credentials either from the /sdcard if
           // we are running in the Companion, or from the packaged assets if we are a
           // packaged application.
-          cachedServiceCredentials = MediaUtil.copyMediaToTempFile(container.$form(), keyPath);
+          cachedServiceCredentials = MediaUtil.copyMediaToTempFile(form, keyPath);
         }
         GoogleCredential credential = new  GoogleCredential.Builder()
             .setTransport(TRANSPORT)
@@ -961,7 +994,7 @@ public class FusiontablesControl extends AndroidNonvisibleComponent implements C
     // We use dispatchErrorOccurredEventDialog because the message will be too long
     // to read as an alert.  The app designer can override this with the Screen.ErrorOccurred
     // event, just as with ordinary dispatchErrorOccurred
-    form.dispatchErrorOccurredEventDialog(this, "SendQuery",
+    container.dispatchErrorOccurredEventDialog(this, "SendQuery",
         ErrorMessages.FUSION_TABLES_QUERY_ERROR, query, parsedException);
   }
 

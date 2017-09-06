@@ -25,7 +25,7 @@ import java.util.Map;
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class LegoMindstormsNxtBase extends AndroidNonvisibleComponent
     implements BluetoothConnectionListener, Component, Deleteable {
   private static final int TOY_ROBOT = 0x0804; // from android.bluetooth.BluetoothClass.Device.
@@ -81,7 +81,7 @@ public class LegoMindstormsNxtBase extends AndroidNonvisibleComponent
    * Creates a new LegoMindstormsNxtBase.
    */
   protected LegoMindstormsNxtBase(ComponentContainer container, String logTag) {
-    super(container.$form());
+    super(container);
     this.logTag = logTag;
   }
 
@@ -248,12 +248,12 @@ public class LegoMindstormsNxtBase extends AndroidNonvisibleComponent
    */
   protected final boolean checkBluetooth(String functionName) {
     if (bluetooth == null) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_BLUETOOTH_NOT_SET);
       return false;
     }
     if (!bluetooth.IsConnected()) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_NOT_CONNECTED_TO_ROBOT);
       return false;
     }
@@ -282,7 +282,7 @@ public class LegoMindstormsNxtBase extends AndroidNonvisibleComponent
       }
     }
 
-    form.dispatchErrorOccurredEvent(this, functionName,
+    container.dispatchErrorOccurredEvent(this, functionName,
         ErrorMessages.ERROR_NXT_INVALID_RETURN_PACKAGE);
     return new byte[0];
   }
@@ -320,15 +320,15 @@ public class LegoMindstormsNxtBase extends AndroidNonvisibleComponent
     if (status < 0) {
       // Real status bytes received from the NXT are unsigned.
       // -1 is returned from getStatus when the returnPackage is not even big enough to contain a
-      // status byte. In that case, we've already called form.dispatchErrorOccurredEvent from
+      // status byte. In that case, we've already called container.dispatchErrorOccurredEvent from
       // receiveReturnPackage.
     } else {
       String errorMessage = ERROR_MESSAGES.get(status);
       if (errorMessage != null) {
-        form.dispatchErrorOccurredEvent(this, functionName,
+        container.dispatchErrorOccurredEvent(this, functionName,
             ErrorMessages.ERROR_NXT_ERROR_CODE_RECEIVED, errorMessage);
       } else {
-        form.dispatchErrorOccurredEvent(this, functionName,
+        container.dispatchErrorOccurredEvent(this, functionName,
             ErrorMessages.ERROR_NXT_ERROR_CODE_RECEIVED,
             "Error code 0x" + Integer.toHexString(status & 0xFF));
       }

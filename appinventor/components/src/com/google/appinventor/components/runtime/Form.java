@@ -2241,7 +2241,8 @@ public class Form extends Activity
     intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME, taskName);
     intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_FORM_NAME, this.getFormName());
     intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE, title);
-    intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, message.toString());
+    String messageObject = Form.jsonEncodeForForm(message, "SendToTask");
+    intent.putExtra(Form.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, messageObject);
     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
   }
 }

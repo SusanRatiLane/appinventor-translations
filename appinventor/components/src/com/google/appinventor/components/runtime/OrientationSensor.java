@@ -55,9 +55,9 @@ import android.view.WindowManager;
     nonVisible = true,
     iconName = "images/orientationsensor.png")
 
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class OrientationSensor extends AndroidNonvisibleComponent
-    implements SensorEventListener, Deleteable, OnPauseListener, OnResumeListener {
+    implements SensorEventListener, Deleteable, OnPauseListener, OnResumeListener, OnStopListener {
   // Constants
   private static final String LOG_TAG = "OrientationSensor";
   // offsets in array returned by SensorManager.getOrientation()
@@ -101,7 +101,7 @@ public class OrientationSensor extends AndroidNonvisibleComponent
    * @param container  ignored (because this is a non-visible component)
    */
   public OrientationSensor(ComponentContainer container) {
-    super(container.$form());
+    super(container);
 
     // Get sensors, and start listening.
     sensorManager =
@@ -109,9 +109,13 @@ public class OrientationSensor extends AndroidNonvisibleComponent
     accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     magneticFieldSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
-    // Begin listening in onResume() and stop listening in onPause().
-    form.registerForOnResume(this);
-    form.registerForOnPause(this);
+    if (container.inForm()) {
+      // Begin listening in onResume() and stop listening in onPause().
+      form.registerForOnResume(this);
+      form.registerForOnPause(this);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
+    }
 
     // Set default property values.
     Enabled(true);
@@ -311,7 +315,7 @@ public class OrientationSensor extends AndroidNonvisibleComponent
    */
   private int getScreenRotation() {
     Display display =
-        ((WindowManager) form.getSystemService(Context.WINDOW_SERVICE)).
+        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).
         getDefaultDisplay();
     if (SdkLevel.getLevel() >= SdkLevel.LEVEL_FROYO) {
       return FroyoUtil.getRotation(display);
@@ -411,6 +415,12 @@ public class OrientationSensor extends AndroidNonvisibleComponent
 
   @Override
   public void onDelete() {
+    stopListening();
+  }
+
+  // OnStopListener implementation
+
+  public void onStop() {
     stopListening();
   }
 

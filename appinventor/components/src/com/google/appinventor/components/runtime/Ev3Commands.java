@@ -28,7 +28,7 @@ import com.google.appinventor.components.runtime.util.Ev3Constants;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.INTERNET," +
                                    "android.permission.WRITE_EXTERNAL_STORAGE," +
                                    "android.permission.READ_EXTERNAL_STORAGE")
@@ -49,7 +49,7 @@ public class Ev3Commands extends LegoMindstormsEv3Base {
     String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
 
     if (minutes < 0 || minutes > 0xff) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
       return;
     }
 
@@ -126,7 +126,7 @@ public class Ev3Commands extends LegoMindstormsEv3Base {
       Object[] value = Ev3BinaryParser.unpack("xS", reply);
       return String.valueOf(value[0]);
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return null;
     }
   }
@@ -151,7 +151,7 @@ public class Ev3Commands extends LegoMindstormsEv3Base {
       Object[] value = Ev3BinaryParser.unpack("xS", reply);
       return String.valueOf(value[0]);
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return null;
     }
   }
@@ -176,7 +176,7 @@ public class Ev3Commands extends LegoMindstormsEv3Base {
       Object[] value = Ev3BinaryParser.unpack("xS", reply);
       return String.valueOf(value[0]);
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return null;
     }
   }
@@ -200,7 +200,7 @@ public class Ev3Commands extends LegoMindstormsEv3Base {
       Object[] value = Ev3BinaryParser.unpack("xS", reply);
       return String.valueOf(value[0]);
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return null;
     }
   }
@@ -225,7 +225,7 @@ public class Ev3Commands extends LegoMindstormsEv3Base {
       Object[] value = Ev3BinaryParser.unpack("xS", reply);
       return String.valueOf(value[0]);
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return null;
     }
   }

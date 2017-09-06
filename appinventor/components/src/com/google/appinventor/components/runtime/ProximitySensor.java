@@ -28,7 +28,7 @@ import java.util.List;
         category = ComponentCategory.SENSORS,
         nonVisible = true,
         iconName = "images/proximitysensor.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class ProximitySensor extends AndroidNonvisibleComponent
         implements OnStopListener, OnResumeListener, SensorComponent, OnPauseListener,
         SensorEventListener, Deleteable {
@@ -50,13 +50,18 @@ public class ProximitySensor extends AndroidNonvisibleComponent
      * @param container  ignored (because this is a non-visible component)
      */
     public ProximitySensor(ComponentContainer container) {
-        super(container.$form());
-        form.registerForOnResume(this);
-        form.registerForOnStop(this);
-        form.registerForOnPause(this);
+        super(container);
+
+        if (container.inForm()) {
+          form.registerForOnResume(this);
+          form.registerForOnStop(this);
+          form.registerForOnPause(this);
+        } else if (container.inTask()) {
+          task.registerForOnStop(this);
+        }
 
         enabled = true;
-        sensorManager = (SensorManager) container.$context().getSystemService(Context.SENSOR_SERVICE);
+        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         startListening();
     }

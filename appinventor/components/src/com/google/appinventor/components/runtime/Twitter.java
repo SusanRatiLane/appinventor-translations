@@ -121,7 +121,6 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   private String userName = "";
   private final SharedPreferences sharedPreferences;
   private final int requestCode;
-  private final ComponentContainer container;
   private final Handler handler;
 
   // TODO(sharon): twitter4j apparently has an asynchronous interface
@@ -152,8 +151,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   private static final String MAX_MENTIONS_RETURNED = "20";
 
   public Twitter(ComponentContainer container) {
-    super(container.$form());
-    this.container = container;
+    super(container);
     handler = new Handler();
 
     mentions = new ArrayList<String>();
@@ -162,11 +160,16 @@ public final class Twitter extends AndroidNonvisibleComponent implements
     directMessages = new ArrayList<String>();
     searchResults = new ArrayList<String>();
 
-    sharedPreferences = container.$context().getSharedPreferences("Twitter",
+    sharedPreferences = context.getSharedPreferences("Twitter",
         Context.MODE_PRIVATE);
     accessToken = retrieveAccessToken();
 
-    requestCode = form.registerForActivityResult(this);
+    if (container.inForm()) {
+      requestCode = form.registerForActivityResult(this);
+    } else {
+      requestCode = 0;
+      notifyIfUnsupportedInContext();
+    }
   }
 
   /**
@@ -182,7 +185,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   @SimpleFunction(userVisible = false, description = "Twitter's API no longer supports login via username and "
       + "password. Use the Authorize call instead.")
   public void Login(String username, String password) {
-    form.dispatchErrorOccurredEvent(this, "Login",
+    container.dispatchErrorOccurredEvent(this, "Login",
         ErrorMessages.ERROR_TWITTER_UNSUPPORTED_LOGIN_FUNCTION);
   }
 
@@ -281,7 +284,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "the OAuth protocol if we don't already have authorization.")
   public void Authorize() {
     if (consumerKey.length() == 0 || consumerSecret.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "Authorize",
+      container.dispatchErrorOccurredEvent(this, "Authorize",
           ErrorMessages.ERROR_TWITTER_BLANK_CONSUMER_KEY_OR_SECRET);
       return;
     }
@@ -311,14 +314,17 @@ public final class Twitter extends AndroidNonvisibleComponent implements
           // needed to get access token
           Intent browserIntent = new Intent(Intent.ACTION_MAIN, Uri
               .parse(authURL));
-          browserIntent.setClassName(container.$context(),
-              WEBVIEW_ACTIVITY_CLASS);
-          container.$form().startActivityForResult(browserIntent,
-              requestCode);
+          browserIntent.setClassName(context, WEBVIEW_ACTIVITY_CLASS);
+          if (container.inForm()) {
+            form.startActivityForResult(browserIntent,
+                    requestCode);
+          } else {
+            notifyIfUnsupportedInContext();
+          }
         } catch (TwitterException e) {
           Log.i("Twitter", "Got exception: " + e.getMessage());
           e.printStackTrace();
-          form.dispatchErrorOccurredEvent(Twitter.this, "Authorize",
+          container.dispatchErrorOccurredEvent(Twitter.this, "Authorize",
               ErrorMessages.ERROR_TWITTER_EXCEPTION, e.getMessage());
           DeAuthorize(); // clean up
         } catch (IllegalStateException ise){ //This should never happen cause it should return
@@ -370,7 +376,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         final String oauthVerifier = uri.getQueryParameter("oauth_verifier");
         if (twitter == null) {
           Log.e("Twitter", "twitter field is unexpectedly null");
-          form.dispatchErrorOccurredEvent(this, "Authorize",
+          container.dispatchErrorOccurredEvent(this, "Authorize",
               ErrorMessages.ERROR_TWITTER_UNABLE_TO_GET_ACCESS_TOKEN,
               "internal error: can't access Twitter library");
           new RuntimeException().printStackTrace();
@@ -395,7 +401,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
               } catch (TwitterException e) {
                 Log.e("Twitter", "Got exception: " + e.getMessage());
                 e.printStackTrace();
-                form.dispatchErrorOccurredEvent(Twitter.this, "Authorize",
+                container.dispatchErrorOccurredEvent(Twitter.this, "Authorize",
                     ErrorMessages.ERROR_TWITTER_UNABLE_TO_GET_ACCESS_TOKEN,
                     e.getMessage());
                 deAuthorize(); // clean up
@@ -403,7 +409,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
             }
           });
         } else {
-          form.dispatchErrorOccurredEvent(this, "Authorize",
+          container.dispatchErrorOccurredEvent(this, "Authorize",
               ErrorMessages.ERROR_TWITTER_AUTHORIZATION_FAILED);
           deAuthorize(); // clean up
         }
@@ -477,7 +483,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   public void Tweet(final String status) {
 
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "Tweet",
+      container.dispatchErrorOccurredEvent(this, "Tweet",
           ErrorMessages.ERROR_TWITTER_SET_STATUS_FAILED, "Need to login?");
       return;
     }
@@ -492,7 +498,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           twitter.updateStatus(status);
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "Tweet",
+          container.dispatchErrorOccurredEvent(Twitter.this, "Tweet",
               ErrorMessages.ERROR_TWITTER_SET_STATUS_FAILED, e.getMessage());
         }
       }
@@ -511,7 +517,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "user has successfully logged in to Twitter.</p>" )
   public void TweetWithImage(final String status, final String imagePath) {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "TweetWithImage",
+      container.dispatchErrorOccurredEvent(this, "TweetWithImage",
           ErrorMessages.ERROR_TWITTER_SET_STATUS_FAILED, "Need to login?");
       return;
     }
@@ -531,11 +537,11 @@ public final class Twitter extends AndroidNonvisibleComponent implements
             twitter.updateStatus(theTweet);
           }
           else {
-            form.dispatchErrorOccurredEvent(Twitter.this, "TweetWithImage",
+            container.dispatchErrorOccurredEvent(Twitter.this, "TweetWithImage",
                 ErrorMessages.ERROR_TWITTER_INVALID_IMAGE_PATH);
           }
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "TweetWithImage",
+          container.dispatchErrorOccurredEvent(Twitter.this, "TweetWithImage",
               ErrorMessages.ERROR_TWITTER_SET_STATUS_FAILED, e.getMessage());
         }
       }
@@ -557,7 +563,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "user has successfully logged in to Twitter.</p>")
   public void RequestMentions() {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "RequestMentions",
+      container.dispatchErrorOccurredEvent(this, "RequestMentions",
           ErrorMessages.ERROR_TWITTER_REQUEST_MENTIONS_FAILED, "Need to login?");
       return;
     }
@@ -568,7 +574,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           replies = twitter.getMentionsTimeline();
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "RequestMentions",
+          container.dispatchErrorOccurredEvent(Twitter.this, "RequestMentions",
               ErrorMessages.ERROR_TWITTER_REQUEST_MENTIONS_FAILED,
               e.getMessage());
         } finally {
@@ -619,7 +625,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   @SimpleFunction
   public void RequestFollowers() {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "RequestFollowers",
+      container.dispatchErrorOccurredEvent(this, "RequestFollowers",
           ErrorMessages.ERROR_TWITTER_REQUEST_FOLLOWERS_FAILED,
           "Need to login?");
       return;
@@ -635,7 +641,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
             friends.add(twitter.showUser(id));
           }
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "RequestFollowers",
+          container.dispatchErrorOccurredEvent(Twitter.this, "RequestFollowers",
               ErrorMessages.ERROR_TWITTER_REQUEST_FOLLOWERS_FAILED,
               e.getMessage());
         } finally {
@@ -694,7 +700,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "user has successfully logged in to Twitter.</p>")
   public void RequestDirectMessages() {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "RequestDirectMessages",
+      container.dispatchErrorOccurredEvent(this, "RequestDirectMessages",
           ErrorMessages.ERROR_TWITTER_REQUEST_DIRECT_MESSAGES_FAILED,
           "Need to login?");
       return;
@@ -707,7 +713,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           messages = twitter.getDirectMessages();
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this,
+          container.dispatchErrorOccurredEvent(Twitter.this,
               "RequestDirectMessages",
               ErrorMessages.ERROR_TWITTER_REQUEST_DIRECT_MESSAGES_FAILED,
               e.getMessage());
@@ -769,7 +775,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "user has successfully logged in to Twitter.</p>")
   public void DirectMessage(final String user, final String message) {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "DirectMessage",
+      container.dispatchErrorOccurredEvent(this, "DirectMessage",
           ErrorMessages.ERROR_TWITTER_DIRECT_MESSAGE_FAILED, "Need to login?");
       return;
     }
@@ -778,7 +784,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           twitter.sendDirectMessage(user, message);
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "DirectMessage",
+          container.dispatchErrorOccurredEvent(Twitter.this, "DirectMessage",
               ErrorMessages.ERROR_TWITTER_DIRECT_MESSAGE_FAILED, e.getMessage());
         }
       }
@@ -791,7 +797,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   @SimpleFunction
   public void Follow(final String user) {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "Follow",
+      container.dispatchErrorOccurredEvent(this, "Follow",
           ErrorMessages.ERROR_TWITTER_FOLLOW_FAILED, "Need to login?");
       return;
     }
@@ -800,7 +806,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           twitter.createFriendship(user);
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "Follow",
+          container.dispatchErrorOccurredEvent(Twitter.this, "Follow",
               ErrorMessages.ERROR_TWITTER_FOLLOW_FAILED, e.getMessage());
         }
       }
@@ -813,7 +819,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   @SimpleFunction
   public void StopFollowing(final String user) {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "StopFollowing",
+      container.dispatchErrorOccurredEvent(this, "StopFollowing",
           ErrorMessages.ERROR_TWITTER_STOP_FOLLOWING_FAILED, "Need to login?");
       return;
     }
@@ -822,7 +828,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           twitter.destroyFriendship(user);
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "StopFollowing",
+          container.dispatchErrorOccurredEvent(Twitter.this, "StopFollowing",
               ErrorMessages.ERROR_TWITTER_STOP_FOLLOWING_FAILED, e.getMessage());
         }
       }
@@ -835,7 +841,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   @SimpleFunction
   public void RequestFriendTimeline() {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "RequestFriendTimeline",
+      container.dispatchErrorOccurredEvent(this, "RequestFriendTimeline",
           ErrorMessages.ERROR_TWITTER_REQUEST_FRIEND_TIMELINE_FAILED,
           "Need to login?");
       return;
@@ -847,7 +853,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           messages = twitter.getHomeTimeline();
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this,
+          container.dispatchErrorOccurredEvent(Twitter.this,
               "RequestFriendTimeline",
               ErrorMessages.ERROR_TWITTER_REQUEST_FRIEND_TIMELINE_FAILED,
               e.getMessage());
@@ -908,7 +914,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "user has successfully logged in to Twitter.</p>")
   public void SearchTwitter(final String query) {
     if (twitter == null || userName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, "SearchTwitter",
+      container.dispatchErrorOccurredEvent(this, "SearchTwitter",
           ErrorMessages.ERROR_TWITTER_SEARCH_FAILED, "Need to login?");
       return;
     }
@@ -919,7 +925,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
         try {
           tweets = twitter.search(new Query(query)).getTweets();
         } catch (TwitterException e) {
-          form.dispatchErrorOccurredEvent(Twitter.this, "SearchTwitter",
+          container.dispatchErrorOccurredEvent(Twitter.this, "SearchTwitter",
               ErrorMessages.ERROR_TWITTER_SEARCH_FAILED, e.getMessage());
         } finally {
           handler.post(new Runnable() {

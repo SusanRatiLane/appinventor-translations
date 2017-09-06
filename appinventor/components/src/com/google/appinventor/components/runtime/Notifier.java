@@ -86,7 +86,7 @@ import com.google.appinventor.components.runtime.util.SdkLevel;
         "</ul>",
     nonVisible = true,
     iconName = "images/notifier.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 
 public final class Notifier extends AndroidNonvisibleComponent implements Component {
 
@@ -130,9 +130,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     if (container.inForm()) {
       progressDialog(message, title);
     } else if (container.inTask()) {
-      container.dispatchErrorOccurredEvent(this, "ShowProgressDialog",
-              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
-              "ShowProgressDialog", getClass().getSimpleName());
+      notifyUnsupportedMethodInContext("ShowProgressDialog");
     }
   }
 
@@ -174,9 +172,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     if (container.inForm()) {
       oneButtonAlert(form, message, title, buttonText);
     } else if (container.inTask()) {
-      container.dispatchErrorOccurredEvent(this, "ShowMessageDialog",
-              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
-              "ShowMessageDialog", getClass().getSimpleName());
+      notifyUnsupportedMethodInContext("ShowMessageDialog");
     }
   }
 
@@ -233,10 +229,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
               new Runnable() {public void run() {AfterChoosing(context.getString(android.R.string.cancel));}}
       );
     } else if (container.inTask()) {
-      container.dispatchErrorOccurredEvent(this, "ShowChooseDialog",
-              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
-              "ShowChooseDialog", getClass().getSimpleName());
-
+      notifyUnsupportedMethodInContext("ShowChooseDialog");
     }
   }
 
@@ -312,9 +305,7 @@ public final class Notifier extends AndroidNonvisibleComponent implements Compon
     if (container.inForm()) {
       textInputDialog(message, title, cancelable);
     } else if (container.inTask()) {
-      container.dispatchErrorOccurredEvent(this, "ShowTextDialog",
-              ErrorMessages.ERROR_COMPONENT_METHOD_UNSUPPORTED_IN_TASK,
-              "ShowTextDialog", getClass().getSimpleName());
+      notifyUnsupportedMethodInContext("ShowTextDialog");
     }
   }
 

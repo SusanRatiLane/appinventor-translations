@@ -30,7 +30,6 @@ import com.google.appinventor.components.runtime.util.MediaUtil;
 import com.google.appinventor.components.runtime.util.SdkLevel;
 import com.google.appinventor.components.runtime.util.YailList;
 
-import android.app.Activity;
 import android.text.TextUtils;
 import android.util.Log;
 

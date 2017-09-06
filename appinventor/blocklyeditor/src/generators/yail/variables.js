@@ -47,6 +47,7 @@ Blockly.Yail['global_declaration'] = function() {
 // Global variable getter block
 Blockly.Yail['lexical_variable_get'] = function() {
   var code = "";
+  var contextName = this.workspace.contextName;
   var name = this.getFieldValue('VAR');
   if (this.eventparam) {        // If this exists, its the english (default) value
     name = this.eventparam;     // which is what we should use in the Yail
@@ -56,7 +57,7 @@ Blockly.Yail['lexical_variable_get'] = function() {
       name = this.eventparam;
     }
   }
-  var commandAndName = Blockly.Yail.getVariableCommandAndName(name);
+  var commandAndName = Blockly.Yail.getVariableCommandAndName(contextName, name);
   code += commandAndName[0];
   name = commandAndName[1];
   
@@ -68,6 +69,7 @@ Blockly.Yail['lexical_variable_get'] = function() {
 Blockly.Yail['lexical_variable_set'] = function() {
   var argument0 = Blockly.Yail.valueToCode(this, 'VALUE', Blockly.Yail.ORDER_NONE) || '0';
   var code = "";
+  var contextName = this.workspace.contextName;
   var name = this.getFieldValue('VAR');
   if (this.eventparam) {        // If this exists, its the english (default) value
     name = this.eventparam;     // which is what we should use in the Yail
@@ -77,7 +79,7 @@ Blockly.Yail['lexical_variable_set'] = function() {
       name = this.eventparam;
     }
   }
-  var commandAndName = Blockly.Yail.setVariableCommandAndName(name);
+  var commandAndName = Blockly.Yail.setVariableCommandAndName(contextName, name);
   code += commandAndName[0];
   name = commandAndName[1];
   code += name + Blockly.Yail.YAIL_SPACER + argument0
@@ -86,14 +88,14 @@ Blockly.Yail['lexical_variable_set'] = function() {
 };
 
 // [lyn, 12/27/2012] Handle prefixes abstractly
-Blockly.Yail['getVariableCommandAndName'] = function(name){
+Blockly.Yail['getVariableCommandAndName'] = function(contextName, name){
   var command = "";
   var pair = Blockly.unprefixName(name);
   var prefix = pair[0];
   var unprefixedName = pair[1];
   if (prefix === Blockly.globalNamePrefix) {
     name = Blockly.Yail.YAIL_GLOBAL_VAR_TAG + unprefixedName;
-    command = Blockly.Yail.YAIL_GET_VARIABLE + this.workspace.contextName + Blockly.Yail.YAIL_SPACER;
+    command = Blockly.Yail.YAIL_GET_VARIABLE + contextName + Blockly.Yail.YAIL_SPACER;
   } else {
     name = Blockly.Yail.YAIL_LOCAL_VAR_TAG + (Blockly.possiblyPrefixYailNameWith(prefix))(unprefixedName);
     command = Blockly.Yail.YAIL_LEXICAL_VALUE;
@@ -102,14 +104,14 @@ Blockly.Yail['getVariableCommandAndName'] = function(name){
 }
 
 // [lyn, 12/27/2012] New
-Blockly.Yail['setVariableCommandAndName'] = function(name){
+Blockly.Yail['setVariableCommandAndName'] = function(contextName, name){
   var command = "";
   var pair = Blockly.unprefixName(name);
   var prefix = pair[0];
   var unprefixedName = pair[1];
   if (prefix === Blockly.globalNamePrefix) {
     name = Blockly.Yail.YAIL_GLOBAL_VAR_TAG + unprefixedName;
-    command = Blockly.Yail.YAIL_SET_VARIABLE;
+    command = Blockly.Yail.YAIL_SET_VARIABLE + contextName + Blockly.Yail.YAIL_SPACER;
   } else {
     name = Blockly.Yail.YAIL_LOCAL_VAR_TAG + (Blockly.possiblyPrefixYailNameWith(prefix))(unprefixedName);
     command = Blockly.Yail.YAIL_SET_LEXICAL_VALUE;

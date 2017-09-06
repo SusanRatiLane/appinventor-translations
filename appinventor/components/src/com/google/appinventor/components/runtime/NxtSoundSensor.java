@@ -30,7 +30,7 @@ import android.os.Handler;
     category = ComponentCategory.LEGOMINDSTORMS,
     nonVisible = true,
     iconName = "images/legoMindstormsNxt.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class NxtSoundSensor extends LegoMindstormsNxtSensor implements Deleteable {
 
   private enum State { UNKNOWN, BELOW_RANGE, WITHIN_RANGE, ABOVE_RANGE }

@@ -66,7 +66,7 @@ import java.util.Queue;
     category = ComponentCategory.SENSORS,
     nonVisible = true,
     iconName = "images/accelerometersensor.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class AccelerometerSensor extends AndroidNonvisibleComponent
     implements OnStopListener, OnResumeListener, SensorComponent, SensorEventListener, Deleteable {
 

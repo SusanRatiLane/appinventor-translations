@@ -34,7 +34,7 @@ import java.util.List;
     category = ComponentCategory.LEGOMINDSTORMS,
     nonVisible = true,
     iconName = "images/legoMindstormsNxt.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class NxtDrive extends LegoMindstormsNxtBase {
 
   // Constants for setOutputState parameters.
@@ -100,7 +100,7 @@ public class NxtDrive extends LegoMindstormsNxtBase {
       try {
         driveMotorPorts.add(convertMotorPortLetterToNumber(ch));
       } catch (IllegalArgumentException e) {
-        form.dispatchErrorOccurredEvent(this, "DriveMotors",
+        container.dispatchErrorOccurredEvent(this, "DriveMotors",
             ErrorMessages.ERROR_NXT_INVALID_MOTOR_PORT, ch);
       }
     }

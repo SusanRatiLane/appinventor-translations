@@ -20,7 +20,7 @@ import com.google.appinventor.components.runtime.util.Ev3BinaryParser;
  * @author jerry73204@gmail.com (jerry73204)
  * @author spaded06543@gmail.com (Alvin Chang)
  */
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class LegoMindstormsEv3Sensor extends LegoMindstormsEv3Base {
   protected static final String DEFAULT_SENSOR_PORT = "1";
   protected int sensorPortNumber;
@@ -52,7 +52,7 @@ public class LegoMindstormsEv3Sensor extends LegoMindstormsEv3Base {
     try {
       sensorPortNumber = sensorPortLetterToPortNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_SENSOR_PORT, sensorPortLetter);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_SENSOR_PORT, sensorPortLetter);
       return;
     }
   }
@@ -113,7 +113,7 @@ public class LegoMindstormsEv3Sensor extends LegoMindstormsEv3Base {
       return (double) ((Float) values[0]);
 
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return -1.0;
     }
   }

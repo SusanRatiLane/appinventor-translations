@@ -112,7 +112,6 @@ public class ActivityStarter extends AndroidNonvisibleComponent
   private String result;
   private int requestCode;
   private YailList extras;
-  private final ComponentContainer container;
 
   /**
    * Creates a new ActivityStarter component.
@@ -120,9 +119,7 @@ public class ActivityStarter extends AndroidNonvisibleComponent
    * @param container  container, kept for access to form and context
    */
   public ActivityStarter(ComponentContainer container) {
-    super(container.$form());
-    // Save the container for later
-    this.container = container;
+    super(container);
     result = "";
     Action(Intent.ACTION_MAIN);
     ActivityPackage("");
@@ -427,7 +424,8 @@ public class ActivityStarter extends AndroidNonvisibleComponent
     resultIntent = null;
     result = "";
 
-    if (this.form == null) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
       return;
     }
 
@@ -442,20 +440,20 @@ public class ActivityStarter extends AndroidNonvisibleComponent
     }
 
     if (intent == null) {
-      form.dispatchErrorOccurredEvent(this, "StartActivity",
+      container.dispatchErrorOccurredEvent(this, "StartActivity",
         ErrorMessages.ERROR_ACTIVITY_STARTER_NO_ACTION_INFO);
     } else {
       try {
-        if (container.$form() != null) { // Make sure we have a form
-          form.dispatchErrorOccurredEvent(this, "StartActivity",
+        if (form != null) { // Make sure we have a form
+          container.dispatchErrorOccurredEvent(this, "StartActivity",
             ErrorMessages.ERROR_ACTIVITY_STARTER_NO_CALLING_ACTIVITY);
           return;
         }
-        container.$form().startActivityForResult(intent, requestCode);
-        String openAnim = container.$form().getOpenAnimType();
-        AnimationUtil.ApplyOpenScreenAnimation(container.$form(), openAnim);
+        form.startActivityForResult(intent, requestCode);
+        String openAnim = form.getOpenAnimType();
+        AnimationUtil.ApplyOpenScreenAnimation(form, openAnim);
       } catch (ActivityNotFoundException e) {
-        form.dispatchErrorOccurredEvent(this, "StartActivity",
+        container.dispatchErrorOccurredEvent(this, "StartActivity",
           ErrorMessages.ERROR_ACTIVITY_STARTER_NO_CORRESPONDING_ACTIVITY);
       }
     }
@@ -532,6 +530,10 @@ public class ActivityStarter extends AndroidNonvisibleComponent
 
   @Override
   public void onDelete() {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     form.unregisterForActivityResult(this);
   }
 }

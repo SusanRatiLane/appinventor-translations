@@ -31,7 +31,7 @@ import android.os.Handler;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class Ev3UltrasonicSensor extends LegoMindstormsEv3Sensor implements Deleteable {
   private static final int SENSOR_TYPE = 30;
   private static final int SENSOR_MODE_CM = 0;
@@ -260,7 +260,7 @@ public class Ev3UltrasonicSensor extends LegoMindstormsEv3Sensor implements Dele
     try {
       setMode(unitName);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -282,7 +282,7 @@ public class Ev3UltrasonicSensor extends LegoMindstormsEv3Sensor implements Dele
     try {
       setMode(SENSOR_MODE_CM_STRING);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -295,7 +295,7 @@ public class Ev3UltrasonicSensor extends LegoMindstormsEv3Sensor implements Dele
     try {
       setMode(SENSOR_MODE_INCH_STRING);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 

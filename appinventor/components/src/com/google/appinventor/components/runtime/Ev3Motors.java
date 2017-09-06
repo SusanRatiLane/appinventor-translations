@@ -33,7 +33,7 @@ import android.os.Handler;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class Ev3Motors extends LegoMindstormsEv3Base {
   private static final int DELAY_MILLISECONDS = 50;
   private static final String DEFAULT_MOTOR_PORTS = "ABC";
@@ -108,7 +108,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
     try {
       motorPortBitField = motorPortLettersToBitField(motorPortLetters);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_MOTOR_PORT, motorPortLetters);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_MOTOR_PORT, motorPortLetters);
     }
   }
 
@@ -144,7 +144,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       setOutputDirection(functionName, 0, motorPortBitField, reversed ? -1 : 1); // assume layer = 0
       directionReversed = reversed;
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -230,7 +230,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
 
       startOutput(functionName, 0, motorPortBitField);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -246,7 +246,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       else
         outputStepPower(functionName, 0, motorPortBitField, power, 0, tachoCounts, 0, useBrake);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -262,7 +262,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       else
         outputTimePower(functionName, 0, motorPortBitField, power, 0, milliseconds, 0, useBrake);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -280,7 +280,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       else
         outputStepPower(functionName, 0, motorPortBitField, power, 0, tachoCounts, 0, useBrake);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -301,7 +301,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       }
 
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -323,7 +323,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       }
 
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -344,7 +344,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       }
 
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -365,7 +365,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       }
 
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -378,7 +378,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
     try {
       stopOutput(functionName, 0, motorPortBitField, useBrake); // assume layer = 0
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -392,7 +392,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       setOutputDirection(functionName, 0, motorPortBitField, 0); // assume layer = 0
       directionReversed = !directionReversed;
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -405,7 +405,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
     try {
       clearOutputCount(functionName, 0, motorPortBitField); // assume layer = 0
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -418,7 +418,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
     try {
       return getOutputCount(functionName, 0, motorPortBitField); // assume layer = 0
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
       return 0;
     }
   }
@@ -723,7 +723,7 @@ public class Ev3Motors extends LegoMindstormsEv3Base {
       try {
         stopOutput(functionName, 0, motorPortBitField, true); // assume layer = 0
       } catch (IllegalArgumentException e) {
-        form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+        container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
       }
     }
   }

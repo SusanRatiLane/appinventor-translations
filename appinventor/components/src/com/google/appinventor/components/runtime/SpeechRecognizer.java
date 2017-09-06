@@ -33,7 +33,7 @@ import java.util.ArrayList;
     category = ComponentCategory.MEDIA,
     nonVisible = true,
     iconName = "images/speechRecognizer.png")
-@SimpleObject
+@SimpleObject()
 public class SpeechRecognizer extends AndroidNonvisibleComponent
     implements Component, ActivityResultListener {
 
@@ -51,11 +51,6 @@ public class SpeechRecognizer extends AndroidNonvisibleComponent
   public SpeechRecognizer(ComponentContainer container) {
     super(container);
     result = "";
-    if (container.inTask()) {
-      container.dispatchErrorOccurredEvent(this, "GetText",
-        ErrorMessages.ERROR_COMPONENT_UNSUPPORTED_IN_TASK,
-        this.getClass().getSimpleName()); // TODO(justus) : Internationalize component name ?
-    }
   }
 
   /**
@@ -82,10 +77,8 @@ public class SpeechRecognizer extends AndroidNonvisibleComponent
     }
     if (container.inForm()) {
       form.startActivityForResult(intent, requestCode);
-    } else if (container.inTask()){
-      container.dispatchErrorOccurredEvent(this, "GetText",
-        ErrorMessages.ERROR_COMPONENT_UNSUPPORTED_IN_TASK,
-        this.getClass().getSimpleName()); // TODO(justus) : Internationalize component name ?
+    } else {
+      notifyIfUnsupportedInContext();
     }
   }
 

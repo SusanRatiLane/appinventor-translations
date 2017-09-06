@@ -327,6 +327,7 @@ public class ReplForm extends Form {
 
   @Override
   public void StopTask(String taskName) {
+    ReplTask.clearSingleTask(taskName);
   }
 
   private void startReplService() {

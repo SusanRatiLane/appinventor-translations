@@ -34,9 +34,9 @@ import android.hardware.SensorManager;
     nonVisible = true,
     iconName = "images/gyroscopesensor.png")
 
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class GyroscopeSensor extends AndroidNonvisibleComponent
-    implements SensorEventListener, Deleteable, OnPauseListener, OnResumeListener {
+    implements SensorEventListener, Deleteable, OnPauseListener, OnResumeListener, OnStopListener {
 
   // Properties
   private boolean enabled;
@@ -53,15 +53,19 @@ public class GyroscopeSensor extends AndroidNonvisibleComponent
    * Creates a new GyroscopeSensor component.
    */
   public GyroscopeSensor(ComponentContainer container) {
-    super(container.$form());
+    super(container);
 
     // Get sensors, and start listening.
-    sensorManager = (SensorManager) form.getSystemService(Context.SENSOR_SERVICE);
+    sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
     gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-    // Begin listening in onResume() and stop listening in onPause().
-    form.registerForOnResume(this);
-    form.registerForOnPause(this);
+    if (container.inForm()) {
+      // Begin listening in onResume() and stop listening in onPause().
+      form.registerForOnResume(this);
+      form.registerForOnPause(this);
+    } else if(container.inTask()) {
+      task.registerForOnStop(this);
+    }
 
     // Set default property values.
     Enabled(true);
@@ -214,6 +218,12 @@ public class GyroscopeSensor extends AndroidNonvisibleComponent
 
   @Override
   public void onDelete() {
+    stopListening();
+  }
+
+  // OnStopListener implementation
+
+  public void onStop() {
     stopListening();
   }
 

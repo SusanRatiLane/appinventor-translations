@@ -17,7 +17,7 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public abstract class LegoMindstormsNxtSensor extends LegoMindstormsNxtBase {
   static class SensorValue<T> {
     final boolean valid;
@@ -81,7 +81,7 @@ public abstract class LegoMindstormsNxtSensor extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return;
     }

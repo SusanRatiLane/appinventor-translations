@@ -57,7 +57,6 @@ public class BarcodeScanner extends AndroidNonvisibleComponent
   private static final String SCANNER_RESULT_NAME = "SCAN_RESULT";
   private String result = "";
   private boolean useExternalScanner = true;
-  private final ComponentContainer container;
 
 
   /* Used to identify the call to startActivityForResult. Will be passed back into the
@@ -70,8 +69,7 @@ public class BarcodeScanner extends AndroidNonvisibleComponent
    * @param container container, component will be placed in
    */
   public BarcodeScanner(ComponentContainer container) {
-    super(container.$form());
-    this.container = container;
+    super(container);
   }
 
   /**
@@ -92,17 +90,23 @@ public class BarcodeScanner extends AndroidNonvisibleComponent
   public void DoScan() {
     Intent intent = new Intent(SCAN_INTENT);
     if (!useExternalScanner && (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR)) {  // Should we attempt to use an internal scanner?
-      String packageName = container.$form().getPackageName();
+      String packageName = context.getPackageName();
       intent.setComponent(new ComponentName(packageName, "com.google.zxing.client.android.AppInvCaptureActivity"));
     }
     if (requestCode == 0) {
-      requestCode = form.registerForActivityResult(this);
+      if (container.inForm()) {
+        requestCode = form.registerForActivityResult(this);
+      }
     }
     try {
-      container.$form().startActivityForResult(intent, requestCode);
+      if (container.inForm()) {
+        form.startActivityForResult(intent, requestCode);
+      } else {
+        notifyIfUnsupportedInContext();
+      }
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
-      container.$form().dispatchErrorOccurredEvent(this, "BarcodeScanner",
+      container.dispatchErrorOccurredEvent(this, "BarcodeScanner",
         ErrorMessages.ERROR_NO_SCANNER_FOUND, "");
     }
   }

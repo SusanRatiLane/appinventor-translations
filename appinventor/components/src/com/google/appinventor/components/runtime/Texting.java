@@ -174,7 +174,7 @@ public class Texting extends AndroidNonvisibleComponent
 
   // Google Voice oauth helper
   private GoogleVoiceUtil gvHelper;
-  private static Activity activity;
+  private static Context applicationContext;
   private static Component component;
   private String authToken;
 
@@ -204,7 +204,6 @@ public class Texting extends AndroidNonvisibleComponent
   //Stores up to 50 pending messages awaiting authentication
   private Queue<String> pendingQueue = new ConcurrentLinkedQueue<String>();
 
-  private ComponentContainer container; // Need this for error reporting
 
   /**
    * Creates a new TextMessage component.
@@ -212,13 +211,12 @@ public class Texting extends AndroidNonvisibleComponent
    * @param container  ignored (because this is a non-visible component)
    */
   public Texting(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     Log.d(TAG, "Texting constructor");
-    this.container = container;
     Texting.component = (Texting)this;
-    activity = container.$form();
+    Texting.applicationContext = this.context;
 
-    SharedPreferences prefs = activity.getSharedPreferences(PREF_FILE, Activity.MODE_PRIVATE);
+    SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
     if (prefs != null) {
       receivingEnabled = prefs.getInt(PREF_RCVENABLED, -1);
       if (receivingEnabled == -1) {
@@ -237,25 +235,35 @@ public class Texting extends AndroidNonvisibleComponent
     }
 
     // Handles authenticating for GV feature.  This sets the authToken.
-    if (googleVoiceEnabled)
-      new AsyncAuthenticate().execute();
+    if (googleVoiceEnabled) {
+      if (container.inForm()) {
+        new AsyncAuthenticate().execute();
+      } else {
+        notifyUnsupportedFeatureInContext("Initialize", "GoogleVoice");
+      }
+    }
 
     smsManager = SmsManager.getDefault();
     PhoneNumber("");
 
-    isInitialized = false; // Set true when the form is initialized and can dispatch
+    isInitialized = false; // Set true when the context is initialized and can dispatch
     isRunning = false;     // This will be set true in onResume and false in onPause
 
-    // Register this component for lifecycle callbacks 
-    container.$form().registerForOnInitialize(this);
-    container.$form().registerForOnResume(this);
-    container.$form().registerForOnPause(this);
-    container.$form().registerForOnStop(this);
+    if (container.inForm()) {
+      // Register this component for lifecycle callbacks
+      form.registerForOnInitialize(this);
+      form.registerForOnResume(this);
+      form.registerForOnPause(this);
+      form.registerForOnStop(this);
+    } else if (container.inTask()){
+      task.registerForOnInitialize(this);
+      task.registerForOnStop(this);
+    }
   }
 
   /**
-   * Callback from Form. No incoming messages can be processed through
-   * MessageReceived until the Form is initialized. Messages are cached
+   * Callback from Context. No incoming messages can be processed through
+   * MessageReceived until the Context is initialized. Messages are cached
    * until this method is called.
    */
   @Override
@@ -264,7 +272,7 @@ public class Texting extends AndroidNonvisibleComponent
     isInitialized = true;
     isRunning = true;    // Added b/c REPL does not call onResume when starting Texting component
     processCachedMessages();
-    NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE);
+    NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
     nm.cancel(SmsBroadcastReceiver.NOTIFICATION_ID);
   }
 
@@ -330,7 +338,10 @@ public class Texting extends AndroidNonvisibleComponent
 
     // If sending by Google Voice, we need authentication
     if (this.googleVoiceEnabled) {
-
+      if (!container.inForm()) {
+        notifyUnsupportedFeatureInContext("SendMessage", "GoogleVoice");
+        return;
+      }
       // If no authToken, get one before trying to send the message.
       if (authToken == null) {
         Log.i(TAG, "Need to get an authToken -- enqueing " + phoneNumber + " " + message);
@@ -338,7 +349,7 @@ public class Texting extends AndroidNonvisibleComponent
 
         // Try enqueuing the message
         if (!ok) {
-          Toast.makeText(activity, "Pending message queue full. Can't send message", Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, "Pending message queue full. Can't send message", Toast.LENGTH_SHORT).show();
           return;
         }
 
@@ -390,7 +401,7 @@ public class Texting extends AndroidNonvisibleComponent
       } else {
         Log.i(TAG, "Dispatch failed, caching");
         synchronized (cacheLock) {
-          addMessageToCache(activity, number, messageText);
+          addMessageToCache(applicationContext, number, messageText);
         }
       }
     }
@@ -425,12 +436,12 @@ public class Texting extends AndroidNonvisibleComponent
   public void GoogleVoiceEnabled(boolean enabled) {
     if (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR) {
       this.googleVoiceEnabled = enabled;
-      SharedPreferences prefs = activity.getSharedPreferences(PREF_FILE, Activity.MODE_PRIVATE);
+      SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
       SharedPreferences.Editor editor = prefs.edit();
       editor.putBoolean(PREF_GVENABLED, enabled);
       editor.commit();
     } else {
-      Toast.makeText(activity, "Sorry, your phone's system does not support this option.", Toast.LENGTH_LONG).show();
+      Toast.makeText(context, "Sorry, your phone's system does not support this option.", Toast.LENGTH_LONG).show();
     }
   }
 
@@ -470,13 +481,13 @@ public class Texting extends AndroidNonvisibleComponent
   public void ReceivingEnabled(int enabled) {
     if ((enabled < ComponentConstants.TEXT_RECEIVING_OFF) ||
         (enabled > ComponentConstants.TEXT_RECEIVING_ALWAYS)) {
-      container.$form().dispatchErrorOccurredEvent(this, "Texting",
+      container.dispatchErrorOccurredEvent(this, "Texting",
           ErrorMessages.ERROR_BAD_VALUE_FOR_TEXT_RECEIVING, enabled);
       return;
     }
 
     Texting.receivingEnabled = enabled;
-    SharedPreferences prefs = activity.getSharedPreferences(PREF_FILE, Activity.MODE_PRIVATE);
+    SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
     SharedPreferences.Editor editor = prefs.edit();
     editor.putInt(PREF_RCVENABLED, enabled);
     editor.remove(PREF_RCVENABLED_LEGACY); // Remove any legacy value
@@ -484,7 +495,7 @@ public class Texting extends AndroidNonvisibleComponent
   }
 
   public static int isReceivingEnabled(Context context) {
-    SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Activity.MODE_PRIVATE);
+    SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
     int retval = prefs.getInt(PREF_RCVENABLED, -1);
     if (retval == -1) {         // Fetch legacy value
       if (prefs.getBoolean(PREF_RCVENABLED_LEGACY, true))
@@ -558,7 +569,7 @@ public class Texting extends AndroidNonvisibleComponent
     Log.i(TAG, "Retrieving cached messages");
     String cache = "";
     try {
-      FileInputStream fis = activity.openFileInput(CACHE_FILE);
+      FileInputStream fis = context.openFileInput(CACHE_FILE);
       byte[] bytes = new byte[8192];
       if (fis == null) {
         Log.e(TAG, "Null file stream returned from openFileInput");
@@ -568,7 +579,7 @@ public class Texting extends AndroidNonvisibleComponent
       Log.i(TAG, "Read " + n + " bytes from " + CACHE_FILE);
       cache = new String(bytes, 0, n);
       fis.close();
-      activity.deleteFile(CACHE_FILE);
+      context.deleteFile(CACHE_FILE);
       messagesCached = 0;
       Log.i(TAG, "Retrieved cache " + cache);
     } catch (FileNotFoundException e) {
@@ -608,7 +619,7 @@ public class Texting extends AndroidNonvisibleComponent
     isRunning = true;
     if (isInitialized) {
       processCachedMessages();
-      NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE);
+      NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
       nm.cancel(SmsBroadcastReceiver.NOTIFICATION_ID);
     }
   }
@@ -913,23 +924,23 @@ public class Texting extends AndroidNonvisibleComponent
     switch (resultCode) {
       case Activity.RESULT_OK:
         Log.i(TAG, "Received OK, msg:" + smsMsg);
-        Toast.makeText(activity, "Message sent", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Message sent", Toast.LENGTH_SHORT).show();
         break;
       case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
         Log.e(TAG, "Received generic failure, msg:" + smsMsg);
-        Toast.makeText(activity, "Generic failure: message not sent", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Generic failure: message not sent", Toast.LENGTH_SHORT).show();
         break;
       case SmsManager.RESULT_ERROR_NO_SERVICE:
         Log.e(TAG, "Received no service error, msg:"  + smsMsg);
-        Toast.makeText(activity, "No Sms service available. Message not sent.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "No Sms service available. Message not sent.", Toast.LENGTH_SHORT).show();
         break;
       case SmsManager.RESULT_ERROR_NULL_PDU:
         Log.e(TAG, "Received null PDU error, msg:"  + smsMsg);
-        Toast.makeText(activity, "Received null PDU error. Message not sent.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Received null PDU error. Message not sent.", Toast.LENGTH_SHORT).show();
         break;
       case SmsManager.RESULT_ERROR_RADIO_OFF:
         Log.e(TAG, "Received radio off error, msg:" + smsMsg);
-        Toast.makeText(activity, "Could not send SMS message: radio off.", Toast.LENGTH_LONG).show();
+        Toast.makeText(context, "Could not send SMS message: radio off.", Toast.LENGTH_LONG).show();
         break;
     }
   }
@@ -945,7 +956,7 @@ public class Texting extends AndroidNonvisibleComponent
     int numParts = parts.size();
     ArrayList<PendingIntent> pendingIntents = new ArrayList<PendingIntent>();
     for (int i = 0; i < numParts; i++)
-      pendingIntents.add(PendingIntent.getBroadcast(activity, 0, new Intent(SENT), 0));
+      pendingIntents.add(PendingIntent.getBroadcast(context, 0, new Intent(SENT), 0));
 
     // Receiver for when the SMS is sent
     BroadcastReceiver sendReceiver = new BroadcastReceiver() {
@@ -953,7 +964,7 @@ public class Texting extends AndroidNonvisibleComponent
       public synchronized void onReceive(Context arg0, Intent arg1) {
         try {
           handleSentMessage(arg0, null, getResultCode(), message);
-          activity.unregisterReceiver(this);
+          context.unregisterReceiver(this);
         } catch (Exception e) {
           Log.e("BroadcastReceiver",
               "Error in onReceive for msgId "  + arg1.getAction());
@@ -963,7 +974,7 @@ public class Texting extends AndroidNonvisibleComponent
       }
     };
     // This may result in an error -- a "sent" or "error" message will be displayed
-    activity.registerReceiver(sendReceiver, new IntentFilter(SENT));
+    context.registerReceiver(sendReceiver, new IntentFilter(SENT));
     smsManager.sendMultipartTextMessage(phoneNumber, null, parts, pendingIntents, null);
   }
 
@@ -976,8 +987,9 @@ public class Texting extends AndroidNonvisibleComponent
     protected String doInBackground(Void... arg0) {
       Log.i(TAG, "Authenticating");
 
+
       // Get and return the authtoken
-      return new OAuth2Helper().getRefreshedAuthToken(activity, GV_SERVICE);
+      return new OAuth2Helper().getRefreshedAuthToken(form, GV_SERVICE);
     }
 
     /**
@@ -988,7 +1000,7 @@ public class Texting extends AndroidNonvisibleComponent
       Log.i(TAG, "authToken = " + result);
       authToken = result;
 
-      Toast.makeText(activity, "Finished authentication", Toast.LENGTH_SHORT).show();
+      Toast.makeText(context, "Finished authentication", Toast.LENGTH_SHORT).show();
 
       // Send any pending messages
       processPendingQueue();
@@ -1058,11 +1070,11 @@ public class Texting extends AndroidNonvisibleComponent
         e.printStackTrace();
       }
       if (ok)
-        Toast.makeText(activity, "Message sent", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Message sent", Toast.LENGTH_SHORT).show();
       else if (code == 58) 
-        Toast.makeText(activity, "Errcode 58: SMS limit reached", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Errcode 58: SMS limit reached", Toast.LENGTH_SHORT).show();
       else if (result.contains("IO Error")) 
-        Toast.makeText(activity, result, Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -1071,7 +1083,7 @@ public class Texting extends AndroidNonvisibleComponent
    */
   @Override
   public void onStop() {
-    SharedPreferences prefs = activity.getSharedPreferences(PREF_FILE, Activity.MODE_PRIVATE);
+    SharedPreferences prefs = context.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
     SharedPreferences.Editor editor = prefs.edit();
     editor.putInt(PREF_RCVENABLED, receivingEnabled);
     editor.putBoolean(PREF_GVENABLED, googleVoiceEnabled);

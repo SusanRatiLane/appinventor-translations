@@ -20,7 +20,7 @@ import java.util.Collections;
  * @author jerry73204@gmail.com (jerry73204)
  * @author spaded06543@gmail.com (Alvin Chang)
  */
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class LegoMindstormsEv3Base extends AndroidNonvisibleComponent
   implements BluetoothConnectionListener, Component, Deleteable {
 
@@ -30,7 +30,7 @@ public class LegoMindstormsEv3Base extends AndroidNonvisibleComponent
   protected BluetoothClient bluetooth;
 
   protected LegoMindstormsEv3Base(ComponentContainer container, String logTag) {
-    super(container.$form());
+    super(container);
     this.logTag = logTag;
   }
 
@@ -68,12 +68,12 @@ public class LegoMindstormsEv3Base extends AndroidNonvisibleComponent
 
   protected final boolean isBluetoothConnected(String functionName) {
     if (bluetooth == null) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_BLUETOOTH_NOT_SET);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_BLUETOOTH_NOT_SET);
       return false;
     }
 
     if (!bluetooth.IsConnected()) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_NOT_CONNECTED_TO_ROBOT);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_NOT_CONNECTED_TO_ROBOT);
       return false;
     }
 
@@ -106,13 +106,13 @@ public class LegoMindstormsEv3Base extends AndroidNonvisibleComponent
           return reply;
         else
         {
-          form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+          container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
           return null;
         }
       }
 
       // handle errors
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_INVALID_REPLY);
       return null;
     } else {
       return null;

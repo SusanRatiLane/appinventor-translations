@@ -44,7 +44,6 @@ import com.google.appinventor.components.runtime.util.SdkLevel;
 public class NearField extends AndroidNonvisibleComponent
 implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListener, Deleteable {
   private static final String TAG = "nearfield";
-  private Activity activity;
 
   private NfcAdapter nfcAdapter;
   private boolean readMode = true;
@@ -61,17 +60,18 @@ implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListene
    * @param container  ignored (because this is a non-visible component)
    */
   public NearField(ComponentContainer container) {
-    super(container.$form());
-    activity = container.$form();
+    super(container);
     writeType = 1;
-    nfcAdapter = (SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD)
-        ? GingerbreadUtil.newNfcAdapter(activity)
-        : null;
-    // register with the forms to that OnResume and OnNewIntent
-    // messages get sent to this component
-    form.registerForOnResume(this);
-    form.registerForOnNewIntent(this);
-    form.registerForOnPause(this);
+    if (container.inForm()) {
+      nfcAdapter = (SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD)
+              ? GingerbreadUtil.newNfcAdapter(form)
+              : null;
+      // register with the forms to that OnResume and OnNewIntent
+      // messages get sent to this component
+      form.registerForOnResume(this);
+      form.registerForOnNewIntent(this);
+      form.registerForOnPause(this);
+    }
     Log.d(TAG, "Nearfield component created");
   }
 
@@ -140,7 +140,11 @@ implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListene
     Log.d(TAG, "Read mode set to" + newMode);
     readMode = newMode;
     if(!readMode && SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD){
-      GingerbreadUtil.enableNFCWriteMode(activity, nfcAdapter, textToWrite);
+      if (container.inForm()) {
+        GingerbreadUtil.enableNFCWriteMode(form, nfcAdapter, textToWrite);
+      } else {
+        notifyIfUnsupportedInContext();
+      }
     }
   }
 
@@ -153,7 +157,11 @@ implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListene
     textToWrite = newText;
     if(!readMode && writeType == 1){
       if(SdkLevel.getLevel() >= SdkLevel.LEVEL_GINGERBREAD){
-        GingerbreadUtil.enableNFCWriteMode(activity, nfcAdapter, textToWrite);
+        if (container.inForm()) {
+          GingerbreadUtil.enableNFCWriteMode(form, nfcAdapter, textToWrite);
+        } else {
+          notifyIfUnsupportedInContext();
+        }
       }
     }
   }
@@ -169,7 +177,7 @@ implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListene
   // TODO: Re-enable NFC communication if it had been disabled
   @Override
   public void onResume() {
-    Intent intent = activity.getIntent();
+    Intent intent = form.getIntent();
     Log.d(TAG, "Nearfield on onResume.  Intent is: " + intent);
   }
 
@@ -187,7 +195,7 @@ implements OnStopListener, OnResumeListener, OnPauseListener, OnNewIntentListene
   public void onPause() {
     Log.d(TAG, "OnPause method started.");
     if (nfcAdapter != null) {
-      GingerbreadUtil.disableNFCAdapter(activity, nfcAdapter);
+      GingerbreadUtil.disableNFCAdapter(form, nfcAdapter);
     }
     //nfcAdapter.disableForegroundDispatch(activity);
   }

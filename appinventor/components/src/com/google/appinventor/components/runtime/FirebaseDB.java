@@ -85,7 +85,6 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
                                                  // where variables are kept when an app exits
                                                  // when off-line
   private Handler androidUIHandler;
-  private final Activity activity;
   private Firebase myFirebase;
   private ChildEventListener childListener;
   private Firebase.AuthStateListener authListener;
@@ -127,14 +126,13 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
    * @param container the Form that this component is contained in.
    */
   public FirebaseDB(ComponentContainer container) {
-    super(container.$form());
+    super(container);
     // We use androidUIHandler when we set up operations that run asynchronously
     // in a separate thread, but which themselves want to cause actions
     // back in the UI thread.  They do this by posting those actions
     // to androidUIHandler.
     androidUIHandler = new Handler();
-    this.activity = container.$form();
-    Firebase.setAndroidContext(activity);
+    Firebase.setAndroidContext(context);
 
     developerBucket = ""; // set dynamically in the Designer
     projectBucket = ""; // given a dynamic default value in the Designer
@@ -441,6 +439,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
 
   @SimpleFunction(description = "Remove the tag from Firebase")
   public void ClearTag(final String tag) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     this.myFirebase.child(tag).removeValue();
   }
 
@@ -453,6 +455,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
    */
   @SimpleFunction
   public void StoreValue(final String tag, Object valueToStore) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     try {
       if(valueToStore != null) {
         valueToStore = JsonUtil.getJsonRepresentation(valueToStore);
@@ -476,6 +482,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
    */
   @SimpleFunction
   public void GetValue(final String tag, final Object valueIfTagNotThere) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     this.myFirebase.child(tag).addListenerForSingleValueEvent(new ValueEventListener() {
       @Override
       public void onDataChange(final DataSnapshot snapshot) {
@@ -567,6 +577,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
   public void FirebaseError(String message) {
     // Log the error message for advanced developers
     Log.e(LOG_TAG, message);
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
 
     // Invoke the application's "FirebaseError" event handler
     boolean dispatched = EventDispatcher.dispatchEvent(this, "FirebaseError", message);
@@ -577,8 +591,12 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
   }
 
   private void connectFirebase() {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     if (SdkLevel.getLevel() < SdkLevel.LEVEL_GINGERBREAD_MR1) {
-      Notifier.oneButtonAlert(activity, "The version of Android on this device is too old to use Firebase.",
+      Notifier.oneButtonAlert(form, "The version of Android on this device is too old to use Firebase.",
         "Android Too Old", "OK");
       return;
     }
@@ -618,6 +636,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
     "in the blocks editor. Note: You should not normally need to use this block as part of " +
     "an application.")
   public void Unauthenticate() {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     if (myFirebase == null) {
       connectFirebase();
     }
@@ -647,6 +669,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
     "the other will get the second element, or an error if there is no available element. " +
     "When the element is available, the \"FirstRemoved\" event will be triggered.")
   public void RemoveFirst(final String tag) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     final ReturnVal result = new ReturnVal();
     Firebase firebaseChild = myFirebase.child(tag);
     Transactional toRun = new Transactional(null, null, result) {
@@ -700,6 +726,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
     "When complete a \"TagList\" event will be triggered with the list of " +
     "known tags.")
   public void GetTagList() {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     Firebase zFireBase = myFirebase.child(""); // Does this really clone the parent?
     zFireBase.addListenerForSingleValueEvent(new ValueEventListener() {
         @Override
@@ -740,6 +770,10 @@ public class FirebaseDB extends AndroidNonvisibleComponent implements Component 
     "If two devices use this function simultaneously, both will be appended and no " +
     "data lost.")
   public void AppendValue(final String tag, final Object valueToAdd) {
+    if (!container.inForm()) {
+      notifyIfUnsupportedInContext();
+      return;
+    }
     final ReturnVal result = new ReturnVal();
     Firebase firebaseChild = myFirebase.child(tag);
     Transactional toRun = new Transactional(null, null, result) {

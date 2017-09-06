@@ -56,7 +56,7 @@ import java.util.Map;
     category = ComponentCategory.MEDIA,
     nonVisible = true,
     iconName = "images/soundEffect.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.VIBRATE, android.permission.INTERNET")
 public class Sound extends AndroidNonvisibleComponent
     implements Component, OnResumeListener, OnStopListener, OnDestroyListener, Deleteable {
@@ -128,6 +128,8 @@ public class Sound extends AndroidNonvisibleComponent
 
       // Make volume buttons control media, not ringer.
       form.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    } else if (container.inTask()) {
+      task.registerForOnStop(this);
     }
 
 
@@ -352,6 +354,9 @@ public class Sound extends AndroidNonvisibleComponent
     Log.i("Sound", "Got onStop");
     if (streamId != 0) {
       soundPool.pause(streamId);
+    }
+    if (container.inTask()) {
+      this.onDestroy();
     }
   }
 

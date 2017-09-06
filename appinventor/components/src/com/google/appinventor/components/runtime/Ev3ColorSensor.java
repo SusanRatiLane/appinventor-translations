@@ -31,7 +31,7 @@ import android.os.Handler;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class Ev3ColorSensor extends LegoMindstormsEv3Sensor implements Deleteable {
   private static final int SENSOR_TYPE = 29;
   private static final int SENSOR_MODE_REFLECTED = 0;
@@ -388,7 +388,7 @@ public class Ev3ColorSensor extends LegoMindstormsEv3Sensor implements Deleteabl
     try {
       setMode(modeName);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -410,7 +410,7 @@ public class Ev3ColorSensor extends LegoMindstormsEv3Sensor implements Deleteabl
     try {
       setMode(SENSOR_MODE_COLOR_STRING);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -423,7 +423,7 @@ public class Ev3ColorSensor extends LegoMindstormsEv3Sensor implements Deleteabl
     try {
       setMode(SENSOR_MODE_REFLECTED_STRING);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
@@ -436,7 +436,7 @@ public class Ev3ColorSensor extends LegoMindstormsEv3Sensor implements Deleteabl
     try{
       setMode(SENSOR_MODE_AMBIENT_STRING);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
