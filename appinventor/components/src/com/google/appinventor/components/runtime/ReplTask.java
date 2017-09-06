@@ -213,7 +213,7 @@ public class ReplTask extends Task {
   }
 
   @Override
-  protected Set<OnInitializeListener> getOnInitiliazeListeners() {
+  protected Set<OnInitializeListener> getOnInitializeListeners() {
     return getCurrentReplTaskThread().getOnInitializeListeners();
   }
 

@@ -354,7 +354,7 @@ public class Task extends Service
     this.setInitialized(true);
 
     //  Call all apps registered to be notified when Initialize Event is dispatched
-    Set<OnInitializeListener> onInitializeListeners = getOnInitiliazeListeners();
+    Set<OnInitializeListener> onInitializeListeners = getOnInitializeListeners();
     for (OnInitializeListener onInitializeListener : onInitializeListeners) {
       onInitializeListener.onInitialize();
     }
@@ -367,7 +367,7 @@ public class Task extends Service
    * @param component
    */
   public void registerForOnInitialize(OnInitializeListener component) {
-    getOnInitiliazeListeners().add(component);
+    getOnInitializeListeners().add(component);
   }
 
   @Override
@@ -556,12 +556,26 @@ public class Task extends Service
 
 
   public void deleteComponent(Object component) {
+    if (component instanceof OnStopListener) {
+      OnStopListener onStopListener = (OnStopListener) component;
+      if (getOnStopListeners().contains(onStopListener)) {
+        getOnStopListeners().remove(onStopListener);
+      }
+    }
     if (component instanceof OnDestroyListener) {
       OnDestroyListener onDestroyListener = (OnDestroyListener) component;
-      Set<OnDestroyListener> onDestroyListeners = getOnDestroyListeners();
-      if (onDestroyListeners.contains(onDestroyListener)) {
-        onDestroyListeners.remove(onDestroyListener);
+      if (getOnDestroyListeners().contains(onDestroyListener)) {
+        getOnDestroyListeners().remove(onDestroyListener);
       }
+    }
+    if (component instanceof OnInitializeListener) {
+      OnInitializeListener onInitializeListener = (OnInitializeListener) component;
+      if (getOnInitializeListeners().contains(onInitializeListener)) {
+        getOnInitializeListeners().remove(onInitializeListener);
+      }
+    }
+    if (component instanceof Deleteable) {
+      ((Deleteable) component).onDelete();
     }
   }
 
@@ -677,7 +691,8 @@ public class Task extends Service
     Intent intent = new Intent(Task.LOCAL_ACTION_SEND_MESSAGE);
     intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TASK_NAME, this.getTaskName());
     intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_TITLE, title);
-    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, message.toString());
+    String messageObject = Form.jsonEncodeForForm(message, "SendToScreen");
+    intent.putExtra(Task.LOCAL_ACTION_SEND_MESSAGE_PARAM_MESSAGE, messageObject);
     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
   }
 
@@ -865,7 +880,7 @@ public class Task extends Service
     return taskThread.getOnDestroyListeners();
   }
 
-  protected Set<OnInitializeListener> getOnInitiliazeListeners() {
+  protected Set<OnInitializeListener> getOnInitializeListeners() {
     return taskThread.getOnInitializeListeners();
   }
 
