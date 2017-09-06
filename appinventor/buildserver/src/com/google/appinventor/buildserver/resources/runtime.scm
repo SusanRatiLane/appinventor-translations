@@ -3101,15 +3101,20 @@ list, use the make-yail-list constructor with no arguments.
 (define (set-form-name form-name)
   (*:setFormName *this-form* form-name))
 
-(define (remove-component context component-name)
+(define (remove-component component-name)
   (let* ((component-symbol (string->symbol component-name))
-         (component-object (lookup-in-context-environment context component-symbol)))
-    (remove-from-context-environment context component-symbol)
-    (when (not (eq? *this-form* #!null))
-      (*:deleteComponent *this-form* component-object))))
+         (component-object (lookup-in-current-context-environment component-symbol)))
+    (remove-from-current-context-environment component-symbol)
+    (cond
+     ((is-current-context-form)
+      (when (not (eq? *this-form* #!null))
+       (*:deleteComponent *this-form* component-object)))
+     ((is-current-context-task)
+      (when (not (eq? (SimpleTask:getCurrentTask) #!null))
+       (*:deleteComponent (SimpleTask:getCurrentTask) component-object))))))
 
-(define (rename-component context old-component-name new-component-name)
-  (rename-in-context-environment context
+(define (rename-component old-component-name new-component-name)
+  (rename-in-context-environment (get-current-context-symbol)
    (string->symbol old-component-name)
    (string->symbol new-component-name)))
 
