@@ -65,7 +65,7 @@ import org.json.JSONException;
     category = ComponentCategory.STORAGE,
     nonVisible = true,
     iconName = "images/tinyWebDB.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.INTERNET")
 public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
 
@@ -80,7 +80,7 @@ public class TinyWebDB extends AndroidNonvisibleComponent implements Component {
   /**
    * Creates a new TinyWebDB component.
    *
-   * @param container the Form that this component is contained in.
+   * @param container the Form/Task that this component is contained in.
    */
   public TinyWebDB(ComponentContainer container) {
     super(container);

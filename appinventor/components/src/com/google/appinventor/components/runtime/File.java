@@ -57,7 +57,7 @@ public class File extends AndroidNonvisibleComponent implements Component {
 
   /**
    * Creates a new File component.
-   * @param container the Form that this component is contained in.
+   * @param container the Form/Task that this component is contained in.
    */
   public File(ComponentContainer container) {
     super(container);

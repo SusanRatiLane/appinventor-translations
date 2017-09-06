@@ -121,7 +121,6 @@ public final class Twitter extends AndroidNonvisibleComponent implements
   private String userName = "";
   private final SharedPreferences sharedPreferences;
   private final int requestCode;
-  private final ComponentContainer container;
   private final Handler handler;
 
   // TODO(sharon): twitter4j apparently has an asynchronous interface
@@ -153,7 +152,6 @@ public final class Twitter extends AndroidNonvisibleComponent implements
 
   public Twitter(ComponentContainer container) {
     super(container);
-    this.container = container;
     handler = new Handler();
 
     mentions = new ArrayList<String>();
@@ -162,7 +160,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
     directMessages = new ArrayList<String>();
     searchResults = new ArrayList<String>();
 
-    sharedPreferences = container.$context().getSharedPreferences("Twitter",
+    sharedPreferences = context.getSharedPreferences("Twitter",
         Context.MODE_PRIVATE);
     accessToken = retrieveAccessToken();
 
@@ -316,8 +314,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
           // needed to get access token
           Intent browserIntent = new Intent(Intent.ACTION_MAIN, Uri
               .parse(authURL));
-          browserIntent.setClassName(container.$context(),
-              WEBVIEW_ACTIVITY_CLASS);
+          browserIntent.setClassName(context, WEBVIEW_ACTIVITY_CLASS);
           if (container.inForm()) {
             form.startActivityForResult(browserIntent,
                     requestCode);

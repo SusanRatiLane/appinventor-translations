@@ -246,7 +246,7 @@ public class Texting extends AndroidNonvisibleComponent
     smsManager = SmsManager.getDefault();
     PhoneNumber("");
 
-    isInitialized = false; // Set true when the form is initialized and can dispatch
+    isInitialized = false; // Set true when the context is initialized and can dispatch
     isRunning = false;     // This will be set true in onResume and false in onPause
 
     if (container.inForm()) {
@@ -262,8 +262,8 @@ public class Texting extends AndroidNonvisibleComponent
   }
 
   /**
-   * Callback from Form. No incoming messages can be processed through
-   * MessageReceived until the Form is initialized. Messages are cached
+   * Callback from Context. No incoming messages can be processed through
+   * MessageReceived until the Context is initialized. Messages are cached
    * until this method is called.
    */
   @Override
@@ -481,7 +481,7 @@ public class Texting extends AndroidNonvisibleComponent
   public void ReceivingEnabled(int enabled) {
     if ((enabled < ComponentConstants.TEXT_RECEIVING_OFF) ||
         (enabled > ComponentConstants.TEXT_RECEIVING_ALWAYS)) {
-      container.$form().dispatchErrorOccurredEvent(this, "Texting",
+      container.dispatchErrorOccurredEvent(this, "Texting",
           ErrorMessages.ERROR_BAD_VALUE_FOR_TEXT_RECEIVING, enabled);
       return;
     }

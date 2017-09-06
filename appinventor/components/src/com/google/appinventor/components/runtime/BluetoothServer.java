@@ -37,14 +37,14 @@ import java.util.concurrent.atomic.AtomicReference;
     category = ComponentCategory.CONNECTIVITY,
     nonVisible = true,
     iconName = "images/bluetooth.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames =
                  "android.permission.BLUETOOTH, " +
                  "android.permission.BLUETOOTH_ADMIN")
 public final class BluetoothServer extends BluetoothConnectionBase {
   private static final String SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB";
 
-  private final Handler androidUIHandler;
+  private final Handler androidHandler;
 
   private final AtomicReference<Object> arBluetoothServerSocket;
 
@@ -53,7 +53,7 @@ public final class BluetoothServer extends BluetoothConnectionBase {
    */
   public BluetoothServer(ComponentContainer container) {
     super(container, "BluetoothServer");
-    androidUIHandler = new Handler();
+    androidHandler = new Handler();
     arBluetoothServerSocket = new AtomicReference<Object>();
   }
 
@@ -77,13 +77,13 @@ public final class BluetoothServer extends BluetoothConnectionBase {
   private void accept(final String functionName, String name, String uuidString) {
     final Object bluetoothAdapter = BluetoothReflection.getBluetoothAdapter();
     if (bluetoothAdapter == null) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_BLUETOOTH_NOT_AVAILABLE);
       return;
     }
 
     if (!BluetoothReflection.isBluetoothEnabled(bluetoothAdapter)) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_BLUETOOTH_NOT_ENABLED);
       return;
     }
@@ -92,7 +92,7 @@ public final class BluetoothServer extends BluetoothConnectionBase {
     try {
       uuid = UUID.fromString(uuidString);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_BLUETOOTH_INVALID_UUID, uuidString);
       return;
     }
@@ -109,7 +109,7 @@ public final class BluetoothServer extends BluetoothConnectionBase {
       }
       arBluetoothServerSocket.set(bluetoothServerSocket);
     } catch (IOException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_BLUETOOTH_UNABLE_TO_LISTEN);
       return;
     }
@@ -124,9 +124,9 @@ public final class BluetoothServer extends BluetoothConnectionBase {
             try {
               acceptedBluetoothSocket = BluetoothReflection.accept(bluetoothServerSocket);
             } catch (IOException e) {
-              androidUIHandler.post(new Runnable() {
+              androidHandler.post(new Runnable() {
                 public void run() {
-                  form.dispatchErrorOccurredEvent(BluetoothServer.this, functionName,
+                  container.dispatchErrorOccurredEvent(BluetoothServer.this, functionName,
                       ErrorMessages.ERROR_BLUETOOTH_UNABLE_TO_ACCEPT);
                 }
               });
@@ -140,13 +140,13 @@ public final class BluetoothServer extends BluetoothConnectionBase {
         if (acceptedBluetoothSocket != null) {
           // Call setConnection and signal the event on the main thread.
           final Object bluetoothSocket = acceptedBluetoothSocket;
-          androidUIHandler.post(new Runnable() {
+          androidHandler.post(new Runnable() {
             public void run() {
               try {
                 setConnection(bluetoothSocket);
               } catch (IOException e) {
                 Disconnect();
-                form.dispatchErrorOccurredEvent(BluetoothServer.this, functionName,
+                container.dispatchErrorOccurredEvent(BluetoothServer.this, functionName,
                     ErrorMessages.ERROR_BLUETOOTH_UNABLE_TO_ACCEPT);
                 return;
               }
