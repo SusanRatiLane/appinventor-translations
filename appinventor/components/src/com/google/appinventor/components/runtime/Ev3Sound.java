@@ -42,7 +42,7 @@ import java.util.List;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.INTERNET," +
                                    "android.permission.WRITE_EXTERNAL_STORAGE," +
                                    "android.permission.READ_EXTERNAL_STORAGE")
@@ -62,7 +62,7 @@ public class Ev3Sound extends LegoMindstormsEv3Base {
     String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
 
     if (volume < 0 || volume > 100 || frequency < 250 || frequency > 10000 || milliseconds < 0 || milliseconds > 0xffff) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
       return;
     }
 

@@ -30,7 +30,7 @@ import android.os.Handler;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class Ev3TouchSensor extends LegoMindstormsEv3Sensor implements Deleteable {
   private static final int SENSOR_VALUE_THRESHOLD = 50;
   private static final int SENSOR_TYPE = 16;

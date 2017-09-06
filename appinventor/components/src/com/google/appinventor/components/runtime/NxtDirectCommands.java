@@ -38,7 +38,7 @@ import java.util.List;
     category = ComponentCategory.LEGOMINDSTORMS,
     nonVisible = true,
     iconName = "images/legoMindstormsNxt.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 @UsesPermissions(permissionNames = "android.permission.INTERNET," +
   "android.permission.WRITE_EXTERNAL_STORAGE," +
   "android.permission.READ_EXTERNAL_STORAGE")
@@ -64,7 +64,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
       return;
     }
     if (programName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_PROGRAM_NAME);
       return;
     }
@@ -100,7 +100,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
       return;
     }
     if (fileName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_FILE_NAME);
       return;
     }
@@ -151,7 +151,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertMotorPortLetterToNumber(motorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_MOTOR_PORT, motorPortLetter);
       return;
     }
@@ -171,7 +171,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return;
     }
@@ -190,7 +190,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertMotorPortLetterToNumber(motorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_MOTOR_PORT, motorPortLetter);
       return new ArrayList<Number>();
     }
@@ -243,7 +243,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return new ArrayList<Object>();
     }
@@ -277,7 +277,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return;
     }
@@ -301,13 +301,13 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     // a feature request or bug report, all that might be required is just raising our upper limit
     // on the range.
     if (mailbox < 1 || mailbox > 10) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_MAILBOX, mailbox);
       return;
     }
     int messageLength = message.length();
     if (messageLength > 58) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_MESSAGE_TOO_LONG);
       return;
     }
@@ -336,7 +336,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertMotorPortLetterToNumber(motorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_MOTOR_PORT, motorPortLetter);
       return;
     }
@@ -419,7 +419,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return 0;
     }
@@ -439,13 +439,13 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return;
     }
 
     if (list.size() > 16) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_DATA_TOO_LARGE);
       return;
     }
@@ -461,14 +461,14 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
       try {
         n = Integer.decode(s);
       } catch (NumberFormatException e) {
-        form.dispatchErrorOccurredEvent(this, functionName,
+        container.dispatchErrorOccurredEvent(this, functionName,
             ErrorMessages.ERROR_NXT_COULD_NOT_DECODE_ELEMENT, i + 1);
         return;
       }
       bytes[i] = (byte) (n & 0xFF);
       n = n >> 8;
       if (n != 0 && n != -1) {
-        form.dispatchErrorOccurredEvent(this, functionName,
+        container.dispatchErrorOccurredEvent(this, functionName,
             ErrorMessages.ERROR_NXT_COULD_NOT_FIT_ELEMENT_IN_BYTE, i + 1);
         return;
       }
@@ -489,7 +489,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     try {
       port = convertSensorPortLetterToNumber(sensorPortLetter);
     } catch (IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SENSOR_PORT, sensorPortLetter);
       return new ArrayList<Integer>();
     }
@@ -546,7 +546,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
     // a feature request or bug report, all that might be required is just raising our upper limit
     // on the range.
     if (mailbox < 1 || mailbox > 10) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_MAILBOX, mailbox);
       return "";
     }
@@ -593,18 +593,18 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
       return;
     }
     if (source.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_SOURCE_ARGUMENT);
       return;
     }
     if (destination.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_DESTINATION_ARGUMENT);
       return;
     }
 
     try {
-      File tempFile = MediaUtil.copyMediaToTempFile(form, source);
+      File tempFile = MediaUtil.copyMediaToTempFile(context, source);
       try {
         InputStream in = new BufferedInputStream(new FileInputStream(tempFile), 1024);
         try {
@@ -635,7 +635,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
         tempFile.delete();
       }
     } catch (IOException e) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_UNABLE_TO_DOWNLOAD_FILE, e.getMessage());
       return;
     }
@@ -704,7 +704,7 @@ public class NxtDirectCommands extends LegoMindstormsNxtBase {
       return;
     }
     if (fileName.length() == 0) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_FILE_NAME);
       return;
     }

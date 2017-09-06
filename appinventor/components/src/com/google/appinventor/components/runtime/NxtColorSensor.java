@@ -35,7 +35,7 @@ import java.util.Map;
     category = ComponentCategory.LEGOMINDSTORMS,
     nonVisible = true,
     iconName = "images/legoMindstormsNxt.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class NxtColorSensor extends LegoMindstormsNxtSensor implements Deleteable {
 
   private enum State { UNKNOWN, BELOW_RANGE, WITHIN_RANGE, ABOVE_RANGE }
@@ -235,7 +235,7 @@ public class NxtColorSensor extends LegoMindstormsNxtSensor implements Deleteabl
       return Component.COLOR_NONE;
     }
     if (!detectColor) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_CANNOT_DETECT_COLOR);
       return Component.COLOR_NONE;
     }
@@ -315,7 +315,7 @@ public class NxtColorSensor extends LegoMindstormsNxtSensor implements Deleteabl
       return -1;
     }
     if (detectColor) {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_CANNOT_DETECT_LIGHT);
       return -1;
     }
@@ -540,7 +540,7 @@ public class NxtColorSensor extends LegoMindstormsNxtSensor implements Deleteabl
         initializeSensor(functionName);
       }
     } else {
-      form.dispatchErrorOccurredEvent(this, functionName,
+      container.dispatchErrorOccurredEvent(this, functionName,
           ErrorMessages.ERROR_NXT_INVALID_GENERATE_COLOR);
     }
   }

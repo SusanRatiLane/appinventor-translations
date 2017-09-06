@@ -31,7 +31,7 @@ import android.os.Handler;
                    category = ComponentCategory.LEGOMINDSTORMS,
                    nonVisible = true,
                    iconName = "images/legoMindstormsEv3.png")
-@SimpleObject
+@SimpleObject(taskCompatible = true)
 public class Ev3GyroSensor extends LegoMindstormsEv3Sensor implements Deleteable {
   private static final int DELAY_MILLISECONDS = 50;
   private static final int SENSOR_TYPE = 32;
@@ -108,7 +108,7 @@ public class Ev3GyroSensor extends LegoMindstormsEv3Sensor implements Deleteable
     try {
       setMode(modeName);
     } catch(IllegalArgumentException e) {
-      form.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
+      container.dispatchErrorOccurredEvent(this, functionName, ErrorMessages.ERROR_EV3_ILLEGAL_ARGUMENT, functionName);
     }
   }
 
