@@ -210,6 +210,39 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
     "Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ\n" +
     "-----END CERTIFICATE-----\n";
 
+  private static final String MIT_CA =
+    "-----BEGIN CERTIFICATE-----\n" +
+    "MIIFXjCCBEagAwIBAgIJAMLfrRWIaHLbMA0GCSqGSIb3DQEBCwUAMIHPMQswCQYD\n" +
+    "VQQGEwJVUzELMAkGA1UECBMCTUExEjAQBgNVBAcTCUNhbWJyaWRnZTEuMCwGA1UE\n" +
+    "ChMlTWFzc2FjaHVzZXR0cyBJbnN0aXR1dGUgb2YgVGVjaG5vbG9neTEZMBcGA1UE\n" +
+    "CxMQTUlUIEFwcCBJbnZlbnRvcjEmMCQGA1UEAxMdQ2xvdWREQiBDZXJ0aWZpY2F0\n" +
+    "ZSBBdXRob3JpdHkxEDAOBgNVBCkTB0Vhc3lSU0ExGjAYBgkqhkiG9w0BCQEWC2pp\n" +
+    "c0BtaXQuZWR1MB4XDTE3MTIyMjIyMzkyOVoXDTI3MTIyMDIyMzkyOVowgc8xCzAJ\n" +
+    "BgNVBAYTAlVTMQswCQYDVQQIEwJNQTESMBAGA1UEBxMJQ2FtYnJpZGdlMS4wLAYD\n" +
+    "VQQKEyVNYXNzYWNodXNldHRzIEluc3RpdHV0ZSBvZiBUZWNobm9sb2d5MRkwFwYD\n" +
+    "VQQLExBNSVQgQXBwIEludmVudG9yMSYwJAYDVQQDEx1DbG91ZERCIENlcnRpZmlj\n" +
+    "YXRlIEF1dGhvcml0eTEQMA4GA1UEKRMHRWFzeVJTQTEaMBgGCSqGSIb3DQEJARYL\n" +
+    "amlzQG1pdC5lZHUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDHzI3D\n" +
+    "FobNDv2HTWlDdedmbxZIJYSqWlzdRJC3oVJgCubdAs46WJRqUxDRWft9UpYGMKkw\n" +
+    "mYN8mdPby2m5OJagdVIZgnguB71zIQkC8yMzd94FC3gldX5m7R014D/0fkpzvsSt\n" +
+    "6fsNectJT0k7gPELOH6t4u6AUbvIsEX0nNyRWsmA/ucXCsDBwXyBJxfOKIQ9tDI4\n" +
+    "/WfcKk9JDpeMF7RP0CIOtlAPotKIaPoY1W3eMIi/0riOt5vTFsB8pxhxAVy0cfGX\n" +
+    "iHukdrAkAJixTgkyS7wzk22xOeXVnRIzAMGK5xHMDw/HRQGTrUGfIXHENV3u+3Ae\n" +
+    "L5/ZoQwyZTixmQNzAgMBAAGjggE5MIIBNTAdBgNVHQ4EFgQUZfMKQXqtC5UJGFrZ\n" +
+    "gZE1nmlx+t8wggEEBgNVHSMEgfwwgfmAFGXzCkF6rQuVCRha2YGRNZ5pcfrfoYHV\n" +
+    "pIHSMIHPMQswCQYDVQQGEwJVUzELMAkGA1UECBMCTUExEjAQBgNVBAcTCUNhbWJy\n" +
+    "aWRnZTEuMCwGA1UEChMlTWFzc2FjaHVzZXR0cyBJbnN0aXR1dGUgb2YgVGVjaG5v\n" +
+    "bG9neTEZMBcGA1UECxMQTUlUIEFwcCBJbnZlbnRvcjEmMCQGA1UEAxMdQ2xvdWRE\n" +
+    "QiBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkxEDAOBgNVBCkTB0Vhc3lSU0ExGjAYBgkq\n" +
+    "hkiG9w0BCQEWC2ppc0BtaXQuZWR1ggkAwt+tFYhoctswDAYDVR0TBAUwAwEB/zAN\n" +
+    "BgkqhkiG9w0BAQsFAAOCAQEAIkKr3eIvwZO6a1Jsh3qXwveVnrqwxYvLw2IhTwNT\n" +
+    "/P6C5jbRnzUuDuzg5sEIpbBo/Bp3qIp7G5cdVOkIrqO7uCp6Kyc7d9lPsEe/cbF4\n" +
+    "aNwNmdWroRN1y0tuMU6+z7frd5pOeAZP9E/DM/0Uaz4yVzwnlvZUttaLymyMhH54\n" +
+    "isGQKbAqHDFtKZvb6DxsHzrO2YgeaBAtjeVhPWiv8BhzbOo9+hhZvYHYtoM2W+Ze\n" +
+    "DHuvv0v+qouphftDKVBp16N8Pk5WgabTXzV6VcNee92iwbWYDEv06+S3AF/q2TBe\n" +
+    "xxXtAa5ywbp6IRF37QuQChcYnOx7zIylYI1PIENfQFC2BA==\n" +
+    "-----END CERTIFICATE-----\n";
+
   private String defaultRedisServer = null;
   private boolean useDefault = true;
 
@@ -1360,10 +1393,14 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
         caInput = new ByteArrayInputStream(DST_ROOT_X3.getBytes("UTF-8"));
         Certificate dstx3 = cf.generateCertificate(caInput);
         caInput.close();
+        caInput = new ByteArrayInputStream(MIT_CA.getBytes("UTF-8"));
+        Certificate mitca = cf.generateCertificate(caInput);
+        caInput.close();
         if (DEBUG) {
           Log.d(LOG_TAG, "comodo=" + ((X509Certificate) ca).getSubjectDN());
           Log.d(LOG_TAG, "inter=" + ((X509Certificate) inter).getSubjectDN());
           Log.d(LOG_TAG, "dstx3=" + ((X509Certificate) dstx3).getSubjectDN());
+          Log.d(LOG_TAG, "mitca=" + ((X509Certificate) mitca).getSubjectDN());
         }
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);
@@ -1380,6 +1417,7 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
         keyStore.setCertificateEntry("comodo", ca);
         keyStore.setCertificateEntry("inter", inter);
         keyStore.setCertificateEntry("dstx3", dstx3);
+        keyStore.setCertificateEntry("mitca", mitca);
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(
           TrustManagerFactory.getDefaultAlgorithm());
         tmf.init(keyStore);
