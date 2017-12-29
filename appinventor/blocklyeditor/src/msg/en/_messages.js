@@ -1342,7 +1342,7 @@ Blockly.Msg.en.switch_language_to_english = {
 
     Blockly.Msg.REPL_UPDATE_NO_UPDATE = "No Update is Available";
     Blockly.Msg.REPL_UPDATE_NO_CONNECTION = "You must be connected to a Companion to update it";
-    Blockly.Msg.REPL_UNABLE_TO_UPDATE = "Unable to send update to device/emulator";
+    Blockly.Msg.REPL_UNABLE_TO_UPDATE = "Unable to send update to device/emulator. As of December 27th, 2017, you may need to install the aiStarter 2.4 package from our website.";
     Blockly.Msg.REPL_UNABLE_TO_LOAD = "Unable to load update from App Inventor server";
     Blockly.Msg.REPL_UNABLE_TO_LOAD_NO_RESPOND = "Unable to load update from App Inventor server (server not responding)";
     Blockly.Msg.REPL_NOW_DOWNLOADING = "We are now downloading update from the App Inventor Server, please standby";
