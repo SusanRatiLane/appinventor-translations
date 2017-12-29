@@ -1,0 +1,4 @@
+#|
+$JSON
+{"authURL":["ai2.appinventor.mit.edu"],"YaVersion":"166","Source":"Form","Properties":{"$Name":"Screen1","$Type":"Form","$Version":"21","AppName":"CompanionUpgradeHelper","Title":"MIT AI Companion Upgrade Helper","Uuid":"0","$Components":[{"$Name":"StatusLabel","$Type":"Label","$Version":"4","Text":"Initializing...","Uuid":"-72549910"},{"$Name":"Downloader","$Type":"Web","$Version":"4","ResponseFileName":"AppInventor\/MITAI2Companion.apk","SaveResponse":"True","Url":"http:\/\/ai2.appinventor.mit.edu\/companions\/MITAI2Companion.apk","Uuid":"-760763910"},{"$Name":"Installer","$Type":"ActivityStarter","$Version":"6","Action":"android.intent.action.MAIN","ActivityClass":"com.android.packageinstaller.PackageInstallerActivity","ActivityPackage":"com.android.packageinstaller","DataUri":"file:\/\/\/mnt\/sdcard\/AppInventor\/MITAI2Companion.apk","Uuid":"674929755"}]}}
+|#
