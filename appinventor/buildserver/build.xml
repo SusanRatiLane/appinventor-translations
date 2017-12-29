@@ -166,6 +166,30 @@
   </target>
 
   <!-- =====================================================================
+       Checks to see whether the AIA project for the CompanionUpgradeHelper
+       needs to be created or upgraded.
+       ===================================================================== -->
+  <target name="CheckUpgradeHelperSrc" depends="MakeKeyStore">
+    <uptodate property="UpgradeHelperSrc.uptodate" targetfile="${local.build.dir}/upgradehelper.zip">
+      <srcfiles file="${user.home}/.appinventor/debug.keystore"/>
+      <srcfiles dir="${appinventor.dir}/upgradehelper" includes="src/**/*,youngandroidproject/*"/>
+    </uptodate>
+  </target>
+
+  <!-- =====================================================================
+       Generates a AIA project for compiling the CompanionUpgradeHelper app
+       using the build server.
+       ===================================================================== -->
+  <target name="GenUpgradeHelperSrcZip"
+          depends="CheckUpgradeHelperSrc"
+          unless="${UpgradeHelperSrc.uptodate}">
+    <copy tofile="${appinventor.dir}/upgradehelper/android.keystore" file="${user.home}/.appinventor/debug.keystore" />
+    <zip destfile="${local.build.dir}/upgradehelper.zip" basedir="${appinventor.dir}/upgradehelper" filesonly="true"
+         includes="src/**/*,youngandroidproject/*,assets/*,android.keystore" />
+    <delete file="${appinventor.dir}/upgradehelper/android.keystore" failonerror="true" />
+  </target>
+
+  <!-- =====================================================================
        CheckPlayApp: Sets the PlayApp.uptodate property to true if
                         the starter app needs to be rebuilt. This can happen
                         if the starter app source files have changed, or if
@@ -175,6 +199,20 @@
           depends="GenPlayAppSrcZip,BuildServer">
     <uptodate property="PlayApp.uptodate" targetfile="${public.build.dir}/MIT AI2 Companion.apk">
       <srcfiles file="${local.build.dir}/aiplayapp.zip"/>
+      <srcfiles dir="${run.lib.dir}" includes="*.jar"/>
+    </uptodate>
+  </target>
+
+  <!-- =====================================================================
+       CheckUpgradeHelper: Sets the UpgradeHelper.uptodate property to true
+                           if the companion upgrade helper app needs to be
+                           rebuilt. This can happen if the upgrade helper
+                           sources files have changed, or if any of the
+                           build server jars have changed.
+       ===================================================================== -->
+  <target name="CheckUpgradeHelper" depends="GenUpgradeHelperSrcZip,BuildServer">
+    <uptodate property="UpgradeHelper.uptodate" targetfile="${public.build.dir}/CompanionUpgradeHelper.apk">
+      <srcfiles file="${local.build.dir}/upgradehelper.zip"/>
       <srcfiles dir="${run.lib.dir}" includes="*.jar"/>
     </uptodate>
   </target>
@@ -274,6 +312,30 @@
       <arg value="${public.build.dir}" />
       <arg value="--outputFileName" />
       <arg value="Emulator.apk" />
+      <arg value="--dexCacheDir" />
+      <arg value="${public.build.dir}/dexCache" />
+    </java>
+  </target>
+
+  <!-- =====================================================================
+       UpgradeHelperApp: builds ../build/buildserver/CompanionUpgradeHelper.apk
+       ===================================================================== -->
+  <target name="UpgradeHelperApp"
+          depends="CheckUpgradeHelper"
+          unless="UpgradeHelper.uptodate">
+    <java classname="com.google.appinventor.buildserver.Main" fork="true" failonerror="true">
+      <classpath>
+        <fileset dir="${run.lib.dir}" includes="*.jar" />
+      </classpath>
+      <sysproperty key="file.encoding" value="UTF-8" />
+      <arg value="--childProcessRamMb" />
+      <arg value="1024" />
+      <arg value="--inputZipFile" />
+      <arg value="${local.build.dir}/upgradehelper.zip" />
+      <arg value="--userName" />
+      <arg value="App Inventor" />
+      <arg value="--outputDir" />
+      <arg value="${public.build.dir}" />
       <arg value="--dexCacheDir" />
       <arg value="${public.build.dir}/dexCache" />
     </java>
