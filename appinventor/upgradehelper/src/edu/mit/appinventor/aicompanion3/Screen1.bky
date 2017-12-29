@@ -1,0 +1,120 @@
+<xml xmlns="http://www.w3.org/1999/xhtml">
+  <block type="component_event" id="v`W*CfX2KK#`9]%Qb2KF" x="undefined" y="undefined">
+    <mutation component_type="Form" instance_name="Screen1" event_name="Initialize"></mutation>
+    <field name="COMPONENT_SELECTOR">Screen1</field>
+    <statement name="DO">
+      <block type="component_set_get" id="UC8d4h2SSDFd59*PR}M`">
+        <mutation component_type="Label" set_or_get="set" property_name="Text" is_generic="false" instance_name="StatusLabel"></mutation>
+        <field name="COMPONENT_SELECTOR">StatusLabel</field>
+        <field name="PROP">Text</field>
+        <value name="VALUE">
+          <block type="text_join" id="09qZ?)A2G=!5liBCeHF{">
+            <mutation items="2"></mutation>
+            <value name="ADD0">
+              <block type="component_set_get" id="Z45-UMWasW}[sR0Vk0kT">
+                <mutation component_type="Label" set_or_get="get" property_name="Text" is_generic="false" instance_name="StatusLabel"></mutation>
+                <field name="COMPONENT_SELECTOR">StatusLabel</field>
+                <field name="PROP">Text</field>
+              </block>
+            </value>
+            <value name="ADD1">
+              <block type="text" id="T)Zw7mh,mC@rCS^%Smhb">
+                <field name="TEXT">\nStarting download...</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="component_method" id="hjja1/UYLGv.D+r9v#[B">
+            <mutation component_type="Web" method_name="Get" is_generic="false" instance_name="Downloader"></mutation>
+            <field name="COMPONENT_SELECTOR">Downloader</field>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="component_event" id="@opatuAB}laCaIibvsDU" x="undefined" y="undefined">
+    <mutation component_type="Web" instance_name="Downloader" event_name="GotFile"></mutation>
+    <field name="COMPONENT_SELECTOR">Downloader</field>
+    <statement name="DO">
+      <block type="component_set_get" id="/J*FP*cbM$$;Of5O1Zs$">
+        <mutation component_type="Label" set_or_get="set" property_name="Text" is_generic="false" instance_name="StatusLabel"></mutation>
+        <field name="COMPONENT_SELECTOR">StatusLabel</field>
+        <field name="PROP">Text</field>
+        <value name="VALUE">
+          <block type="text_join" id="xRjFiE|{uS=x+!55v73{">
+            <mutation items="4"></mutation>
+            <value name="ADD0">
+              <block type="component_set_get" id="tz1YiR`C:HHXc4*$P,.Y">
+                <mutation component_type="Label" set_or_get="get" property_name="Text" is_generic="false" instance_name="StatusLabel"></mutation>
+                <field name="COMPONENT_SELECTOR">StatusLabel</field>
+                <field name="PROP">Text</field>
+              </block>
+            </value>
+            <value name="ADD1">
+              <block type="text" id="p8`VqdbwEk,d_~tzC6#v">
+                <field name="TEXT">\nResult stored at </field>
+              </block>
+            </value>
+            <value name="ADD2">
+              <block type="lexical_variable_get" id="!h+!$Ue0/7Ywo-k:Y6R*">
+                <mutation>
+                  <eventparam name="fileName"></eventparam>
+                </mutation>
+                <field name="VAR">fileName</field>
+              </block>
+            </value>
+            <value name="ADD3">
+              <block type="text" id="AeKvUL,mn1;ax/3L/d6)">
+                <field name="TEXT">\nLaunching installer...</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="component_method" id="cbmiQ]s3/LFTUnb9oo!K">
+            <mutation component_type="ActivityStarter" method_name="StartActivity" is_generic="false" instance_name="Installer"></mutation>
+            <field name="COMPONENT_SELECTOR">Installer</field>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="component_event" id="9cu#{8S}$~MW5-k#C|]q" x="undefined" y="undefined">
+    <mutation component_type="Form" instance_name="Screen1" event_name="ErrorOccurred"></mutation>
+    <field name="COMPONENT_SELECTOR">Screen1</field>
+    <statement name="DO">
+      <block type="component_set_get" id="Y686:3orIR%sMczVM1Q`">
+        <mutation component_type="Label" set_or_get="set" property_name="Text" is_generic="false" instance_name="StatusLabel"></mutation>
+        <field name="COMPONENT_SELECTOR">StatusLabel</field>
+        <field name="PROP">Text</field>
+        <value name="VALUE">
+          <block type="text_join" id="$5@G,gmL(c1nN[o|YCgz">
+            <mutation items="3"></mutation>
+            <value name="ADD0">
+              <block type="component_set_get" id=".EDoRkddN7#o+Js[rO]K">
+                <mutation component_type="Label" set_or_get="get" property_name="Text" is_generic="false" instance_name="StatusLabel"></mutation>
+                <field name="COMPONENT_SELECTOR">StatusLabel</field>
+                <field name="PROP">Text</field>
+              </block>
+            </value>
+            <value name="ADD1">
+              <block type="text" id="3W*g,;+4K9RL(VKECCC@">
+                <field name="TEXT">\nError: </field>
+              </block>
+            </value>
+            <value name="ADD2">
+              <block type="lexical_variable_get" id="Pd5os4WvIE^i:sbnX@?,">
+                <mutation>
+                  <eventparam name="message"></eventparam>
+                </mutation>
+                <field name="VAR">message</field>
+              </block>
+            </value>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <yacodeblocks ya-version="166" language-version="21"></yacodeblocks>
+</xml>
