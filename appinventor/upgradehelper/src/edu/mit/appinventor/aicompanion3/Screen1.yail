@@ -1,0 +1,51 @@
+#|
+$Source $Yail
+|#
+
+(define-form edu.mit.appinventor.aicompanion3.Screen1 Screen1)
+(require <com.google.youngandroid.runtime>)
+
+;;; Screen1
+
+(do-after-form-creation (set-and-coerce-property! 'Screen1 'AppName "CompanionUpgradeHelper" 'text)
+ (set-and-coerce-property! 'Screen1 'Title "MIT AI Companion Upgrade Helper" 'text)
+)
+
+(define-event Screen1 Initialize()(set-this-form)
+    (set-and-coerce-property! 'Label1 'Text (call-yail-primitive string-append (*list-for-runtime* (get-property 'Label1 'Text) "\nStarting download..." ) '(text text ) "join") 'text)(call-component-method 'Web1 'Get (*list-for-runtime*) '()))
+(define-event Screen1 ErrorOccurred($component $functionName $errorNumber $message)(set-this-form)
+    (set-and-coerce-property! 'Label1 'Text (call-yail-primitive string-append (*list-for-runtime* (get-property 'Label1 'Text) "\nError: " (lexical-value $message) ) '(text text text ) "join") 'text))
+;;; Label1
+
+(add-component Screen1 com.google.appinventor.components.runtime.Label Label1 
+(set-and-coerce-property! 'Label1 'Text "Initializing..." 'text)
+
+)
+
+;;; Web1
+
+(add-component Screen1 com.google.appinventor.components.runtime.Web Web1 
+(set-and-coerce-property! 'Web1 'ResponseFileName "AppInventor/MITAI2Companion.apk" 'text)
+
+(set-and-coerce-property! 'Web1 'SaveResponse #t 'boolean)
+
+(set-and-coerce-property! 'Web1 'Url "http://ai2.appinventor.mit.edu/companions/MITAI2Companion.apk" 'text)
+
+)
+
+(define-event Web1 GotFile($url $responseCode $responseType $fileName)(set-this-form)
+    (set-and-coerce-property! 'Label1 'Text (call-yail-primitive string-append (*list-for-runtime* (get-property 'Label1 'Text) "\nResult stored at " (lexical-value $fileName) "\nLaunching installer..." ) '(text text text text ) "join") 'text)(call-component-method 'ActivityStarter1 'StartActivity (*list-for-runtime*) '()))
+;;; ActivityStarter1
+
+(add-component Screen1 com.google.appinventor.components.runtime.ActivityStarter ActivityStarter1 
+(set-and-coerce-property! 'ActivityStarter1 'Action "android.intent.action.MAIN" 'text)
+
+(set-and-coerce-property! 'ActivityStarter1 'ActivityClass "com.android.packageinstaller.PackageInstallerActivity" 'text)
+
+(set-and-coerce-property! 'ActivityStarter1 'ActivityPackage "com.android.packageinstaller" 'text)
+
+(set-and-coerce-property! 'ActivityStarter1 'DataUri "file:///mnt/sdcard/AppInventor/MITAI2Companion.apk" 'text)
+
+)
+
+(init-runtime)
