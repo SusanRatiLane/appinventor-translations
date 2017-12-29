@@ -70,7 +70,8 @@ Blockly.ReplStateObj.prototype = {
     'rendezvouscode' : null,            // Code used for Rendezvous (hash of replcode)
     'dialog' : null,                    // The Dialog Box with the code and QR Code
     'count' : 0,                        // Count of number of reads from rendezvous server
-    'didversioncheck' : false
+    'didversioncheck' : false,
+    'emulator': false
 };
 
 // Blockly is only loaded once now, so we can init this here.
@@ -384,6 +385,7 @@ Blockly.ReplMgr.putYail = (function() {
                 if (this.readyState == 4 && this.status == 200) {
                     rs.didversioncheck = true;
                     if (this.response[0] != "{") {
+                        top.ReplState.needsUpgradeHelper = true;
                         engine.checkversionupgrade(true, "", true); // Old Companion
                         engine.resetcompanion();
                         return;
@@ -476,6 +478,8 @@ Blockly.ReplMgr.putYail = (function() {
 //   button.
 //          context.hardreset(context.formName); // kill adb and emulator
             rs.didversioncheck = false;
+            rs.emulator = false;
+            rs.needsUpgradeHelper = false;
             top.BlocklyPanel_indicateDisconnect();
         },
         "checkversionupgrade" : function(fatal, installer, force) {
@@ -561,6 +565,8 @@ Blockly.ReplMgr.triggerUpdate = function() {
         rs.state = Blockly.ReplMgr.rsState.IDLE;
         rs.connection = null;
         rs.didversioncheck = false;
+        rs.emulator = false;
+        rs.needsUpgradeHelper = false;
         context.resetYail(false);
         top.BlocklyPanel_indicateDisconnect();
         // End reset companion state
@@ -583,7 +589,9 @@ Blockly.ReplMgr.triggerUpdate = function() {
 
     encoder.add('package', 'update.apk');
     var qs = encoder.toString();
-    fetchconn.open("GET", top.COMPANION_UPDATE_URL, true);
+    var url = rs.emulator && rs.needsUpgradeHelper ? '/companions/CompanionUpgradeHelper.asc' :
+        top.COMPANION_UPDATE_URL;
+    fetchconn.open("GET", url, true);
     fetchconn.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             try {
