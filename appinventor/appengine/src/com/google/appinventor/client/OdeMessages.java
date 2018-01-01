@@ -6299,6 +6299,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String switchToPortugueseBR();
 
+  @DefaultMessage("Português")
+  @Description("")
+  String switchToPortuguese();
+
   @DefaultMessage("Nederlands")
   @Description("")
   String switchToDutch();
