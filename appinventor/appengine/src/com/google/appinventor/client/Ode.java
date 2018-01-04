@@ -1618,11 +1618,7 @@ public class Ode implements EntryPoint {
         }
       });
     holder.add(ok);
-    // TEMPORARY: Do not show the "do not show" checkbox
-    // we are forcing the display of the splash screen during
-    // our fundraising campaign
-
-    // holder.add(noshow);
+    holder.add(noshow);
     DialogBoxContents.add(message);
     DialogBoxContents.add(holder);
     dialogBox.setWidget(DialogBoxContents);
@@ -1651,24 +1647,22 @@ public class Ode implements EntryPoint {
    * then return false so they do not see it again. Return true to show it
    */
   private boolean shouldShowWelcomeDialog() {
-    // TEMPORARY: Always show the Splash Screen
-    return true;
-    // if (splashConfig.version == 0) {   // Never show splash if version is 0
-    //   return false;             // Check first to avoid others unnecessary calls
-    // }
-    // String value = userSettings.getSettings(SettingsConstants.SPLASH_SETTINGS).
-    //   getPropertyValue(SettingsConstants.SPLASH_SETTINGS_VERSION);
-    // int uversion;
-    // if (value == null) {        // Nothing stored
-    //   uversion = 0;
-    // } else {
-    //   uversion = Integer.parseInt(value);
-    // }
-    // if (uversion >= splashConfig.version) {
-    //   return false;
-    // } else {
-    //   return true;
-    // }
+    if (splashConfig.version == 0) {   // Never show splash if version is 0
+      return false;             // Check first to avoid others unnecessary calls
+    }
+    String value = userSettings.getSettings(SettingsConstants.SPLASH_SETTINGS).
+      getPropertyValue(SettingsConstants.SPLASH_SETTINGS_VERSION);
+    int uversion;
+    if (value == null) {        // Nothing stored
+      uversion = 0;
+    } else {
+      uversion = Integer.parseInt(value);
+    }
+    if (uversion >= splashConfig.version) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   /**
