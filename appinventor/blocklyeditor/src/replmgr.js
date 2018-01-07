@@ -1114,6 +1114,8 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
         message = Blockly.Msg.REPL_CONNECTING_USB_CABLE;
     } else {
         message = Blockly.Msg.REPL_STARTING_EMULATOR;
+        top.ReplState.emulator = true;
+        pc = -1;
     }
     progdialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_CONNECTING, message, Blockly.Msg.REPL_CANCEL, false, null, 0, function() {
         progdialog.hide();
@@ -1151,6 +1153,7 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
         });
     };
 
+    // -1 == setuptools version check
     // 0 == starting emulator
     // 1 == Counting down after emulator started
     // 2 == Counting down after repl start requested
@@ -1159,6 +1162,27 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
         var xhr;
         var RefreshAssets = top.AssetManager_refreshAssets;
         switch(pc) {
+        case -1:
+            xhr = goog.net.XmlHttp();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var result = goog.json.parse(this.response);
+                    if (result['version'] === '2.3' && top.navigator.userAgent.match(/Mac OS X 10_13/)) {
+                        // Setuptools do not work on Mac OS X 10.13 High Sierra. Show an error
+                        progdialog.setContent(Blockly.Msg.REPL_ERROR_SETUPTOOLS_2_3_NOT_SUPPORTED);
+                        clearTimeout(interval);
+                        return;
+                    } else {
+                        pc = 0;
+                    }
+                } else if (this.readyState == 4) {
+                    progdialog.setContent(Blockly.Msg.REPL_ERROR_UNABLE_TO_GET_SETUPTOOLS_VERSION);
+                    pc = 0;
+                }
+            };
+            xhr.open('GET', 'http://localhost:8004/ping/', true);
+            xhr.send();
+            break;
         case 0:
             xhr = goog.net.XmlHttp();
             xhr.onreadystatechange = function() {
