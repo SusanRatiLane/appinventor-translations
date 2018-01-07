@@ -106,6 +106,8 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.ERROR_DUPLICATE_EVENT_HANDLER = "This is a duplicate event handler for this component.";
     Blockly.ERROR_COMPONENT_DOES_NOT_EXIST = "Component does not exist";
     Blockly.ERROR_BLOCK_IS_NOT_DEFINED = "This block is not defined. Delete this block!";
+    Blockly.Msg.REPL_ERROR_SETUPTOOLS_2_3_NOT_SUPPORTED = 'The emulator bundled with MIT App Inventor aiStarter 2.3 does not work with Mac OS X 10.13 High Sierra. We apologize for the inconvenience and are working on a fix. Please check our website at <a href="http://appinventor.mit.edu">http://appinventor.mit.edu/</a> for an aiStarter release announcement.';
+    Blockly.Msg.REPL_ERROR_UNABLE_TO_GET_SETUPTOOLS_VERSION = 'Unable to retrieve the version of aiStarter installed on your computer. Connection will proceed, but errors may occur.';
 
 // Colour Blocks.
     Blockly.Msg.LANG_COLOUR_PICKER_HELPURL = 'http://appinventor.mit.edu/explore/ai2/support/blocks/colors#basic';
