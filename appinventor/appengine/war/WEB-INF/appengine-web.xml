@@ -159,7 +159,8 @@
     <property name="troubleshooting.url" value="http://appinventor.mit.edu/explore/ai2/support/troubleshooting" />
     <property name="forums.url" value="https://groups.google.com/forum/#!forum/mitappinventortest" />
     <property name="feedback.url" value="http://appinv.us/aifeedback" />
-    <property name="release.notes.url" value="http://appinventor.mit.edu/ai2/ReleaseNotes.html" />
+    <property name="release.notes.url"
+              value="https://docs.google.com/document/d/1GQ6ywmZ693mtosWLgWohpnTVisES3XhT5PPk0jWkuw4/edit?usp=sharing" />
     <property name="tos.url" value="/about/termsofservice.html" />
     <property name="logo.url" value="http://appinventor.mit.edu" />
     <property name="guide.url" value="http://appinventor.mit.edu/explore/library" />
