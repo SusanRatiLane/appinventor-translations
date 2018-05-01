@@ -178,18 +178,20 @@ public class LoginServlet extends HttpServlet {
           out.println("</body>\n");
           out.println("</html>\n");
           return;
+        } else if (!page.equals("token")) {
+            String uri = new UriBuilder("/login/google")
+              .add("locale", locale)
+              .add("repo", repo)
+              .add("galleryId", galleryId)
+              .add("redirect", redirect).build();
+            resp.sendRedirect(uri);
+            return;
         }
-        String uri = new UriBuilder("/login/google")
-          .add("locale", locale)
-          .add("repo", repo)
-          .add("galleryId", galleryId)
-          .add("redirect", redirect).build();
-        resp.sendRedirect(uri);
-        return;
       }
     }
 
-    // If we get here, local accounts are supported
+      // If we get here, local accounts are supported
+      // or we are the "token" page
 
     if (page.equals("setpw")) {
       String uid = getParam(req);
