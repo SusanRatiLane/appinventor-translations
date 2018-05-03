@@ -108,6 +108,8 @@
     <property name="auth.uselocal" value="true" />
     <property name="login.url"
               value="http://login.appinventor.mit.edu/ai2-prod" />
+    <property name="logout.url"
+              value="http://login.appinventor.mit.edu/logout" />
 
     <!-- Flags associated with localauth code -->
     <property name="localauth.mailserver" value="https://osiris.mit.edu/passmail/" />
