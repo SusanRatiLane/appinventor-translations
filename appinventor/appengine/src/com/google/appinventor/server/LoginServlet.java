@@ -292,10 +292,11 @@ public class LoginServlet extends HttpServlet {
         resp.addCookie(cook);
       }
 //      String uri = "http://" + req.getServerName();
-      String uri = "/";
-      if (!locale.equals("en")) {
-        uri += "?locale=" + locale;
-      }
+      String uri = new UriBuilder("/")
+        .add("locale", locale)
+        .add("repo", repo)
+        .add("galleryId", galleryId)
+        .add("redirect", redirect).build();
       resp.sendRedirect(uri);   // This should bring up App Inventor
       return;
     }
