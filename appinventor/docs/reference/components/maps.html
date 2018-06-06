@@ -438,7 +438,8 @@
       span.wo { background-color: #8f8; color: black; }
       span.bo { background-color: #88f; color: black; }
       span.do { background-color: #ff8; color: black; }
-
+      span.warning:before { color: #8e3907; content: "Warning: "; font-weight: bold; }
+      span.warning { color: #8e3907; }
 
     </style>
   </head>
@@ -793,7 +794,9 @@
                    location providers are available.</dd>
                    <dt class="boolean" id="Map.ShowZoom">ShowZoom<i></i></dt>
                    <dd>Shows or hides the Android native zoom buttons to allow the user to zoom the Map in or out. This
-                   can be used in place of the two-finger pinch-to-zoom gesture.</dd>
+                   can be used in place of the two-finger pinch-to-zoom gesture. <span class="warning">Zoom controls do
+                   not behave correctly when the Sizing property on Screen1 is set to Fixed. Switch to using Responsive
+                   sizing as a workaround until this bug is fixed.</span></dd>
                    <dt class="number ro bo" id="Map.UserLatitude">UserLatitude<i></i></dt>
                    <dd>Returns the user's latitude if ShowUser is enabled.</dd>
                    <dt class="number ro bo" id="Map.UserLongitude">UserLongitude<i></i></dt>
