@@ -172,7 +172,7 @@ public class Form extends AppInventorCompatActivity
   private static boolean applicationIsBeingClosed;
   private static boolean isClassicTheme;
 
-  private final Handler androidUIHandler = new Handler();
+  protected final Handler androidUIHandler = new Handler();
 
   protected String formName;
 

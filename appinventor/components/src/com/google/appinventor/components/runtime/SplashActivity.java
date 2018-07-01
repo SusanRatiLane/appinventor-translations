@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 
+import gnu.expr.Language;
+import kawa.standard.Scheme;
+
 import java.util.Random;
 
 import android.net.Uri;
@@ -39,12 +42,24 @@ public final class SplashActivity extends AppInventorCompatActivity {
 
   WebView webview;
   Handler handler;
+  Language scheme;
 
   public class JavaInterface {
     Context mContext;
 
     public JavaInterface(Context context) {
       mContext = context;
+    }
+
+    // This is for hacking around. Not sure what we will do with it
+    // but you never know :-)
+    @JavascriptInterface
+    public String doScheme(String sexp) {
+      try {
+        return (String) scheme.eval(sexp);
+      } catch (Throwable e) {
+        return (e.toString());
+      }
     }
 
     @JavascriptInterface
@@ -78,6 +93,11 @@ public final class SplashActivity extends AppInventorCompatActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // Scheme hacking!
+    scheme = Scheme.getInstance("scheme");
+    gnu.expr.ModuleExp.mustNeverCompile();
+
+
     JavaInterface android = new JavaInterface(this);
     handler = new Handler();
     webview = new WebView(this);
