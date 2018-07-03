@@ -1,0 +1,120 @@
+<html>
+    <head>
+        <title>WebRTC Testing</title>
+        <script type="text/javascript">
+         var servers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
+         var data;
+         var peer;
+         function sender() {
+             var offer;
+             var poller;
+             var poll = function() {
+                 xhr = new XMLHttpRequest();
+                 xhr.open('GET', 'http://jis.qyv.net:3000/tester-r', true);
+                 xhr.onreadystatechange = function() {
+                     if (this.readyState == 4 && this.status == 200) {
+                         if (this.response[0] == '[') {
+                             var json = JSON.parse(this.response);
+                             for (var i = 0; i < json.length; i++ ){
+                                 var hunk = json[i];
+                                 var candidate = hunk['candidate'];
+                                 offer = hunk['offer'];
+                                 if (candidate) {
+                                     peer.addIceCandidate(candidate);
+                                 } else if (offer) {
+                                     peer.setRemoteDescription(offer);
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 xhr.send();
+             };
+             peer = new RTCPeerConnection(servers);
+             peer.onicecandidate = function(evt) {
+                 if (evt.type == 'icecandidate') {
+                     xhr = new XMLHttpRequest();
+                     xhr.open('POST', 'http://jis.qyv.net:3000/', true);
+                     xhr.send(JSON.stringify({'key' : 'tester-s',
+                                              'webrtc' : true,
+                                              'candidate' : evt.candidate}));
+                 }
+             }
+             data = peer.createDataChannel('data');
+             data.onopen = function() {
+                 clearInterval(poller);
+                 alert('ready');
+                 // Ready to actually exchange data
+             }
+             peer.createOffer().then(function(desc) {
+                 offer = desc;
+                 xhr = new XMLHttpRequest();
+                 xhr.open('POST', 'http://jis.qyv.net:3000/', true);
+                 xhr.send(JSON.stringify({'key' : 'tester-s',
+                                          'webrtc' : true,
+                                          'offer' : desc}));
+                 peer.setLocalDescription(desc);
+             });
+             poller = setInterval(poll, 1000);
+         };
+         function receiver() {
+             var offer;
+             var poller;
+             var poll = function() {
+                 xhr = new XMLHttpRequest();
+                 xhr.open('GET', 'http://jis.qyv.net:3000/tester-s', true);
+                 xhr.onreadystatechange = function() {
+                     if (this.readyState == 4 && this.status == 200) {
+                         if (this.response[0] == '[') {
+                             var json = JSON.parse(this.response);
+                             for (var i = 0; i < json.length; i++ ) {
+                                 var hunk = json[i];
+                                 var candidate = hunk['candidate'];
+                                 offer = hunk['offer'];
+                                 if (candidate) {
+                                     peer.addIceCandidate(candidate);
+                                 } else if (offer) {
+                                     peer.setRemoteDescription(offer);
+                                     peer.createAnswer().then(function(desc) {
+                                         xhr = new XMLHttpRequest();
+                                         xhr.open('POST', 'http://jis.qyv.net:3000/', true);
+                                         xhr.send(JSON.stringify({'key' : 'tester-r',
+                                                                  'webrtc' : true,
+                                                                  'offer' : desc}));
+                                         peer.setLocalDescription(desc);
+                                     });
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 xhr.send();
+             };
+             peer = new RTCPeerConnection(servers);
+             peer.onicecandidate = function(evt) {
+                 if (evt.type == 'icecandidate') {
+                     xhr = new XMLHttpRequest();
+                     xhr.open('POST', 'http://jis.qyv.net:3000/', true);
+                     xhr.send(JSON.stringify({'key' : 'tester-r',
+                                              'webrtc' : true,
+                                              'candidate' : evt.candidate}));
+                 }
+             }
+             peer.ondatachannel = function(ev) {
+                 data = ev.channel;
+                 data.onopen = function() {
+                     clearInterval(poller);
+                     alert("ready");
+                     // Ready to actually exchange data
+                 }
+             };
+             poller = setInterval(poll, 1000);
+         };
+        </script>
+    </head>
+    <body>
+        <h1>WebRTC Testing</h1>
+        <button onclick="sender();">Sender</button><br/>
+        <button onclick="receiver();">Receiver</button>
+    </body>
+</html>
