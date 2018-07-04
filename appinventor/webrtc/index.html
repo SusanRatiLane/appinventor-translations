@@ -54,6 +54,13 @@
              data = peer.createDataChannel('data');
              data.onopen = function() {
                  clearInterval(poller);
+                 var b = document.getElementById("chatbutton");
+                 b.disabled = false;
+                 data.onmessage = function(ev) {
+                     var data = ev.data;
+                     var c = document.getElementById("chat");
+                     c.innerHTML = c.innerHTML + '<br/>' + data;
+                 };
                  alert('ready');
                  // Ready to actually exchange data
              }
@@ -122,18 +129,37 @@
                  data = ev.channel;
                  data.onopen = function() {
                      clearInterval(poller);
+                     var b = document.getElementById("chatbutton");
+                     b.disabled = false;
+                     data.onmessage = function(ev) {
+                         var data = ev.data;
+                         var c = document.getElementById("chat");
+                         c.innerHTML = c.innerHTML + '<br/>' + data;
+                     };
                      alert("ready");
                      // Ready to actually exchange data
                  }
              };
              poller = setInterval(poll, 1000);
          };
+         function chat() {
+             var t = document.getElementById("send");
+             var c = document.getElementById("chat");
+             c.innerHTML = c.innerHTML + '<br/>' + t.value;
+             data.send(t.value);
+         };
         </script>
     </head>
     <body>
         <h1>WebRTC Testing</h1>
-        <button onclick="sender();">Sender</button><br/>
+        <button onclick="sender();">Sender</button><br/><br/>
         <button onclick="receiver();">Receiver</button>
+        <br/><br/>
+        <div id="chat"></div>
+        <br/><br/>
+        <textarea id="send" rows="10" cols="70"></textarea>
+        <br/><br/>
+        <button id="chatbutton" onclick="chat();" disabled="true">Send Chat</button>
     </body>
 </html>
 
