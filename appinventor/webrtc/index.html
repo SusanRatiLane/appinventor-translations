@@ -5,6 +5,10 @@
          var servers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
          var data;
          var peer;
+         var seennonce = {};
+         function newnonce() {
+             return Math.floor(Math.random() * 10000) + 1;
+         };
          function sender() {
              var offer;
              var poller;
@@ -20,7 +24,13 @@
                                  var candidate = hunk['candidate'];
                                  offer = hunk['offer'];
                                  if (candidate) {
-                                     peer.addIceCandidate(candidate);
+                                     var nonce = hunk['nonce'];
+                                     if (!seennonce[nonce]) {
+                                         seennonce[nonce] = true;
+                                         peer.addIceCandidate(candidate);
+                                     } else {
+                                         console.log("Seen nonce " + nonce);
+                                     }
                                  } else if (offer) {
                                      peer.setRemoteDescription(offer);
                                  }
@@ -37,6 +47,7 @@
                      xhr.open('POST', 'http://jis.qyv.net:3000/', true);
                      xhr.send(JSON.stringify({'key' : 'tester-s',
                                               'webrtc' : true,
+                                              'nonce' : newnonce(),
                                               'candidate' : evt.candidate}));
                  }
              }
@@ -72,7 +83,13 @@
                                  var candidate = hunk['candidate'];
                                  offer = hunk['offer'];
                                  if (candidate) {
-                                     peer.addIceCandidate(candidate);
+                                     var nonce = hunk['nonce'];
+                                     if (!seennonce[nonce]) {
+                                         seennonce[nonce] = true;
+                                         peer.addIceCandidate(candidate);
+                                     } else {
+                                         console.log("Seen nonce " + nonce);
+                                     }
                                  } else if (offer) {
                                      peer.setRemoteDescription(offer);
                                      peer.createAnswer().then(function(desc) {
@@ -97,6 +114,7 @@
                      xhr.open('POST', 'http://jis.qyv.net:3000/', true);
                      xhr.send(JSON.stringify({'key' : 'tester-r',
                                               'webrtc' : true,
+                                              'nonce' : newnonce(),
                                               'candidate' : evt.candidate}));
                  }
              }
@@ -118,3 +136,4 @@
         <button onclick="receiver();">Receiver</button>
     </body>
 </html>
+
