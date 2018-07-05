@@ -2,9 +2,11 @@
     <head>
         <title>WebRTC Testing</title>
         <script type="text/javascript">
+         var rendezvous = 'http://jis.qyv.net:3000/'
          var servers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
          var data;
          var peer;
+         var key;
          var seennonce = {};
          function newnonce() {
              return Math.floor(Math.random() * 10000) + 1;
@@ -14,7 +16,7 @@
              var poller;
              var poll = function() {
                  xhr = new XMLHttpRequest();
-                 xhr.open('GET', 'http://jis.qyv.net:3000/tester-r', true);
+                 xhr.open('GET', rendezvous + key + '-r', true);
                  xhr.onreadystatechange = function() {
                      if (this.readyState == 4 && this.status == 200) {
                          if (this.response[0] == '[') {
@@ -44,8 +46,8 @@
              peer.onicecandidate = function(evt) {
                  if (evt.type == 'icecandidate') {
                      xhr = new XMLHttpRequest();
-                     xhr.open('POST', 'http://jis.qyv.net:3000/', true);
-                     xhr.send(JSON.stringify({'key' : 'tester-s',
+                     xhr.open('POST', rendezvous, true);
+                     xhr.send(JSON.stringify({'key' : key + '-s',
                                               'webrtc' : true,
                                               'nonce' : newnonce(),
                                               'candidate' : evt.candidate}));
@@ -67,8 +69,8 @@
              peer.createOffer().then(function(desc) {
                  offer = desc;
                  xhr = new XMLHttpRequest();
-                 xhr.open('POST', 'http://jis.qyv.net:3000/', true);
-                 xhr.send(JSON.stringify({'key' : 'tester-s',
+                 xhr.open('POST', rendezvous, true);
+                 xhr.send(JSON.stringify({'key' : key + '-s',
                                           'webrtc' : true,
                                           'offer' : desc}));
                  peer.setLocalDescription(desc);
@@ -80,7 +82,7 @@
              var poller;
              var poll = function() {
                  xhr = new XMLHttpRequest();
-                 xhr.open('GET', 'http://jis.qyv.net:3000/tester-s', true);
+                 xhr.open('GET', rendezvous + key + '-s', true);
                  xhr.onreadystatechange = function() {
                      if (this.readyState == 4 && this.status == 200) {
                          if (this.response[0] == '[') {
@@ -101,8 +103,8 @@
                                      peer.setRemoteDescription(offer);
                                      peer.createAnswer().then(function(desc) {
                                          xhr = new XMLHttpRequest();
-                                         xhr.open('POST', 'http://jis.qyv.net:3000/', true);
-                                         xhr.send(JSON.stringify({'key' : 'tester-r',
+                                         xhr.open('POST', rendezvous, true);
+                                         xhr.send(JSON.stringify({'key' : key + '-r',
                                                                   'webrtc' : true,
                                                                   'offer' : desc}));
                                          peer.setLocalDescription(desc);
@@ -118,8 +120,8 @@
              peer.onicecandidate = function(evt) {
                  if (evt.type == 'icecandidate') {
                      xhr = new XMLHttpRequest();
-                     xhr.open('POST', 'http://jis.qyv.net:3000/', true);
-                     xhr.send(JSON.stringify({'key' : 'tester-r',
+                     xhr.open('POST', rendezvous, true);
+                     xhr.send(JSON.stringify({'key' : key + '-r',
                                               'webrtc' : true,
                                               'nonce' : newnonce(),
                                               'candidate' : evt.candidate}));
@@ -148,18 +150,28 @@
              c.innerHTML = c.innerHTML + '<br/>' + t.value;
              data.send(t.value);
          };
+         function setkey() {
+             var k = document.getElementById("key").value;
+             key = k;
+             document.getElementById("sendbutton").disabled = false;
+             document.getElementById("receivebutton").disabled = false;
+         }
         </script>
     </head>
     <body>
         <h1>WebRTC Testing</h1>
-        <button onclick="sender();">Sender</button><br/><br/>
-        <button onclick="receiver();">Receiver</button>
+        <button id="sendbutton" disabled="true" onclick="sender();">Sender</button><br/><br/>
+        <button id="receivebutton" disabled="true" onclick="receiver();">Receiver</button>
         <br/><br/>
         <div id="chat"></div>
         <br/><br/>
         <textarea id="send" rows="10" cols="70"></textarea>
         <br/><br/>
         <button id="chatbutton" onclick="chat();" disabled="true">Send Chat</button>
+        <br/><br/>
+        <input type="text" id="key" value=""/>
+        <br/><br/>
+        <button onclick="setkey();">Set Rendezvous Key</button>
     </body>
 </html>
 
