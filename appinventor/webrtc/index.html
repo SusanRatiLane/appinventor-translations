@@ -65,7 +65,10 @@
                  };
                  alert('ready');
                  // Ready to actually exchange data
-             }
+             };
+             data.onclose = function() {
+                 alert("Data Connection is closed");
+             };
              peer.createOffer().then(function(desc) {
                  offer = desc;
                  xhr = new XMLHttpRequest();
@@ -140,7 +143,10 @@
                      };
                      alert("ready");
                      // Ready to actually exchange data
-                 }
+                 };
+                 data.onclose = function() {
+                     alert("Data Connection is closed");
+                 };
              };
              poller = setInterval(poll, 1000);
          };

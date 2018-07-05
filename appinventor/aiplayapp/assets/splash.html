@@ -41,7 +41,168 @@
              Android.finished();
          }
         </script>
-
+        <script type="text/javascript">
+         var rendezvous = 'http://jis.qyv.net:3000/'
+         var servers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
+         var data;
+         var peer;
+         var key;
+         var seennonce = {};
+         function newnonce() {
+             return Math.floor(Math.random() * 10000) + 1;
+         };
+         function sender() {
+             var offer;
+             var poller;
+             var poll = function() {
+                 xhr = new XMLHttpRequest();
+                 xhr.open('GET', rendezvous + key + '-r', true);
+                 xhr.onreadystatechange = function() {
+                     if (this.readyState == 4 && this.status == 200) {
+                         if (this.response[0] == '[') {
+                             var json = JSON.parse(this.response);
+                             for (var i = 0; i < json.length; i++ ){
+                                 var hunk = json[i];
+                                 var candidate = hunk['candidate'];
+                                 offer = hunk['offer'];
+                                 if (candidate) {
+                                     var nonce = hunk['nonce'];
+                                     if (!seennonce[nonce]) {
+                                         seennonce[nonce] = true;
+                                         peer.addIceCandidate(candidate);
+                                     } else {
+                                         console.log("Seen nonce " + nonce);
+                                     }
+                                 } else if (offer) {
+                                     peer.setRemoteDescription(offer);
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 xhr.send();
+             };
+             peer = new RTCPeerConnection(servers);
+             peer.onicecandidate = function(evt) {
+                 if (evt.type == 'icecandidate') {
+                     xhr = new XMLHttpRequest();
+                     xhr.open('POST', rendezvous, true);
+                     xhr.send(JSON.stringify({'key' : key + '-s',
+                                              'webrtc' : true,
+                                              'nonce' : newnonce(),
+                                              'candidate' : evt.candidate}));
+                 }
+             }
+             data = peer.createDataChannel('data');
+             data.onopen = function() {
+                 clearInterval(poller);
+                 var b = document.getElementById("chatbutton");
+                 b.disabled = false;
+                 data.onmessage = function(ev) {
+                     var data = ev.data;
+                     var c = document.getElementById("chat");
+                     c.innerHTML = c.innerHTML + '<br/>' + data;
+                 };
+                 alert('ready');
+                 // Ready to actually exchange data
+             }
+             peer.createOffer().then(function(desc) {
+                 offer = desc;
+                 xhr = new XMLHttpRequest();
+                 xhr.open('POST', rendezvous, true);
+                 xhr.send(JSON.stringify({'key' : key + '-s',
+                                          'webrtc' : true,
+                                          'offer' : desc}));
+                 peer.setLocalDescription(desc);
+             });
+             poller = setInterval(poll, 1000);
+         };
+         function receiver() {
+             var offer;
+             var poller;
+             var poll = function() {
+                 xhr = new XMLHttpRequest();
+                 xhr.open('GET', rendezvous + key + '-s', true);
+                 xhr.onreadystatechange = function() {
+                     if (this.readyState == 4 && this.status == 200) {
+                         if (this.response[0] == '[') {
+                             var json = JSON.parse(this.response);
+                             for (var i = 0; i < json.length; i++ ) {
+                                 var hunk = json[i];
+                                 var candidate = hunk['candidate'];
+                                 offer = hunk['offer'];
+                                 if (candidate) {
+                                     var nonce = hunk['nonce'];
+                                     if (!seennonce[nonce]) {
+                                         seennonce[nonce] = true;
+                                         peer.addIceCandidate(candidate);
+                                     } else {
+                                         console.log("Seen nonce " + nonce);
+                                     }
+                                 } else if (offer) {
+                                     peer.setRemoteDescription(offer);
+                                     peer.createAnswer().then(function(desc) {
+                                         xhr = new XMLHttpRequest();
+                                         xhr.open('POST', rendezvous, true);
+                                         xhr.send(JSON.stringify({'key' : key + '-r',
+                                                                  'webrtc' : true,
+                                                                  'offer' : desc}));
+                                         peer.setLocalDescription(desc);
+                                     });
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 xhr.send();
+             };
+             peer = new RTCPeerConnection(servers);
+             peer.onicecandidate = function(evt) {
+                 if (evt.type == 'icecandidate') {
+                     xhr = new XMLHttpRequest();
+                     xhr.open('POST', rendezvous, true);
+                     xhr.send(JSON.stringify({'key' : key + '-r',
+                                              'webrtc' : true,
+                                              'nonce' : newnonce(),
+                                              'candidate' : evt.candidate}));
+                 }
+             }
+             peer.ondatachannel = function(ev) {
+                 data = ev.channel;
+                 data.onopen = function() {
+                     clearInterval(poller);
+                     var b = document.getElementById("chatbutton");
+                     b.disabled = false;
+                     data.onmessage = function(ev) {
+                         var message = ev.data;
+                         if (message[0] == '#') {
+//                             message = "(*.toString " + message + ")";
+                             retval = Android.doScheme(message.slice(1));
+                             data.send(retval);
+                         } else {
+                             var c = document.getElementById("chat");
+                             c.innerHTML = c.innerHTML + '<br/>' + message;
+                         }
+                     };
+                     alert("ready");
+                     // Ready to actually exchange data
+                 }
+             };
+             poller = setInterval(poll, 1000);
+         };
+         function chat() {
+             var t = document.getElementById("send");
+             var c = document.getElementById("chat");
+             c.innerHTML = c.innerHTML + '<br/>' + t.value;
+             data.send(t.value);
+         };
+         function setkey() {
+             var k = document.getElementById("key").value;
+             key = k;
+             document.getElementById("sendbutton").disabled = false;
+             document.getElementById("receivebutton").disabled = false;
+         }
+        </script>
     </head>
     <body onload="start();">
         <center>
@@ -68,5 +229,18 @@
         <p>&nbsp;</p>
         <div id="foo"></div>
         <button onclick="done();">Continue</button>
+        <p>&nbsp;</p>
+        <button id="sendbutton" disabled="true" onclick="sender();">Sender</button><br/><br/>
+        <button id="receivebutton" disabled="true" onclick="receiver();">Receiver</button>
+        <br/><br/>
+        <div id="chat"></div>
+        <br/><br/>
+        <textarea id="send" rows="10" cols="70"></textarea>
+        <br/><br/>
+        <button id="chatbutton" onclick="chat();" disabled="true">Send Chat</button>
+        <br/><br/>
+        <input type="text" id="key" value=""/>
+        <br/><br/>
+        <button onclick="setkey();">Set Rendezvous Key</button>
     </body>
 </html>
