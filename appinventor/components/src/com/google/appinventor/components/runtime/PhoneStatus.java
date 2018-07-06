@@ -89,6 +89,12 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     "Return the SHA1 of the provided seed, this will be used to contact the " +
     "rendezvous server.")
   public String setHmacSeedReturnCode(String seed) {
+
+    if (form instanceof ReplForm) {
+      Log.d(LOG_TAG, "Calling ReplForm.SetupWebView(" + seed + ")");
+      ((ReplForm)form).SetupWebView(seed);
+    }
+
     AppInvHTTPD.setHmacKey(seed);
     MessageDigest Sha1;
     try {

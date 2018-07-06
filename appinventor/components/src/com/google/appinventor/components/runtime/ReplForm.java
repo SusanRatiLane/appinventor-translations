@@ -12,6 +12,9 @@ import android.graphics.Color;
 
 import android.net.Uri;
 
+import gnu.expr.Language;
+import kawa.standard.Scheme;
+
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
@@ -26,6 +29,13 @@ import android.view.Menu;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.MenuItem;
 import android.view.View;
+
+import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebStorage;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import android.widget.Toast;
 
@@ -89,12 +99,53 @@ public class ReplForm extends Form {
   private List<String> loadedExternalDexs; // keep a track of loaded dexs to prevent reloading and causing crash in older APIs
   private String currentTheme = ComponentConstants.DEFAULT_THEME;
 
+  WebView webview;
+
   private static final String SPLASH_ACTIVITY_CLASS = SplashActivity.class
       .getName();
 
   public ReplForm() {
     super();
     topform = this;
+  }
+
+  public class WebViewJavaInterface {
+    Context mContext;
+    Language scheme;
+    String code;
+
+    public WebViewJavaInterface(Context context, Language scheme, String code) {
+      mContext = context;
+      this.scheme = scheme;
+      this.code = code;
+    }
+
+    // This is for hacking around. Not sure what we will do with it
+    // but you never know :-)
+    @JavascriptInterface
+    public String doScheme(String sexp) {
+      try {
+        return (String) scheme.eval(sexp);
+      } catch (Throwable e) {
+        return (e.toString());
+      }
+    }
+
+    @JavascriptInterface
+    public String getCode() {
+      return code;
+    }
+
+    @JavascriptInterface
+    public void finished() {
+      runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            ReplForm.this.webview.destroy();
+            ReplForm.this.finish();
+          }
+        });
+    }
   }
 
   @Override
@@ -352,6 +403,38 @@ public class ReplForm extends Form {
     currentTheme = theme;
     super.Theme(theme);
     updateTitle();
+  }
+
+  /**
+   * Setup an internal use WebView to use for WebRTC Communications with
+   * the user's browser.
+   *
+   * @param code The six digit code entered in the user interface
+   */
+  public void SetupWebView(String code) {
+    Log.d(LOG_TAG, "SetupWebView: Code = " + code);
+    Language scheme = Scheme.getInstance("scheme");
+    gnu.expr.ModuleExp.mustNeverCompile();
+    WebViewJavaInterface android = new WebViewJavaInterface(this, scheme, code);
+    webview = new WebView(this);
+    WebSettings webSettings = webview.getSettings();
+    webSettings.setJavaScriptEnabled(true);
+    webSettings.setDatabaseEnabled(true);
+    webSettings.setDomStorageEnabled(true);
+    String databasePath = this.getApplicationContext().getDir("database", Context.MODE_PRIVATE).getPath();
+    webSettings.setDatabasePath(databasePath);
+    webview.setWebChromeClient(new WebChromeClient() {
+        @Override
+        public void onExceededDatabaseQuota(String url, String databaseIdentifier,
+          long currentQuota, long estimatedSize, long totalUsedQuota,
+          WebStorage.QuotaUpdater quotaUpdater) {
+          quotaUpdater.updateQuota(5 * 1024 * 1024);
+        }
+      });
+    setContentView(webview);
+    webview.setWebContentsDebuggingEnabled(true); // For DEBUGGING
+    webview.addJavascriptInterface(android, "Android");
+    webview.loadUrl("file:///android_asset/comm.html");
   }
 
   @Override

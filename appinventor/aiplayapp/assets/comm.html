@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>WebRTC Testing</title>
+        <title>Welcome to App Inventor</title>
         <script type="text/javascript">
          var rendezvous = 'http://jis.qyv.net:3000/'
          var servers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
@@ -8,6 +8,15 @@
          var peer;
          var key;
          var seennonce = {};
+         function start() {
+             key = Android.getCode();
+             receiver();
+         }
+         function done() {
+             data.close();
+             Android.finished();
+         }
+
          function newnonce() {
              return Math.floor(Math.random() * 10000) + 1;
          };
@@ -56,23 +65,11 @@
              data = peer.createDataChannel('data');
              data.onopen = function() {
                  clearInterval(poller);
-                 console.log('onopen');
-                 var b = document.getElementById("chatbutton");
-                 b.disabled = false;
                  data.onmessage = function(ev) {
-                     var data = ev.data;
-                     var c = document.getElementById("chat");
-                     c.innerHTML = c.innerHTML + '<br/>' + data;
+                     // Nothing to do...
                  };
-                 alert('ready');
                  // Ready to actually exchange data
-             };
-             data.onclose = function() {
-                 alert("Data Connection is closed");
-             };
-             data.onerror = function(err) {
-                 alert("Data Error " + err);
-             };
+             }
              peer.createOffer().then(function(desc) {
                  offer = desc;
                  xhr = new XMLHttpRequest();
@@ -138,54 +135,23 @@
                  data = ev.channel;
                  data.onopen = function() {
                      clearInterval(poller);
-                     console.log('onopen');
-                     var b = document.getElementById("chatbutton");
-                     b.disabled = false;
                      data.onmessage = function(ev) {
-                         var data = ev.data;
-                         var c = document.getElementById("chat");
-                         c.innerHTML = c.innerHTML + '<br/>' + data;
+                         var message = ev.data;
+                         if (message == '#DONE#') {
+                             done();
+                         } else {
+                             retval = Android.doScheme(message);
+                             data.send(retval);
+                         }
                      };
-                     alert("ready");
-                     // Ready to actually exchange data
-                 };
-                 data.onclose = function() {
-                     alert("Data Connection is closed");
-                 };
-                 data.onerror = function(err) {
-                     alert("Data Error " + err);
-                 };
+                     // Ready for data exchange
+                     data.send('Ready');
+                 }
              };
              poller = setInterval(poll, 1000);
          };
-         function chat() {
-             var t = document.getElementById("send");
-             var c = document.getElementById("chat");
-             c.innerHTML = c.innerHTML + '<br/>' + t.value;
-             data.send(t.value);
-         };
-         function setkey() {
-             var k = document.getElementById("key").value;
-             key = k;
-             document.getElementById("sendbutton").disabled = false;
-             document.getElementById("receivebutton").disabled = false;
-         }
         </script>
     </head>
-    <body>
-        <h1>WebRTC Testing</h1>
-        <button id="sendbutton" disabled="true" onclick="sender();">Sender</button><br/><br/>
-        <button id="receivebutton" disabled="true" onclick="receiver();">Receiver</button>
-        <br/><br/>
-        <div id="chat"></div>
-        <br/><br/>
-        <textarea id="send" rows="10" cols="70"></textarea>
-        <br/><br/>
-        <button id="chatbutton" onclick="chat();" disabled="true">Send Chat</button>
-        <br/><br/>
-        <input type="text" id="key" value=""/>
-        <br/><br/>
-        <button onclick="setkey();">Set Rendezvous Key</button>
+    <body onload="start();">
     </body>
 </html>
-
