@@ -100,6 +100,7 @@ public class ReplForm extends Form {
   private String currentTheme = ComponentConstants.DEFAULT_THEME;
 
   WebView webview;
+  Language scheme;
 
   private static final String SPLASH_ACTIVITY_CLASS = SplashActivity.class
       .getName();
@@ -422,7 +423,7 @@ public class ReplForm extends Form {
    */
   public void SetupWebView(String code) {
     Log.d(LOG_TAG, "SetupWebView: Code = " + code);
-    Language scheme = Scheme.getInstance("scheme");
+    scheme = Scheme.getInstance("scheme");
     gnu.expr.ModuleExp.mustNeverCompile();
     WebViewJavaInterface android = new WebViewJavaInterface(this, scheme, code);
     webview = new WebView(this);

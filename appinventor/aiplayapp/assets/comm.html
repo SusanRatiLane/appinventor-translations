@@ -140,8 +140,7 @@
                          if (message == '#DONE#') {
                              done();
                          } else {
-                             var retval = Android.doScheme(message);
-                             data.send("(*:toString " + retval + ")");
+                             Android.doScheme(message);
                          }
                      };
                      // Ready for data exchange

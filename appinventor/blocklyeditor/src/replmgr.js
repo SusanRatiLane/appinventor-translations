@@ -38,7 +38,7 @@ top.loadAll = true;             // Use "Chunked" loading for initial form load
                                 // in the top window to ease debugging (this may change
                                 // in the future).
 
-                                // Note: While we develop webkit communication, we
+                                // Note: While we develop webrtc communication, we
                                 // are not using the chunking code (jis: 07/08/2018)
 
 top.loadAllErrorCount = 0;      // When we get an error loading a chunk, we turn off
@@ -253,12 +253,12 @@ Blockly.ReplMgr.putYail = (function() {
     var conn;                   // XMLHttpRequest Object sending to Phone
     var rxhr;                   // XMLHttpRequest Object listening for returns
     var phonereceiving = false;
-    var usewebkit = true;
-    var webkitstarting = false;
-    var webkitrunning = false;
+    var usewebrtc = true;
+    var webrtcstarting = false;
+    var webrtcrunning = false;
     var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
-    var webkitrendezvous = 'http://jis.qyv.net:3000/';
-    var webkitdata;
+    var webrtcrendezvous = 'http://jis.qyv.net:3000/';
+    var webrtcdata;
     var seennonce = {};
     var engine = {
         // Enqueue form for the phone
@@ -287,13 +287,13 @@ Blockly.ReplMgr.putYail = (function() {
                 engine.pollphone(); // Trigger callback side
             }
         },
-        'webkitstart' : function() {
+        'webrtcstart' : function() {
             var offer;
             var poller;
             var key = rs.replcode;
             var poll = function() {
                 xhr = new XMLHttpRequest();
-                xhr.open('GET', webkitrendezvous + key + '-r', true);
+                xhr.open('GET', webrtcrendezvous + key + '-r', true);
                 xhr.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
                         if (this.response[0] == '[') {
@@ -323,34 +323,34 @@ Blockly.ReplMgr.putYail = (function() {
             peer.onicecandidate = function(evt) {
                 if (evt.type == 'icecandidate') {
                     xhr = new XMLHttpRequest();
-                    xhr.open('POST', webkitrendezvous, true);
+                    xhr.open('POST', webrtcrendezvous, true);
                     xhr.send(JSON.stringify({'key' : key + '-s',
                                              'webrtc' : true,
                                              'nonce' : Math.floor(Math.random() * 10000) + 1,
                                              'candidate' : evt.candidate}));
                 }
             }
-            webkitdata = peer.createDataChannel('data');
-            webkitdata.onopen = function() {
+            webrtcdata = peer.createDataChannel('data');
+            webrtcdata.onopen = function() {
                 clearInterval(poller);
-                console.log('webkit data connection open!');
-                webkitdata.onmessage = function(ev) {
+                console.log('webrtc data connection open!');
+                webrtcdata.onmessage = function(ev) {
                 };
                 // Ready to actually exchange data
-                webkitrunning = true;
-                top.webkitdata = webkitdata; // For debugging
+                webrtcrunning = true;
+                top.webrtcdata = webrtcdata; // For debugging
                 engine.pollphone();
             };
-            webkitdata.onclose = function() {
+            webrtcdata.onclose = function() {
                 alert("Data Connection is closed");
             };
-            webkitdata.onerror = function(err) {
+            webrtcdata.onerror = function(err) {
                 alert("Data Error " + err);
             };
             peer.createOffer().then(function(desc) {
                 offer = desc;
                 xhr = new XMLHttpRequest();
-                xhr.open('POST', webkitrendezvous, true);
+                xhr.open('POST', webrtcrendezvous, true);
                 xhr.send(JSON.stringify({'key' : key + '-s',
                                          'webrtc' : true,
                                          'offer' : desc}));
@@ -368,28 +368,29 @@ Blockly.ReplMgr.putYail = (function() {
                 engine.receivefromphone();
             }
             var work;
-            if (usewebkit) {
-                if (!webkitrunning && !webkitstarting) {
-                    webkitstarting = true;
-                    engine.webkitstart(); // We need to start webkit
+            if (usewebrtc) {
+                if (!webrtcrunning && !webrtcstarting) {
+                    webrtcstarting = true;
+                    engine.webrtcstart(); // We need to start webrtc
                     return;
                 }
-                if (!webkitrunning) {
+                if (!webrtcrunning) {
                     return;     // We are in the process of starting
                 }
-                // OK, let's send with webkit!
+                // OK, let's send with webrtc!
                 while ((work = rs.phoneState.phoneQueue.shift())) {
                     if (!work.block) {
                         work.block = -1;
                     }
                     var sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
                         work.block + " (begin " + work.code + ")))";
-                    webkitdata.send(sendcode); // Send the code!
+                    console.log(sendcode);
+                    webrtcdata.send(sendcode); // Send the code!
                 }
                 rs.phoneState.ioRunning = false;
                 return;
             }
-            // We only get here if we are not using webkit
+            // We only get here if we are not using webrtc
             if (top.loadAll) {
                 var chunk;
                 var allcode = "";
@@ -1062,9 +1063,13 @@ Blockly.ReplMgr.quoteUnicode = function(input) {
         var u = input.charCodeAt(i); // Unicode of the character
         if (u < ' '.charCodeAt(0) || u > '~'.charCodeAt(0)) {
           // Replace any special chars with \u1234 unicode
-            var hex = "000" + u.toString(16);
-            hex = hex.substring(hex.length - 4);
-            sb.push("\\u" + hex);
+            if (u == 10) {      // Don't encode newlines
+                sb.push(input.charAt(i));
+            } else {
+                var hex = "000" + u.toString(16);
+                hex = hex.substring(hex.length - 4);
+                sb.push("\\u" + hex);
+            }
         } else {
             sb.push(input.charAt(i));
         }
