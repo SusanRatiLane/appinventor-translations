@@ -37,6 +37,10 @@ top.loadAll = true;             // Use "Chunked" loading for initial form load
                                 // of code queued for the device. We put this variable
                                 // in the top window to ease debugging (this may change
                                 // in the future).
+
+                                // Note: While we develop webkit communication, we
+                                // are not using the chunking code (jis: 07/08/2018)
+
 top.loadAllErrorCount = 0;      // When we get an error loading a chunk, we turn off
                                 // loadAll and set this to some positive value
                                 // (20 at the moment). We then count this value down each
@@ -249,6 +253,13 @@ Blockly.ReplMgr.putYail = (function() {
     var conn;                   // XMLHttpRequest Object sending to Phone
     var rxhr;                   // XMLHttpRequest Object listening for returns
     var phonereceiving = false;
+    var usewebkit = true;
+    var webkitstarting = false;
+    var webkitrunning = false;
+    var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
+    var webkitrendezvous = 'http://jis.qyv.net:3000/';
+    var webkitdata;
+    var seennonce = {};
     var engine = {
         // Enqueue form for the phone
         'putYail' : function(code, block, success, failure) {
@@ -276,6 +287,78 @@ Blockly.ReplMgr.putYail = (function() {
                 engine.pollphone(); // Trigger callback side
             }
         },
+        'webkitstart' : function() {
+            var offer;
+            var poller;
+            var key = rs.replcode;
+            var poll = function() {
+                xhr = new XMLHttpRequest();
+                xhr.open('GET', webkitrendezvous + key + '-r', true);
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        if (this.response[0] == '[') {
+                            var json = JSON.parse(this.response);
+                            for (var i = 0; i < json.length; i++ ){
+                                var hunk = json[i];
+                                var candidate = hunk['candidate'];
+                                offer = hunk['offer'];
+                                if (candidate) {
+                                    var nonce = hunk['nonce'];
+                                    if (!seennonce[nonce]) {
+                                        seennonce[nonce] = true;
+                                        peer.addIceCandidate(candidate);
+                                    } else {
+                                        console.log("Seen nonce " + nonce);
+                                    }
+                                } else if (offer) {
+                                    peer.setRemoteDescription(offer);
+                                }
+                            }
+                        }
+                    }
+                }
+                xhr.send();
+            };
+            peer = new RTCPeerConnection(iceservers);
+            peer.onicecandidate = function(evt) {
+                if (evt.type == 'icecandidate') {
+                    xhr = new XMLHttpRequest();
+                    xhr.open('POST', webkitrendezvous, true);
+                    xhr.send(JSON.stringify({'key' : key + '-s',
+                                             'webrtc' : true,
+                                             'nonce' : Math.floor(Math.random() * 10000) + 1,
+                                             'candidate' : evt.candidate}));
+                }
+            }
+            webkitdata = peer.createDataChannel('data');
+            webkitdata.onopen = function() {
+                clearInterval(poller);
+                console.log('webkit data connection open!');
+                webkitdata.onmessage = function(ev) {
+                };
+                // Ready to actually exchange data
+                webkitrunning = true;
+                top.webkitdata = webkitdata; // For debugging
+                engine.pollphone();
+            };
+            webkitdata.onclose = function() {
+                alert("Data Connection is closed");
+            };
+            webkitdata.onerror = function(err) {
+                alert("Data Error " + err);
+            };
+            peer.createOffer().then(function(desc) {
+                offer = desc;
+                xhr = new XMLHttpRequest();
+                xhr.open('POST', webkitrendezvous, true);
+                xhr.send(JSON.stringify({'key' : key + '-s',
+                                         'webrtc' : true,
+                                         'offer' : desc}));
+                peer.setLocalDescription(desc);
+            });
+            poller = setInterval(poll, 1000);
+
+        },
         'pollphone' : function() {
             if (!rs.didversioncheck) {
                 engine.doversioncheck();
@@ -285,6 +368,28 @@ Blockly.ReplMgr.putYail = (function() {
                 engine.receivefromphone();
             }
             var work;
+            if (usewebkit) {
+                if (!webkitrunning && !webkitstarting) {
+                    webkitstarting = true;
+                    engine.webkitstart(); // We need to start webkit
+                    return;
+                }
+                if (!webkitrunning) {
+                    return;     // We are in the process of starting
+                }
+                // OK, let's send with webkit!
+                while ((work = rs.phoneState.phoneQueue.shift())) {
+                    if (!work.block) {
+                        work.block = -1;
+                    }
+                    var sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
+                        work.block + " (begin " + work.code + ")))";
+                    webkitdata.send(sendcode); // Send the code!
+                }
+                rs.phoneState.ioRunning = false;
+                return;
+            }
+            // We only get here if we are not using webkit
             if (top.loadAll) {
                 var chunk;
                 var allcode = "";

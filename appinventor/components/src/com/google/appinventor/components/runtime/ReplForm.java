@@ -125,9 +125,18 @@ public class ReplForm extends Form {
     @JavascriptInterface
     public String doScheme(String sexp) {
       try {
+        adoptMainThreadClassLoader();
         return (String) scheme.eval(sexp);
       } catch (Throwable e) {
         return (e.toString());
+      }
+    }
+
+    private void adoptMainThreadClassLoader() {
+      ClassLoader mainClassLoader = Looper.getMainLooper().getThread().getContextClassLoader();
+      Thread myThread = Thread.currentThread();
+      if (myThread.getContextClassLoader() != mainClassLoader) {
+        myThread.setContextClassLoader(mainClassLoader);
       }
     }
 
