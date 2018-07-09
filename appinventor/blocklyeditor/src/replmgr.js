@@ -379,11 +379,14 @@ Blockly.ReplMgr.putYail = (function() {
                 }
                 // OK, let's send with webrtc!
                 while ((work = rs.phoneState.phoneQueue.shift())) {
+                    var blockid;
                     if (!work.block) {
-                        work.block = -1;
+                        blockid = -1;
+                    } else {
+                        blockid = '"' + work.block.id + '"';
                     }
                     var sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
-                        work.block + " (begin " + work.code + ")))";
+                        blockid + " (begin " + work.code + ")))";
                     console.log(sendcode);
                     webrtcdata.send(sendcode); // Send the code!
                 }
