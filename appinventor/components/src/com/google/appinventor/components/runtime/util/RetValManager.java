@@ -12,6 +12,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.google.appinventor.components.runtime.ReplForm;
+
 import android.util.Log;
 
 /*
@@ -25,6 +27,8 @@ public class RetValManager {
   private static final String LOG_TAG = "RetValManager";
   private static final Object semaphore = new Object();
   private static final long TENSECONDS = 10000; // Ten Seconds (in milliseconds)
+
+  private static final boolean usingWebRTC = true;
 
   // There can be only one!
   private static ArrayList<JSONObject> currentArray = new ArrayList<JSONObject>(10);
@@ -58,7 +62,18 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (sendNotify) {
+      if (usingWebRTC) {
+        try {
+          JSONObject output = new JSONObject();
+          output.put("status", "OK");
+          output.put("values", new JSONArray(currentArray));
+          ReplForm.ReturnRetvals(output.toString());
+        } catch (JSONException e) {
+          Log.e(LOG_TAG, "Error building retval", e);
+          return;
+        }
+        currentArray.clear();
+      } else if (sendNotify) {
         semaphore.notifyAll();
       }
     }
@@ -77,7 +92,18 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (sendNotify) {
+      if (usingWebRTC) {
+        try {
+          JSONObject output = new JSONObject();
+          output.put("status", "OK");
+          output.put("values", new JSONArray(currentArray));
+          ReplForm.ReturnRetvals(output.toString());
+        } catch (JSONException e) {
+          Log.e(LOG_TAG, "Error building retval", e);
+          return;
+        }
+        currentArray.clear();
+      } else if (sendNotify) {
         semaphore.notifyAll();
       }
     }
@@ -104,7 +130,18 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (sendNotify) {
+      if (usingWebRTC) {
+        try {
+          JSONObject output = new JSONObject();
+          output.put("status", "OK");
+          output.put("values", new JSONArray(currentArray));
+          ReplForm.ReturnRetvals(output.toString());
+        } catch (JSONException e) {
+          Log.e(LOG_TAG, "Error building retval", e);
+          return;
+        }
+        currentArray.clear();
+      } else if (sendNotify) {
         semaphore.notifyAll();
       }
     }
@@ -130,7 +167,18 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (sendNotify) {
+      if (usingWebRTC) {
+        try {
+          JSONObject output = new JSONObject();
+          output.put("status", "OK");
+          output.put("values", new JSONArray(currentArray));
+          ReplForm.ReturnRetvals(output.toString());
+        } catch (JSONException e) {
+          Log.e(LOG_TAG, "Error building retval", e);
+          return;
+        }
+        currentArray.clear();
+      } else if (sendNotify) {
         semaphore.notifyAll();
       }
     }

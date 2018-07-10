@@ -335,6 +335,11 @@ Blockly.ReplMgr.putYail = (function() {
                 clearInterval(poller);
                 console.log('webrtc data connection open!');
                 webrtcdata.onmessage = function(ev) {
+                    console.log("webrtc(onmessage): " + ev.data);
+                    var json = goog.json.parse(ev.data);
+                    if (json.status == 'OK') {
+                        context.processRetvals(json.values);
+                    }
                 };
                 // Ready to actually exchange data
                 webrtcrunning = true;
@@ -364,7 +369,7 @@ Blockly.ReplMgr.putYail = (function() {
                 engine.doversioncheck();
                 return;
             }
-            if (!phonereceiving) {
+            if (!phonereceiving && !usewebrtc) {
                 engine.receivefromphone();
             }
             var work;

@@ -447,6 +447,12 @@ public class ReplForm extends Form {
     webview.loadUrl("file:///android_asset/comm.html");
   }
 
+  public static void ReturnRetvals(String retvals) {
+    ReplForm form = (ReplForm)activeForm;
+    Log.d(LOG_TAG, "ReturnRetvals: " + retvals);
+    form.webview.loadUrl("javascript:retvals('" + retvals + "');");
+  }
+
   @Override
   public String getAssetPathForExtension(Component component, String asset) throws FileNotFoundException {
     // For testing extensions, we allow external = false, but still compile the assets into the
