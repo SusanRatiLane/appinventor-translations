@@ -119,7 +119,7 @@
     <property name="localauth.mailserver.password" value="changeme" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="newblocksbuildserver.appinventor.mit.edu:9990" />
+    <property name="build.server.host" value="nb176buildserver.appinventor.mit.edu:9993" />
 
     <!-- We provide below for a second buildserver. If this field is
          non-empty then the user is presented a choice of two different
