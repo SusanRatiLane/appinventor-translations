@@ -116,7 +116,7 @@
     <property name="localauth.mailserver.password" value="changeme" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="newblocksbuildserver.appinventor.mit.edu:9990" />
+    <property name="build.server.host" value="newblocksbuildserver.appinventor.mit.edu:9993" />
 
     <!-- host[:port] to tell build server the app host url to callback
          when deploy AppInventor on other GAE implementation such as
