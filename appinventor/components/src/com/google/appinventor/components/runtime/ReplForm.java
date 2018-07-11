@@ -447,10 +447,15 @@ public class ReplForm extends Form {
     webview.loadUrl("file:///android_asset/comm.html");
   }
 
-  public static void ReturnRetvals(String retvals) {
-    ReplForm form = (ReplForm)activeForm;
+  public static void ReturnRetvals(final String retvals) {
+    final ReplForm form = (ReplForm)activeForm;
     Log.d(LOG_TAG, "ReturnRetvals: " + retvals);
-    form.webview.loadUrl("javascript:retvals('" + retvals + "');");
+    form.androidUIHandler.post(new Runnable() {
+        @Override
+        public void run() {
+          form.webview.loadUrl("javascript:retvals('" + retvals + "');");
+        }
+      });
   }
 
   @Override

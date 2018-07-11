@@ -32,6 +32,9 @@ goog.require('AI.Events');
 if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {}
 Blockly.ReplMgr.yail = null;
 
+top.usewebrtc = true;           // True if we are going to use webRTC instead
+                                // of our builtin webserver
+
 top.loadAll = true;             // Use "Chunked" loading for initial form load
                                 // or any case where we have more then one "chunk"
                                 // of code queued for the device. We put this variable
@@ -253,7 +256,6 @@ Blockly.ReplMgr.putYail = (function() {
     var conn;                   // XMLHttpRequest Object sending to Phone
     var rxhr;                   // XMLHttpRequest Object listening for returns
     var phonereceiving = false;
-    var usewebrtc = true;
     var webrtcstarting = false;
     var webrtcrunning = false;
     var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
@@ -369,11 +371,11 @@ Blockly.ReplMgr.putYail = (function() {
                 engine.doversioncheck();
                 return;
             }
-            if (!phonereceiving && !usewebrtc) {
+            if (!phonereceiving && !top.usewebrtc) {
                 engine.receivefromphone();
             }
             var work;
-            if (usewebrtc) {
+            if (top.usewebrtc) {
                 if (!webrtcrunning && !webrtcstarting) {
                     webrtcstarting = true;
                     engine.webrtcstart(); // We need to start webrtc
@@ -696,7 +698,7 @@ Blockly.ReplMgr.triggerUpdate = function() {
         if (this.readyState == 4 && this.status == 200) {
             try {
                 showdialog(Blockly.Msg.REPL_GOT_IT, Blockly.Msg.REPL_UPDATE_INFO);
-                Blockly.ReplMgr.putAsset("update.apk", goog.crypt.base64.decodeStringToByteArray(this.response),
+                Blockly.ReplMgr.putAsset(0, "update.apk", goog.crypt.base64.decodeStringToByteArray(this.response),
                                          function() {
                                              // Trigger Update Here
                                              console.log("Update: Downloaded");
@@ -836,6 +838,9 @@ Blockly.ReplMgr.processRetvals = function(responses) {
             break;
         case "popScreen":
             top.BlocklyPanel_popScreen();
+            break;
+        case "assetTransferred":
+            top.AssetManager_markAssetTransferred(r.value);
             break;
         case "error":
             console.log("processRetVals: Error value = " + r.value);
@@ -1051,7 +1056,8 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
                                 // we are waiting for the version check (noop) to finish
         case 4:
             progdialog.hide();
-            rs.state = context.rsState.ASSET; // Indicate that we are connected, start loading assets
+            rs.state = context.rsState.CONNECTED;
+//            rs.state = context.rsState.ASSET; // Indicate that we are connected, start loading assets
             clearInterval(interval);
             RefreshAssets(function() {
                 Blockly.ReplMgr.loadExtensions();
@@ -1166,7 +1172,9 @@ Blockly.ReplMgr.getFromRendezvous = function() {
                 rs.versionurl = 'http://' + json.ipaddr + ':8001/_getversion';
                 rs.baseurl = 'http://' + json.ipaddr + ':8001/';
                 rs.extensionurl = rs.baseurl + '_extensions';
-                rs.state = Blockly.ReplMgr.rsState.ASSET;
+                rs.state = Blockly.ReplMgr.rsState.CONNECTED;
+                Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect()); // TEMP
+//                rs.state = Blockly.ReplMgr.rsState.ASSET;
                 rs.dialog.hide();
                 RefreshAssets(function() {
                                   Blockly.ReplMgr.loadExtensions();
@@ -1184,7 +1192,8 @@ Blockly.ReplMgr.getFromRendezvous = function() {
 Blockly.ReplMgr.resendAssetsAndExtensions = function() {
     var rs = top.ReplState;
     var RefreshAssets = top.AssetManager_refreshAssets;
-    rs.state = Blockly.ReplMgr.rsState.ASSET;
+    rs.state = Blockly.ReplMgr.rsState.CONNECTED;
+//    rs.state = Blockly.ReplMgr.rsState.ASSET;
     RefreshAssets(function() {
         Blockly.ReplMgr.loadExtensions();
     });
@@ -1278,11 +1287,29 @@ Blockly.ReplMgr.bytes_to_hexstring = function(input) {
     return z.join("");
 };
 
-Blockly.ReplMgr.putAsset = function(filename, blob, success, fail, force) {
+Blockly.ReplMgr.putAsset = function(projectid, filename, blob, success, fail, force) {
     if (top.ReplState === undefined)
         return false;
     if (!force && (top.ReplState.state != this.rsState.ASSET && top.ReplState.state != this.rsState.CONNECTED))
         return false;           // We didn't really do anything
+    if (top.usewebrtc) {
+        // Note: if using webrtc we ignore the passed in callback and
+        // instead just call makeAssetTransferred ourselves
+        var uri = window.location.origin;
+        var regex = /AppInventor *=([^;]+)/;
+        if (regex.test(document.cookie)) {
+            var cookie = regex.exec(document.cookie)[1];
+        } else {
+            console.log("Cannot obtain cookie for putAsset!");
+            return;
+        }
+        console.log("putAsset uri = " + uri + " cookie = " + cookie);
+        var yail = "(AssetFetcher:fetchAssets \"" + cookie + "\" \"" + projectid +
+            "\" \"" + uri + "\" \"" + filename + "\")";
+        console.log("Yail for putAsset = " + yail);
+        this.putYail(yail);
+        return true;
+    }
     var conn = goog.net.XmlHttp();
     var arraybuf = new ArrayBuffer(blob.length);
     var rs = top.ReplState;

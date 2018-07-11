@@ -4,7 +4,9 @@
 
 package com.google.appinventor.components.runtime.util;
 import android.os.Environment;
-import com.google.appinventor.components.runtime.util.AsynchUtil;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.util.Log;
 
@@ -48,53 +50,50 @@ public class AssetFetcher {
 
   private static final String LOG_TAG = AssetFetcher.class.getSimpleName();
 
-
   private static final String REPL_ASSET_DIR =
     Environment.getExternalStorageDirectory().getAbsolutePath() +
-    "/AppInventor/assets/";
+    "/AppInventor/";
 
+  // We use a single threaded executor so we only load one asset at a time!
+  private static ExecutorService background = Executors.newSingleThreadExecutor();
 
-  public AssetFetcher(String uri, String cookieName, String cookieValue, long projectId) {
-    this.uri = uri;
-    this.cookieName = cookieName;
-    this.cookieValue = cookieValue;
-    this.projectId = projectId;
+  /* We are only used statically */
+  private AssetFetcher() {
   }
 
-  public void fetchAssets(final List<String> assets) {
-    AsynchUtil.runAsynchronously(new Runnable() {
+  public static void fetchAssets(final String cookieValue,
+    final String projectId, final String uri, final String asset) {
+    background.submit(new Runnable() {
         @Override
         public void run() {
           try {
-            for (String asset : assets) {
-              String aUri = uri + "/ode/download/file/" + projectId + "/assets/" + asset;
-              URL url = new URL(aUri);
-              HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-              connection.setRequestMethod("GET");
-              connection.addRequestProperty("Cookie", cookieName + " = " + cookieValue);
-              if (connection != null) {
-                int responseCode = connection.getResponseCode();
-                Log.d(LOG_TAG, "asset = " + asset + " responseCode = " + responseCode);
-                BufferedInputStream in = new BufferedInputStream(connection.getInputStream(), 0x1000);
-                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(REPL_ASSET_DIR + asset)), 0x1000);
-                try {
-                  while (true) {
-                    int b = in.read();
-                    if (b == -1) {
-                      break;
-                    }
-                    out.write(b);
+            String aUri = uri + "/ode/download/file/" + projectId + "/" + asset;
+            URL url = new URL(aUri);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.addRequestProperty("Cookie",  "AppInventor = " + cookieValue);
+            if (connection != null) {
+              int responseCode = connection.getResponseCode();
+              Log.d(LOG_TAG, "asset = " + asset + " responseCode = " + responseCode);
+              BufferedInputStream in = new BufferedInputStream(connection.getInputStream(), 0x1000);
+              BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(REPL_ASSET_DIR + asset)), 0x1000);
+              try {
+                while (true) {
+                  int b = in.read();
+                  if (b == -1) {
+                    break;
                   }
-                  out.flush();
-                } catch (IOException e) {
-                  Log.e(LOG_TAG, "copying assets", e);
-                  continue;             // Next Asset
-                } finally {
-                  out.close();
+                  out.write(b);
                 }
+                out.flush();
+              } catch (IOException e) {
+                Log.e(LOG_TAG, "copying assets", e);
+              } finally {
+                out.close();
               }
-              connection.disconnect();
             }
+            connection.disconnect();
+            RetValManager.assetTransferred(asset);
           } catch (Exception e) {
             Log.e(LOG_TAG, "Exception", e); // Cop out
           }
@@ -103,14 +102,14 @@ public class AssetFetcher {
   }
 
   // For testing
-  AssetFetcher INSTANCE = null;
+  // AssetFetcher INSTANCE = null;
 
-  public static void TestFetcher(long projectId, String cookie, String asset) {
-    Log.d(LOG_TAG, "TestFetcher: projectId = " + projectId + " asset = " + asset + " cookie = " + cookie);
-    AssetFetcher tester = new AssetFetcher("http://jis.qyv.net:8888", "AppInventor", cookie, projectId);
-    List<String> assetList = (List<String>) new ArrayList();
-    assetList.add(asset);
-    tester.fetchAssets(assetList);
-  }
+  // public static void TestFetcher(long projectId, String cookie, String asset) {
+  //   Log.d(LOG_TAG, "TestFetcher: projectId = " + projectId + " asset = " + asset + " cookie = " + cookie);
+  //   AssetFetcher tester = new AssetFetcher("http://jis.qyv.net:8888", "AppInventor", cookie, projectId);
+  //   List<String> assetList = (List<String>) new ArrayList();
+  //   assetList.add(asset);
+  //   tester.fetchAssets(assetList);
+  // }
 
 }
