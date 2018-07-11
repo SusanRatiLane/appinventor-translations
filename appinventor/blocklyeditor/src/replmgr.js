@@ -367,7 +367,7 @@ Blockly.ReplMgr.putYail = (function() {
 
         },
         'pollphone' : function() {
-            if (!rs.didversioncheck) {
+            if (!rs.didversioncheck && !top.usewebrtc) { // have to do version check different for webrtc
                 engine.doversioncheck();
                 return;
             }
