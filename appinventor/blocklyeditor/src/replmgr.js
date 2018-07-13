@@ -674,7 +674,6 @@ Blockly.ReplMgr.putYail = (function() {
     };
     engine.putYail.reset = engine.reset;
     engine.putYail.putAsset = engine.putAsset;
-    engine.putYail.pollphone = engine.pollphone;
     return engine.putYail;
 })();
 
@@ -1272,7 +1271,8 @@ Blockly.ReplMgr.loadExtensions = function() {
     if (top.usewebrtc) {
         // Need to trigger the loading of extensions here
         rs.state = Blockly.ReplMgr.rsState.CONNECTED;
-        this.putYail.pollphone(); //  Need to kick off i/o
+        Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect());
+
     } else {
         rs.state = Blockly.ReplMgr.rsState.EXTENSIONS;
         var xmlhttp = goog.net.XmlHttp();
