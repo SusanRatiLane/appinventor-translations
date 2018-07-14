@@ -266,10 +266,11 @@ Blockly.ReplMgr.putYail = (function() {
         // Enqueue form for the phone
         'putYail' : function(code, block, success, failure) {
             context = this;
+            rs = top.ReplState;
             if (!code) {        // This is a kludge. It lets us call putYail without args
+                engine.pollphone();
                 return;         // in order to setup the context variable above.
             }
-            rs = top.ReplState;
             if (rs === undefined || rs === null) {
                 console.log('putYail: replState not set yet.');
                 return;
@@ -320,6 +321,7 @@ Blockly.ReplMgr.putYail = (function() {
             }
         },
         'webrtcstart' : function() {
+            var RefreshAssets = top.AssetManager_refreshAssets;
             var offer;
             var poller;
             var key = rs.replcode;
@@ -377,7 +379,9 @@ Blockly.ReplMgr.putYail = (function() {
                 webrtcrunning = true;
                 top.webrtcdata = webrtcdata; // For debugging
                 rs.dialog.hide();            // Take down QR Code dialog
-                engine.pollphone();
+                RefreshAssets(function() {
+                    Blockly.ReplMgr.loadExtensions();
+                });
             };
             webrtcdata.onclose = function() {
                 alert("Data Connection is closed");
@@ -1163,9 +1167,7 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
                 rs.connection = null;
                 top.BlocklyPanel_indicateDisconnect();
             });
-            RefreshAssets(function() {
-                Blockly.ReplMgr.loadExtensions();
-            });
+            this.putYail();     // This initializes the putYail state engine
             return;
         }
         if (emulator || usb) {         // If we are talking to the emulator, don't use rendezvou server
