@@ -234,7 +234,7 @@ Blockly.ReplMgr.resetYail = function(partial) {
     top.ReplState.phoneState.initialized = false; // so running io stops
     this.putYail.reset();
     if (!partial) {
-        top.ReplState.phoneState = { "phoneQueue" : []};
+        top.ReplState.phoneState = { "phoneQueue" : [], "assetQueue" : []};
     }
 };
 
@@ -384,10 +384,16 @@ Blockly.ReplMgr.putYail = (function() {
                 });
             };
             webrtcdata.onclose = function() {
-                alert("Data Connection is closed");
+                console.log("webrtc data closed");
+                webrtcdata = null;
+                webrtcstarting = false;
+                webrtcrunning = false;
             };
             webrtcdata.onerror = function(err) {
-                alert("Data Error " + err);
+                console.log("webrtc data error: " + err);
+                webrtcdata = null;
+                webrtcstarting = false;
+                webrtcrunning = false;
             };
             peer.createOffer().then(function(desc) {
                 offer = desc;
@@ -626,6 +632,13 @@ Blockly.ReplMgr.putYail = (function() {
             rxhr.send("IGNORED=STUFF");
         },
         "reset" : function() {
+            // if (top.usewebrtc) {
+            //     if (webrtcdata) {
+            //         webrtcdata.close();
+            //     }
+            //     webrtcrunning = false;
+            //     webrtcstarting = false;
+            // }
             if (rxhr)
                 rxhr.abort();
             rxhr = null;
@@ -644,6 +657,7 @@ Blockly.ReplMgr.putYail = (function() {
 //          context.hardreset(context.formName); // kill adb and emulator
             rs.didversioncheck = false;
             top.BlocklyPanel_indicateDisconnect();
+            engine.reset();
         },
         "checkversionupgrade" : function(fatal, installer, force) {
             var dialog;
@@ -1199,6 +1213,11 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
     } else {
         if (top.ReplState.state == this.rsState.RENDEZVOUS) {
             top.ReplState.dialog.hide();
+        }
+        try {
+            top.webrtcdata.send("#DONE#"); // This should kill the companion
+        } catch (err) {
+            console.log("webrtcdata: Error: " + err);
         }
         this.resetYail(false);
         top.ReplState.state = this.rsState.IDLE;
