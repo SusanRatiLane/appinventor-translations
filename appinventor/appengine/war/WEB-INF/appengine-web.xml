@@ -110,7 +110,7 @@
     <property name="localauth.mailserver.password" value="changeme" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="ai2testbuildserver.appinventor.mit.edu:9990" />
+    <property name="build.server.host" value="newblocksbuildserver.appinventor.mit.edu:9994" />
 
     <!-- host[:port] to tell build server the app host url to callback
          when deploy AppInventor on other GAE implementation such as
@@ -126,7 +126,7 @@
     <!-- Set this to false if we should not send the Git build version with build requests.
          This is useful when testing new servers where we don't want to require the
          buildserver to match -->
-    <property name="build.send.git.version" value="false" />
+    <property name="build.send.git.version" value="true" />
 
     <!-- Session Management Variables. -->
     <!-- We define three variables here.
