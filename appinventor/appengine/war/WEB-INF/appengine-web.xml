@@ -134,7 +134,7 @@
     -->
 
     <!-- host[:port] to use for the second build server -->
-    <property name="build2.server.host" value="" />
+    <property name="build2.server.host" value="newblocksbuildserver.appinventor.mit.edu:9994" />
 
     <!-- host[:port] to tell build server the app host url to callback
          when deploy AppInventor on other GAE implementation such as
