@@ -7068,6 +7068,22 @@ public interface OdeMessages extends Messages {
   @Description("")
   String RotationProperties();
 
+  @DefaultMessage("Notice!")
+  @Description("Title for the Warning Dialog Box")
+  String NoticeTitle();
+
+  @DefaultMessage("Use this option to build apps that that will work back to Android version 2.1 (Eclair)," +
+      "<br/>but will not be publishable in the Google Play Store. " +
+      "<a href=\"http://appinv.us/xnot1\" target=\"_blank\">More Information</a>")
+  @Description("Text for the Package non-SDK 26 Warning Dialog Box (HTML)")
+  String PackageNotice();
+
+  @DefaultMessage("Use this option to create applications that can be submitted to the Google Play Store." +
+      "<br/>These applications will not run on Android versions older than 4.0. " +
+      "<a href=\"http://appinv.us/xnot1\" target=\"_blank\">More Information</a>")
+  @Description("Text for the Package SDK 26 Warning Dialog Box (HTML)")
+  String Package26Notice();
+
   @DefaultMessage("WebRTC")     // Note: This is INTERNAL so doesn't need translation
   @Description("")
   String WebRTCProperties();
@@ -7084,17 +7100,4 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GetInstallerMethods();
 
-  @DefaultMessage("Notice!")
-  @Description("Title for the Warning Dialog Box")
-  String NoticeTitle();
-
-  @DefaultMessage("Use this option to build apps that that will work back to Android version 2.1 (Eclair)," +
-      "<br/>but will not be publishable in the Google Play Store.")
-  @Description("Text for the Package non-SDK 26 Warning Dialog Box (HTML)")
-  String PackageNotice();
-
-  @DefaultMessage("Use this option to create applications that can be submitted to the Google Play Store." +
-      "<br/>These applications will not run on Android versions older than 4.0.")
-  @Description("Text for the Package SDK 26 Warning Dialog Box (HTML)")
-  String Package26Notice();
 }
