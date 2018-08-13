@@ -32,7 +32,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-
+import android.content.pm.PackageInfo;
+import android.content.pm.PermissionInfo;
 import android.content.res.Configuration;
 
 import android.graphics.PorterDuff;
@@ -131,7 +132,7 @@ import org.json.JSONException;
 @DesignerComponent(version = YaVersion.FORM_COMPONENT_VERSION,
     category = ComponentCategory.LAYOUT,
     description = "Top-level component containing all other components in the program",
-    androidMinSdk = 7,
+    androidMinSdk = 14,
     showOnPalette = false)
 @SimpleObject
 @UsesLibraries(libraries = "appcompat-v7.aar, support-v4.aar, animated-vector-drawable.aar, " +
@@ -240,7 +241,7 @@ public class Form extends AppInventorCompatActivity
   private final Set<OnOptionsItemSelectedListener> onOptionsItemSelectedListeners = Sets.newHashSet();
 
   // Listeners for permission results
-  private final HashMap<Integer, PermissionHandler> permissionHandlers = Maps.newHashMap();
+  private final HashMap<Integer, PermissionResultHandler> permissionHandlers = Maps.newHashMap();
 
   private final Random permissionRandom = new Random(); // Used for generating nonces
 
@@ -366,6 +367,50 @@ public class Form extends AppInventorCompatActivity
       progress.dismiss();
     }
 
+    // Check to see if we need to ask for WRITE_EXTERNAL_STORAGE
+    // permission.  We look at the application manifest to see if it
+    // is declared there. If it is, then we need to ask the user to
+    // approve it here. Otherwise we don't need to and we can
+    // continue. Because the asking process is asynchronous
+    // we have to have yet another continuation of the onCreate
+    // process (onCreateFinish2). Sigh.
+
+    // DEBUG: For now just listing the manifest permissions...
+    boolean needSdcardWrite = false;
+    try {
+      PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(),
+        PackageManager.GET_PERMISSIONS);
+      for (String permission : packageInfo.requestedPermissions) {
+        Log.d(LOG_TAG, "requestedPersmission: " + permission);
+        if ("android.permission.WRITE_EXTERNAL_STORAGE".equals(permission)) {
+          if (!(this instanceof ReplForm)) { // Don't do this for the Companion
+            needSdcardWrite = true;
+          }
+          Log.d(LOG_TAG, "NEED TO REQUEST PERMISSION!");
+        }
+      }
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Exception while attempting to learn permissions.", e);
+    }
+    if (needSdcardWrite) {
+      askPermission("android.permission.WRITE_EXTERNAL_STORAGE",
+        new PermissionResultHandler() {
+          @Override
+          public void HandlePermissionResponse(String permission, boolean granted) {
+            if (granted) {
+              onCreateFinish2();
+            } else {
+              Log.i(LOG_TAG, "WRITE_EXTERNAL_STORAGE Permission denied by user");
+              onCreateFinish2();
+            }
+          }
+        });
+    } else {
+      onCreateFinish2();
+    }
+  }
+
+  private void onCreateFinish2() {
     defaultPropertyValues();
 
     // Get startup text if any before adding components
@@ -2325,7 +2370,7 @@ public class Form extends AppInventorCompatActivity
 
   // Permission Handling Code
 
-  public void askPermission(final String permission, final PermissionHandler responseRequestor) {
+  public void askPermission(final String permission, final PermissionResultHandler responseRequestor) {
     final Form form = this;
     androidUIHandler.post(new Runnable() {
         @Override
@@ -2337,6 +2382,8 @@ public class Form extends AppInventorCompatActivity
             return;
           }
           int nonce = permissionRandom.nextInt(100000);
+          Log.d(LOG_TAG, "askPermission: permission = " + permission +
+            " requestCode = " + nonce);
           permissionHandlers.put(nonce, responseRequestor);
           ActivityCompat.requestPermissions((Activity)form,
             new String[] {permission}, nonce);
@@ -2347,17 +2394,21 @@ public class Form extends AppInventorCompatActivity
   @Override
   public void onRequestPermissionsResult(int requestCode,
     String permissions[], int[] grantResults) {
-    PermissionHandler responder = permissionHandlers.get(requestCode);
+    PermissionResultHandler responder = permissionHandlers.get(requestCode);
     if (responder == null) {
       // Hmm. Shouldn't happen
       Log.e(LOG_TAG, "Received permission response which we cannot match.");
       return;
     }
-    if (grantResults.length > 0
-      && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-      responder.HandlePermissionResponse(permissions[0], true);
+    if (grantResults.length > 0) {
+      if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        responder.HandlePermissionResponse(permissions[0], true);
+      } else {
+        responder.HandlePermissionResponse(permissions[0], false);
+      }
     } else {
-      responder.HandlePermissionResponse(permissions[0], false);
+      Log.d(LOG_TAG, "onRequestPermissionsResult: grantResults.length = " + grantResults.length +
+        " requestCode = " + requestCode);
     }
     permissionHandlers.remove(requestCode);
   }

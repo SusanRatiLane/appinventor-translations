@@ -1,16 +1,9 @@
 <html>
     <head>
-        <title>Welcome to App Inventor</title>
+        <title>Welcome to MIT App Inventor</title>
         <script type="text/javascript">
-         var permissions = ['android.permission.CAMERA',
-                            'android.permission.WRITE_EXTERNAL_STORAGE']
-         function test() {
-             var item = document.getElementById("foo");
-             item.innerHTML = "<b>Clicked</b>";
-         }
+         var permissions = ['android.permission.WRITE_EXTERNAL_STORAGE'];
          function permresult(permission, result) {
-             var item = document.getElementById("foo");
-             item.innerHTML = "Permission " + permission + " = " + result;
              start();/* Re-evaluate whether or not to display */
          }
          function hasallpermissions() {
@@ -22,11 +15,15 @@
          }
          function start() {
              var item = document.getElementById("needpermission");
+             var cbutton = document.getElementById("cbutton");
              if (!hasallpermissions()) {
                  item.style.display = "block";
+                 cbutton.style.display = "none";
              } else {
                  item.style.display = "none";
+                 cbutton.style.display = "block";
              }
+             getmotd();
          }
          function getpermission() {
              for (i = 0; i < permissions.length; i++) {
@@ -39,6 +36,24 @@
          }
          function done() {
              Android.finished();
+         }
+         function getmotd() {
+             xhr = new XMLHttpRequest();
+             xhr.open("GET", "http://templates.appinventor.mit.edu/mit/m.json");
+             xhr.onreadystatechange = function() {
+                 if (this.readyState == 4 && this.status == 200) {
+                     var json = JSON.parse(this.response);
+                     var ele = document.getElementById("motd");
+                     var message = json[Android.getVersion()];
+                     if (!message) {
+                         message = json['message'];
+                     }
+                     if (message) {
+                         ele.innerHTML = message;
+                     }
+                 }
+             };
+             xhr.send();
          }
         </script>
         <script type="text/javascript">
@@ -206,41 +221,24 @@
     </head>
     <body onload="start();">
         <center>
-            <h1>Welcome to App Inventor!</h1>
+            <h1>Welcome to MIT App Inventor!</h1>
         </center>
         <p>Welcome to the MIT App Inventor Companion Application. You use this application in conjunction with
             the MIT App Inventor application authoring system. You can learn more about it at http://appinventor.mit.edu.
         </p>
+        <div id="motd">
+        </div>
         <div id="needpermission" style="display:none;">
         <p>
-            On modern Android devices you will be prompted to give permission for certain sensitive activities such as
-            reading the location of your device. You will only receive these prompts when you attempt to perform
-            these activities. Once you give permission, Android will remember and not ask you next time.
-        </p>
-        <p>
-            The Companion needs CAMERA and STORAGE persmission. Press the "Get Permissions" button below to ask your device
-            to grant these permissions. Each time you press the button you will be prompted for a missing permission. Once
-            all permissions have been obtained, the "Get Permissions" button will disappear. Press "Continue" to use
-            the Companion.
+            The Companion needs STORAGE permission. Press the "Get Permissions" button below to ask your device
+            to grant these permissions.
         </p>
         <p>&nbsp;</p>
         <button onclick="getpermission();">Get Permissions</button>
         </div>
         <p>&nbsp;</p>
-        <div id="foo"></div>
-        <button onclick="done();">Continue</button>
-        <p>&nbsp;</p>
-        <button id="sendbutton" disabled="true" onclick="sender();">Sender</button><br/><br/>
-        <button id="receivebutton" disabled="true" onclick="receiver();">Receiver</button>
-        <br/><br/>
-        <div id="chat"></div>
-        <br/><br/>
-        <textarea id="send" rows="10" cols="70"></textarea>
-        <br/><br/>
-        <button id="chatbutton" onclick="chat();" disabled="true">Send Chat</button>
-        <br/><br/>
-        <input type="text" id="key" value=""/>
-        <br/><br/>
-        <button onclick="setkey();">Set Rendezvous Key</button>
+        <div id="cbutton">
+            <button onclick="done();">Continue</button>
+        </div>
     </body>
 </html>

@@ -24,8 +24,11 @@ public final class ErrorMessages {
   // LocationSensor errors
   public static final int ERROR_LOCATION_SENSOR_LATITUDE_NOT_FOUND = 101;
   public static final int ERROR_LOCATION_SENSOR_LONGITUDE_NOT_FOUND = 102;
+  public static final int ERROR_LOCATION_NO_PERMISSION = 103;
   // Camera errors
   public static final int ERROR_CAMERA_NO_IMAGE_RETURNED = 201;
+  public static final int ERROR_NO_CAMERA_PERMISSION = 202;
+
   // Twitter errors
   public static final int ERROR_TWITTER_UNSUPPORTED_LOGIN_FUNCTION = 301;
   public static final int ERROR_TWITTER_BLANK_CONSUMER_KEY_OR_SECRET = 302;
@@ -104,6 +107,7 @@ public final class ErrorMessages {
   public static final int ERROR_SOUND_RECORDER_ILLEGAL_STOP = 803;
   public static final int ERROR_SOUND_RECORDER_MAX_DURATION_REACHED = 804;
   public static final int ERROR_SOUND_RECORDER_MAX_FILESIZE_REACHED = 805;
+  public static final int ERROR_SOUND_NO_PERMISSION = 806;
   // Form errors
   public static final int ERROR_INVALID_SCREEN_ORIENTATION = 901;
   public static final int ERROR_SCREEN_NOT_FOUND = 902;
@@ -134,6 +138,7 @@ public final class ErrorMessages {
   // Contact picker (and PhoneNumberPicker) errors
   public static final int ERROR_PHONE_UNSUPPORTED_CONTACT_PICKER = 1107;
   public static final int ERROR_PHONE_UNSUPPORTED_SEARCH_IN_CONTACT_PICKING = 1108;
+  public static final int ERROR_NO_READ_CONTACTS_PERMISSION = 1116; // Note Gap in numbers
   // Camcorder errors
   public static final int ERROR_CAMCORDER_NO_CLIP_RETURNED = 1201;
   // VideoPlayer errors
@@ -148,10 +153,11 @@ public final class ErrorMessages {
   // ImagePicker errors
   public static final int ERROR_CANNOT_SAVE_IMAGE = 1601;
   public static final int ERROR_CANNOT_COPY_MEDIA = 1602;
-  public static final int ERROR_NO_CAMERA_PERMISSION = 1603;
 
   // Texting errors
   public static final int ERROR_BAD_VALUE_FOR_TEXT_RECEIVING = 1701;
+  public static final int ERROR_NO_SMS_PERMISSION = 1702;
+  public static final int ERROR_NO_SMS_RECEIVE_PERMISSION = 1703;
 
   // Repl Communication Errors
   public static final int ERROR_REPL_SECURITY_ERROR = 1801;
@@ -234,7 +240,10 @@ public final class ErrorMessages {
   public static final int ERROR_INVALID_LONGITUDE_IN_POINT_AT_INDEX = 3419;
   public static final int ERROR_EXPECTED_ARRAY_AT_INDEX = 3420;
 
-  // Start the next group of errors at 3500
+  // Phone Call Errors
+  public static final int ERROR_NO_CALL_PERMISSION = 3501;
+
+  // Start the next group of errors at 3600
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -261,6 +270,8 @@ public final class ErrorMessages {
         "Unable to find latitude from %s.");
     errorMessages.put(ERROR_LOCATION_SENSOR_LONGITUDE_NOT_FOUND,
         "Unable to find longitude from %s.");
+    errorMessages.put(ERROR_LOCATION_NO_PERMISSION,
+        "Location Permission was Denied.");
     // Camera errors
     errorMessages.put(ERROR_CAMERA_NO_IMAGE_RETURNED,
         "The camera did not return an image.");
@@ -420,6 +431,7 @@ public final class ErrorMessages {
     errorMessages.put(ERROR_SOUND_RECORDER_ILLEGAL_STOP, "Stop() called when not recording.");
     errorMessages.put(ERROR_SOUND_RECORDER_MAX_DURATION_REACHED, "Maximum sound recording duration was reached.");
     errorMessages.put(ERROR_SOUND_RECORDER_MAX_FILESIZE_REACHED, "Maximum sound recording size was reached.");
+    errorMessages.put(ERROR_SOUND_NO_PERMISSION, "RECORD_AUDIO permission denied");
     // Form errors
     errorMessages.put(ERROR_INVALID_SCREEN_ORIENTATION,
         "The specified screen orientation is not valid: %s");
@@ -471,6 +483,8 @@ public final class ErrorMessages {
     errorMessages.put(ERROR_PHONE_UNSUPPORTED_SEARCH_IN_CONTACT_PICKING,
         "To pick contacts, pick them directly, without using search.");
     // Camcorder errors
+    errorMessages.put(ERROR_NO_READ_CONTACTS_PERMISSION,
+        "READ_CONTACTS Permission was denied.");
     errorMessages.put(ERROR_CAMCORDER_NO_CLIP_RETURNED,
         "The camcorder did not return a clip.");
     // VideoPlayer errors
@@ -494,10 +508,14 @@ public final class ErrorMessages {
     errorMessages.put(ERROR_CANNOT_COPY_MEDIA,
         "Unable to copy selected media: %s");
     errorMessages.put(ERROR_NO_CAMERA_PERMISSION,
-        "Scanning requires CAMERA Permission");
+        "Permission to use the Camera denied.");
     // Texting errors
     errorMessages.put(ERROR_BAD_VALUE_FOR_TEXT_RECEIVING,
       "Text Receiving should be either 1, 2 or 3.");
+    errorMessages.put(ERROR_NO_SMS_PERMISSION,
+      "You do not have SEND_SMS permission");
+    errorMessages.put(ERROR_NO_SMS_RECEIVE_PERMISSION,
+      "You do not have RECEIVE_SMS permission");
     errorMessages.put(ERROR_REPL_SECURITY_ERROR,
       "Security Error Receiving Blocks from Browser.");
     //AccelerometerSensor errors
@@ -586,6 +604,8 @@ public final class ErrorMessages {
         "Invalid longitude %2$s in point at index %1$d. Expected a value between [-180, 180].");
     errorMessages.put(ERROR_EXPECTED_ARRAY_AT_INDEX,
         "Expected an array of values at index %1$d, but got %2$s.");
+    errorMessages.put(ERROR_NO_CALL_PERMISSION,
+        "You do not have permission to make phone calls.");
   }
 
   private ErrorMessages() {

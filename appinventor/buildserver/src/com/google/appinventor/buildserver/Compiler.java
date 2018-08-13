@@ -121,7 +121,7 @@ public final class Compiler {
   private static final String DEFAULT_ICON = RUNTIME_FILES_DIR + "ya.png";
   private static final String DEFAULT_VERSION_CODE = "1";
   private static final String DEFAULT_VERSION_NAME = "1.0";
-  private static final String DEFAULT_MIN_SDK = "7";
+  private static final String DEFAULT_MIN_SDK = "14";
   private static final String DEFAULT_THEME = "AppTheme.Light.DarkActionBar";
 
   /*
@@ -528,7 +528,13 @@ public final class Compiler {
     String colorAccent = project.getAccentColor() == null ? "#00728A" : project.getAccentColor();
     String theme = project.getTheme() == null ? "Classic" : project.getTheme();
     String actionbar = project.getActionBar();
-    String parentTheme = theme.replace("AppTheme", "Theme.AppCompat");
+    String parentTheme;
+    if (theme.startsWith("Classic")) {
+      parentTheme = "Theme.AppCompat.Light";
+    } else {
+      parentTheme = theme.replace("AppTheme", "Theme.AppCompat");
+    }
+
     if (!"true".equalsIgnoreCase(actionbar)) {
       if (parentTheme.endsWith("DarkActionBar")) {
         parentTheme = parentTheme.replace("DarkActionBar", "NoActionBar");
@@ -559,22 +565,41 @@ public final class Compiler {
       out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(stylesXml), "UTF-8"));
       out.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
       out.write("<resources>\n");
-      if (!parentTheme.startsWith("Classic")) {
-        writeTheme(out, "AppTheme", parentTheme);
-        if (parentTheme.contains("Light")) {
-          writeDialogTheme(out, "AIDialog", "Theme.AppCompat.Light.Dialog");
-          writeDialogTheme(out, "AIAlertDialog", "Theme.AppCompat.Light.Dialog.Alert");
-        } else {
-          writeDialogTheme(out, "AIDialog", "Theme.AppCompat.Dialog");
-          writeDialogTheme(out, "AIAlertDialog", "Theme.AppCompat.Dialog.Alert");
-        }
+
+      writeTheme(out, "AppTheme", parentTheme);
+      if (parentTheme.contains("Light")) {
+        writeDialogTheme(out, "AIDialog", "Theme.AppCompat.Light.Dialog");
+        writeDialogTheme(out, "AIAlertDialog", "Theme.AppCompat.Light.Dialog.Alert");
+      } else {
+        writeDialogTheme(out, "AIDialog", "Theme.AppCompat.Dialog");
+        writeDialogTheme(out, "AIAlertDialog", "Theme.AppCompat.Dialog.Alert");
       }
+
       out.write("<style name=\"TextAppearance.AppCompat.Button\">\n");
       out.write("<item name=\"textAllCaps\">false</item>\n");
       out.write("</style>\n");
       out.write("</resources>\n");
       out.close();
     } catch(IOException e) {
+      return false;
+    }
+    return true;
+  }
+
+  /*
+   * Creates the provider_paths file which is used to setup a "Files" content
+   * provider.
+   */
+  private boolean createProviderXml(File providerDir) {
+    File paths = new File(providerDir, "provider_paths.xml");
+    try {
+      BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(paths), "UTF-8"));
+      out.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+      out.write("<paths xmlns:android=\"http://schemas.android.com/apk/res/android\">\n");
+      out.write("   <external-path name=\"external_files\" path=\".\"/>\n");
+      out.write("</paths>\n");
+      out.close();
+    } catch (IOException e) {
       return false;
     }
     return true;
@@ -652,6 +677,7 @@ public final class Compiler {
 
       if (isForCompanion) {      // This is so ACRA can do a logcat on phones older then Jelly Bean
         out.write("  <uses-permission android:name=\"android.permission.READ_LOGS\" />\n");
+        out.write("  <uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\" />\n");
       }
 
       // TODO(markf): Change the minSdkVersion below if we ever require an SDK beyond 1.5.
@@ -668,8 +694,8 @@ public final class Compiler {
       // testing their packaged apps.  Maybe we should make that an option, somehow.
       // TODONE(jis): Turned off debuggable. No one really uses it and it represents a security
       // risk for App Inventor App end-users.
-      // out.write("android:debuggable=\"false\" ");
-      out.write("android:debuggable=\"true\" "); // DEBUGGING
+      out.write("android:debuggable=\"false\" ");
+      // out.write("android:debuggable=\"true\" "); // DEBUGGING
       if (aName.equals("")) {
         out.write("android:label=\"" + projectName + "\" ");
       } else {
@@ -682,7 +708,8 @@ public final class Compiler {
         out.write("android:name=\"com.google.appinventor.components.runtime.multidex.MultiDexApplication\" ");
       }
       // Write theme info if we are not using the "Classic" theme (i.e., no theme)
-      if (!"Classic".equalsIgnoreCase(project.getTheme())) {
+      if (true) {
+//      if (!"Classic".equalsIgnoreCase(project.getTheme())) {
         out.write("android:theme=\"@style/AppTheme\" ");
       }
       out.write(">\n");
@@ -716,7 +743,7 @@ public final class Compiler {
 
         // The keyboard option prevents the app from stopping when a external (bluetooth)
         // keyboard is attached.
-        out.write("android:configChanges=\"orientation|keyboardHidden|keyboard\">\n");
+        out.write("android:configChanges=\"orientation|screenSize|keyboardHidden|keyboard\">\n");
 
 
         out.write("      <intent-filter>\n");
@@ -796,6 +823,19 @@ public final class Compiler {
         out.write("</receiver> \n");
       }
 
+      // Add the FileProvider because in Sdk >=24 we cannot pass file:
+      // URLs in intents (and in other contexts)
+
+      out.write("      <provider\n");
+      out.write("         android:name=\"android.support.v4.content.FileProvider\"\n");
+      out.write("         android:authorities=\"" + packageName + ".provider\"\n");
+      out.write("         android:exported=\"false\"\n");
+      out.write("         android:grantUriPermissions=\"true\">\n");
+      out.write("         <meta-data\n");
+      out.write("            android:name=\"android.support.FILE_PROVIDER_PATHS\"\n");
+      out.write("            android:resource=\"@xml/provider_paths\"/>\n");
+      out.write("      </provider>\n");
+
       out.write("  </application>\n");
       out.write("</manifest>\n");
       out.close();
@@ -874,6 +914,12 @@ public final class Compiler {
     File style21Dir = createDir(resDir, "values-v21");
     if (!compiler.createValuesXml(styleDir, "") ||
         !compiler.createValuesXml(style21Dir, "-v21")) {
+      return false;
+    }
+
+    out.println("________Creating provider_path xml");
+    File providerDir = createDir(resDir, "xml");
+    if (!compiler.createProviderXml(providerDir)) {
       return false;
     }
 
@@ -1551,11 +1597,13 @@ public final class Compiler {
       aaptPackageCommandLineArgs.add(packageName);
       aaptPackageCommandLineArgs.add("--output-text-symbols");
       aaptPackageCommandLineArgs.add(symbolOutputDir.getAbsolutePath());
+      aaptPackageCommandLineArgs.add("--no-version-vectors");
       appRJava = new File(sourceOutputDir, packageName.replaceAll("\\.", "/") + "/R.java");
       appRTxt = new File(symbolOutputDir, "R.txt");
     }
     aaptPackageCommandLineArgs.add(libsDir.getAbsolutePath());
     String[] aaptPackageCommandLine = aaptPackageCommandLineArgs.toArray(new String[aaptPackageCommandLineArgs.size()]);
+    libSetup();                 // Setup /tmp/lib64 on Linux
     long startAapt = System.currentTimeMillis();
     // Using System.err and System.out on purpose. Don't want to pollute build messages with
     // tools output
@@ -1775,6 +1823,29 @@ public final class Compiler {
         resources.put(resourcePath, file);
       }
       return file.getAbsolutePath();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /*
+   * This code is only invoked on Linux. It copies libc++.so into /tmp/lib64. This
+   * is needed on linux to run the aapt tool.
+   */
+  private void libSetup() {
+    String osName = System.getProperty("os.name");
+    if (!osName.equals("Linux")) {
+      return;                   // Nothing to do (yet) for MacOS and Windows
+    }
+    try {
+      File outFile = new File("/tmp/lib64/libc++.so");
+      if (outFile.exists()) {    // Don't do it more then once!
+        return;
+      }
+      File tmpLibDir = new File("/tmp/lib64");
+      tmpLibDir.mkdirs();
+      Files.copy(Resources.newInputStreamSupplier(Compiler.class.getResource("/tools/linux/lib64/libc++.so")),
+        outFile);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

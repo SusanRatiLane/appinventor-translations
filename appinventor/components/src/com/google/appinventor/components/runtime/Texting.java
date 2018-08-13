@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import android.Manifest;
 import android.text.TextUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -206,6 +207,12 @@ public class Texting extends AndroidNonvisibleComponent
 
   private ComponentContainer container; // Need this for error reporting
 
+  // Do we have SEND_SMS permission enabled?
+  private boolean havePermission = false;
+
+  // Do we have RECEIVE_SMS permission enabled?
+  private boolean haveReceivePermission = false;
+
   /**
    * Creates a new TextMessage component.
    *
@@ -266,6 +273,14 @@ public class Texting extends AndroidNonvisibleComponent
     processCachedMessages();
     NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE);
     nm.cancel(SmsBroadcastReceiver.NOTIFICATION_ID);
+  }
+
+  // Called from runtime.scm
+  public void Initialize() {
+    if (receivingEnabled > ComponentConstants.TEXT_RECEIVING_OFF && !haveReceivePermission) {
+      // Request receive SMS permission if we are configured to receive but do not have permission
+      requestReceiveSmsPermission();
+    }
   }
 
   /**
@@ -481,6 +496,9 @@ public class Texting extends AndroidNonvisibleComponent
     editor.putInt(PREF_RCVENABLED, enabled);
     editor.remove(PREF_RCVENABLED_LEGACY); // Remove any legacy value
     editor.commit();
+    if (enabled > ComponentConstants.TEXT_RECEIVING_OFF && !haveReceivePermission) {
+      requestReceiveSmsPermission();
+    }
   }
 
   public static int isReceivingEnabled(Context context) {
@@ -941,6 +959,31 @@ public class Texting extends AndroidNonvisibleComponent
   private void sendViaSms() {
     Log.i(TAG, "Sending via built-in Sms");
 
+    // Need to make sure we have the SEND_SMS permission
+    if (!havePermission) {
+      final Form form = container.$form();
+      final Texting me = this;
+      form.runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            form.askPermission(Manifest.permission.SEND_SMS,
+              new PermissionResultHandler() {
+                @Override
+                public void HandlePermissionResponse(String permission, boolean granted) {
+                  if (granted) {
+                    me.havePermission = true;
+                    me.sendViaSms();
+                  } else {
+                    form.dispatchErrorOccurredEvent(me, "Texting",
+                      ErrorMessages.ERROR_NO_SMS_PERMISSION, "");
+                  }
+                }
+              });
+          }
+        });
+      return;
+    }
+
     ArrayList<String> parts = smsManager.divideMessage(message);
     int numParts = parts.size();
     ArrayList<PendingIntent> pendingIntents = new ArrayList<PendingIntent>();
@@ -965,6 +1008,27 @@ public class Texting extends AndroidNonvisibleComponent
     // This may result in an error -- a "sent" or "error" message will be displayed
     activity.registerReceiver(sendReceiver, new IntentFilter(SENT));
     smsManager.sendMultipartTextMessage(phoneNumber, null, parts, pendingIntents, null);
+  }
+
+  private void requestReceiveSmsPermission() {
+    form.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        form.askPermission(Manifest.permission.RECEIVE_SMS,
+            new PermissionResultHandler() {
+              @Override
+              public void HandlePermissionResponse(String permission, boolean granted) {
+                if (granted) {
+                  haveReceivePermission = true;
+                } else {
+                  form.dispatchErrorOccurredEvent(Texting.this, "Texting",
+                      ErrorMessages.ERROR_NO_SMS_RECEIVE_PERMISSION);
+                }
+              }
+            });
+      }
+    });
+
   }
 
   /**
