@@ -75,8 +75,13 @@ public class AssetFetcher {
             if (connection != null) {
               int responseCode = connection.getResponseCode();
               Log.d(LOG_TAG, "asset = " + asset + " responseCode = " + responseCode);
+              File outFile = new File(REPL_ASSET_DIR + asset);
+              File parentOutFile = outFile.getParentFile();
+              if (!parentOutFile.exists()) {
+                parentOutFile.mkdirs();
+              }
               BufferedInputStream in = new BufferedInputStream(connection.getInputStream(), 0x1000);
-              BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(REPL_ASSET_DIR + asset)), 0x1000);
+              BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile), 0x1000);
               try {
                 while (true) {
                   int b = in.read();
