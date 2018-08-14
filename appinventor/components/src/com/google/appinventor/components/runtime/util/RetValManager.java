@@ -221,6 +221,39 @@ public class RetValManager {
   }
 
   /*
+   * extensionsLoaded
+   *
+   */
+  public static void extensionsLoaded() {
+    synchronized (semaphore) {
+      JSONObject retval = new JSONObject();
+      try {
+        retval.put("status", "OK");
+        retval.put("type", "extensionsLoaded");
+      } catch (JSONException e) {
+        Log.e(LOG_TAG, "Error building retval", e);
+        return;
+      }
+      boolean sendNotify = currentArray.isEmpty();
+      currentArray.add(retval);
+      if (usingWebRTC) {
+        try {
+          JSONObject output = new JSONObject();
+          output.put("status", "OK");
+          output.put("values", new JSONArray(currentArray));
+          ReplForm.ReturnRetvals(output.toString());
+        } catch (JSONException e) {
+          Log.e(LOG_TAG, "Error building retval", e);
+          return;
+        }
+        currentArray.clear();
+      } else if (sendNotify) {
+        semaphore.notifyAll();
+      }
+    }
+  }
+
+  /*
    * fetch -- Fetch all pending results as a JSON encoded array.
    *
    * NOTE: This code is not used when we are using webrtc

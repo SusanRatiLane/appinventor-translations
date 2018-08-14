@@ -276,7 +276,8 @@ Blockly.ReplMgr.putYail = (function() {
                 return;
             }
             if (rs.state != Blockly.ReplMgr.rsState.CONNECTED &&
-                rs.state != Blockly.ReplMgr.rsState.ASSET) {
+                rs.state != Blockly.ReplMgr.rsState.ASSET &&
+                rs.state != Blockly.ReplMgr.rsState.EXTENSIONS) {
                 console.log('putYail: phone not connected');
                 return;
             }
@@ -302,7 +303,8 @@ Blockly.ReplMgr.putYail = (function() {
                 return;
             }
             if (rs.state != Blockly.ReplMgr.rsState.CONNECTED &&
-                rs.state != Blockly.ReplMgr.rsState.ASSET) {
+                rs.state != Blockly.ReplMgr.rsState.ASSET &&
+                rs.state != Blockly.ReplMgr.rsState.EXTENSIONS) {
                 console.log('putAsset: phone not connected');
                 return;
             }
@@ -819,6 +821,7 @@ Blockly.ReplMgr.acceptableVersion = function(version) {
 };
 
 Blockly.ReplMgr.processRetvals = function(responses) {
+    var rs = top.ReplState;
     var block;
     var context = this;
     var runtimeerr = function(message) {
@@ -913,6 +916,10 @@ Blockly.ReplMgr.processRetvals = function(responses) {
             break;
         case "assetTransferred":
             top.AssetManager_markAssetTransferred(r.value);
+            break;
+        case "extensionsLoaded":
+            rs.state = Blockly.ReplMgr.rsState.CONNECTED;
+            Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect());
             break;
         case "error":
             console.log("processRetVals: Error value = " + r.value);
@@ -1291,9 +1298,14 @@ Blockly.ReplMgr.loadExtensions = function() {
     var rs = top.ReplState;
     if (top.usewebrtc) {
         // Need to trigger the loading of extensions here
-        rs.state = Blockly.ReplMgr.rsState.CONNECTED;
-        Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect());
-
+        rs.state = Blockly.ReplMgr.rsState.EXTENSIONS;
+        var extensionJson = JSON.stringify(top.AssetManager_getExtensions());
+        extensionJson = extensionJson.replace(/"/g, '\\"');
+        var yailstring = "(AssetFetcher:loadExtensions \"" +
+            extensionJson +
+            "\")"
+        console.log("Blockly.ReplMgr.loadExtensions(webrtc): Yail = " + yailstring);
+        this.putYail.putAsset(yailstring);
     } else {
         rs.state = Blockly.ReplMgr.rsState.EXTENSIONS;
         var xmlhttp = goog.net.XmlHttp();

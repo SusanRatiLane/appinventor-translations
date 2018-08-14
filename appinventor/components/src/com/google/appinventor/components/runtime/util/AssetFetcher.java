@@ -5,10 +5,10 @@
 package com.google.appinventor.components.runtime.util;
 import android.os.Environment;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import android.util.Log;
+
+import com.google.appinventor.components.runtime.Form;
+import com.google.appinventor.components.runtime.ReplForm;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -21,6 +21,11 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 /**
  * AssetFetcher: This module is used by the MIT AI2 Companion to fetch
@@ -106,15 +111,30 @@ public class AssetFetcher {
       });
   }
 
-  // For testing
-  // AssetFetcher INSTANCE = null;
-
-  // public static void TestFetcher(long projectId, String cookie, String asset) {
-  //   Log.d(LOG_TAG, "TestFetcher: projectId = " + projectId + " asset = " + asset + " cookie = " + cookie);
-  //   AssetFetcher tester = new AssetFetcher("http://jis.qyv.net:8888", "AppInventor", cookie, projectId);
-  //   List<String> assetList = (List<String>) new ArrayList();
-  //   assetList.add(asset);
-  //   tester.fetchAssets(assetList);
-  // }
-
+  public static void loadExtensions(String jsonString) {
+    Log.d(LOG_TAG, "loadExtensions called jsonString = " + jsonString);
+    try {
+      ReplForm form = (ReplForm) Form.getActiveForm();
+      JSONArray array = new JSONArray(jsonString);
+      List<String> extensionsToLoad = new ArrayList<String>();
+      for (int i = 0; i < array.length(); i++) {
+        String extensionName = array.optString(i);
+        if (extensionName != null) {
+          Log.d(LOG_TAG, "loadExtensions, extensionName = " + extensionName);
+          extensionsToLoad.add(extensionName);
+        } else {
+          Log.e(LOG_TAG, "extensionName was null");
+          return;
+        }
+      }
+      try {
+        form.loadComponents(extensionsToLoad);
+        RetValManager.extensionsLoaded();
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Error in form.loadComponents", e);
+      }
+    } catch (JSONException e) {
+      Log.e(LOG_TAG, "JSON Exception parsing extension string", e);
+    }
+  }
 }
