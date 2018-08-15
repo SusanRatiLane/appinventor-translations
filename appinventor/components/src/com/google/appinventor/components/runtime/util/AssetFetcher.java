@@ -117,6 +117,11 @@ public class AssetFetcher {
       ReplForm form = (ReplForm) Form.getActiveForm();
       JSONArray array = new JSONArray(jsonString);
       List<String> extensionsToLoad = new ArrayList<String>();
+      if (array.length() == 0) { // No extensions
+        Log.d(LOG_TAG, "loadExtensions: No Extensions");
+        RetValManager.extensionsLoaded(); // This kicks things going
+        return;
+      }
       for (int i = 0; i < array.length(); i++) {
         String extensionName = array.optString(i);
         if (extensionName != null) {
