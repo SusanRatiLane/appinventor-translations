@@ -259,7 +259,7 @@ Blockly.ReplMgr.putYail = (function() {
     var webrtcstarting = false;
     var webrtcrunning = false;
     var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
-    var webrtcrendezvous = 'http://jis.qyv.net:3000/';
+    var webrtcrendezvous = 'http://jis.qyv.net:3000/rendezvous2/';
     var webrtcdata;
     var seennonce = {};
     var engine = {
