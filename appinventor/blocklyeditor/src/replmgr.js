@@ -634,13 +634,13 @@ Blockly.ReplMgr.putYail = (function() {
             rxhr.send("IGNORED=STUFF");
         },
         "reset" : function() {
-            // if (top.usewebrtc) {
-            //     if (webrtcdata) {
-            //         webrtcdata.close();
-            //     }
-            //     webrtcrunning = false;
-            //     webrtcstarting = false;
-            // }
+            if (top.usewebrtc) {
+                if (webrtcdata) {
+                    webrtcdata.close();
+                }
+                webrtcrunning = false;
+                webrtcstarting = false;
+            }
             if (rxhr)
                 rxhr.abort();
             rxhr = null;
