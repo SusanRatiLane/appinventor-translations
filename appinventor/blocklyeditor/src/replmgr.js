@@ -633,8 +633,8 @@ Blockly.ReplMgr.putYail = (function() {
             };
             rxhr.send("IGNORED=STUFF");
         },
-        "reset" : function() {
-            if (top.usewebrtc) {
+        "reset" : function(hard) {
+            if (top.usewebrtc && hard) {
                 if (webrtcdata) {
                     webrtcdata.close();
                 }
@@ -1228,6 +1228,7 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
         }
         this.resetYail(false);
         top.ReplState.state = this.rsState.IDLE;
+        this.putYail.reset(true);      // This will kill a webrtc connection
         this.hardreset(this.formName);       // Tell aiStarter to kill off adb
     }
 };
