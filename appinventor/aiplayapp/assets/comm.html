@@ -84,6 +84,7 @@
              poller = setInterval(poll, 1000);
          };
          function receiver() {
+             var first = true;/* The Rendevzous server uses this for logging */
              var offer;
              var poller;
              var poll = function() {
@@ -112,7 +113,9 @@
                                          xhr.open('POST', rendezvous, true);
                                          xhr.send(JSON.stringify({'key' : key + '-r',
                                                                   'webrtc' : true,
+                                                                  'first' : first,
                                                                   'offer' : desc}));
+                                         first = false;
                                          peer.setLocalDescription(desc);
                                      });
                                  }
