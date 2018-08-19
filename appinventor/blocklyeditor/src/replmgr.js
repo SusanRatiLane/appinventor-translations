@@ -327,6 +327,7 @@ Blockly.ReplMgr.putYail = (function() {
             var offer;
             var poller;
             var key = rs.replcode;
+            var haveoffer = false;
             var poll = function() {
                 xhr = new XMLHttpRequest();
                 xhr.open('GET', webrtcrendezvous + key + '-r', true);
@@ -338,7 +339,7 @@ Blockly.ReplMgr.putYail = (function() {
                                 var hunk = json[i];
                                 var candidate = hunk['candidate'];
                                 offer = hunk['offer'];
-                                if (candidate) {
+                                if (candidate && haveoffer) {
                                     var nonce = hunk['nonce'];
                                     if (!seennonce[nonce]) {
                                         seennonce[nonce] = true;
@@ -347,7 +348,11 @@ Blockly.ReplMgr.putYail = (function() {
                                         console.log("Seen nonce " + nonce);
                                     }
                                 } else if (offer) {
-                                    peer.setRemoteDescription(offer);
+                                    if (!haveoffer) {
+                                        haveoffer = true;
+                                        i = 0; // Start loop over (I hope)
+                                        peer.setRemoteDescription(offer);
+                                    }
                                 }
                             }
                         }
