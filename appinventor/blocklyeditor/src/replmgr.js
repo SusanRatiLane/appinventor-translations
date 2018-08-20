@@ -258,7 +258,10 @@ Blockly.ReplMgr.putYail = (function() {
     var phonereceiving = false;
     var webrtcstarting = false;
     var webrtcrunning = false;
-    var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
+    // var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
+    var iceservers = { 'iceServers' : [ { 'url' : 'turn:turn.appinventor.mit.edu:3478',
+                                          'username' : 'oh',
+                                          'credential' : 'boy' }]};
     var webrtcrendezvous = 'http://jis.qyv.net:3000/rendezvous2/';
     var webrtcdata;
     var seennonce = {};
