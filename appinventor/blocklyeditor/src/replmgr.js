@@ -328,9 +328,9 @@ Blockly.ReplMgr.putYail = (function() {
         'webrtcstart' : function() {
             var RefreshAssets = top.AssetManager_refreshAssets;
             var offer;
-            var poller;
             var key = rs.replcode;
             var haveoffer = false;
+            var isopen = false;
             var poll = function() {
                 xhr = new XMLHttpRequest();
                 xhr.open('GET', webrtcrendezvous + key + '-r', true);
@@ -359,6 +359,9 @@ Blockly.ReplMgr.putYail = (function() {
                                 }
                             }
                         }
+                        if (!isopen) {
+                            setTimeout(poll, 1000); // Try again in one second
+                        }
                     }
                 }
                 xhr.send();
@@ -376,7 +379,7 @@ Blockly.ReplMgr.putYail = (function() {
             }
             webrtcdata = peer.createDataChannel('data');
             webrtcdata.onopen = function() {
-                clearInterval(poller);
+                isopen = true;
                 console.log('webrtc data connection open!');
                 webrtcdata.onmessage = function(ev) {
                     console.log("webrtc(onmessage): " + ev.data);
@@ -414,7 +417,7 @@ Blockly.ReplMgr.putYail = (function() {
                                          'offer' : desc}));
                 peer.setLocalDescription(desc);
             });
-            poller = setInterval(poll, 1000);
+            poll();
 
         },
         'pollphone' : function() {
