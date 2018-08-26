@@ -137,6 +137,8 @@ public abstract class ComponentProcessor extends AbstractProcessor {
 
   // Must match buildserver.compiler.ARMEABI_V7A_SUFFIX
   private static final String ARMEABI_V7A_SUFFIX = "-v7a";
+  // Must match buildserver.compiler.ARMEABI_V8A_SUFFIX
+  private static final String ARMEABI_V8A_SUFFIX = "-v8a";
 
   // The next two fields are set in init().
   /**
@@ -935,6 +937,10 @@ public abstract class ComponentProcessor extends AbstractProcessor {
       for (String v7aLibrary : usesNativeLibraries.v7aLibraries().split(",")) {
         updateWithNonEmptyValue(componentInfo.nativeLibraries, v7aLibrary.trim() + ARMEABI_V7A_SUFFIX);
       }
+      for (String v8aLibrary : usesNativeLibraries.v8aLibraries().split(",")) {
+        updateWithNonEmptyValue(componentInfo.nativeLibraries, v8aLibrary.trim() + ARMEABI_V8A_SUFFIX);
+      }
+
     }
 
     // Gather required files.

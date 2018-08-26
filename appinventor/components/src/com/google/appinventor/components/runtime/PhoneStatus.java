@@ -10,6 +10,7 @@ import java.util.Formatter;
 import java.security.MessageDigest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
@@ -23,10 +24,13 @@ import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.SimpleEvent;
 import com.google.appinventor.components.annotations.SimpleFunction;
 import com.google.appinventor.components.annotations.SimpleObject;
+import com.google.appinventor.components.annotations.UsesLibraries;
+import com.google.appinventor.components.annotations.UsesNativeLibraries;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.AppInvHTTPD;
 import com.google.appinventor.components.runtime.util.PackageInstaller;
+import com.google.appinventor.components.runtime.util.WebRTCNativeMgr;
 import com.google.appinventor.components.runtime.Form;
 import com.google.appinventor.components.runtime.ReplForm;
 
@@ -44,6 +48,9 @@ import com.google.appinventor.components.runtime.ReplForm;
                    nonVisible = true,
                    iconName = "images/phoneip.png")
 @SimpleObject
+@UsesLibraries(libraries = "webrtc.aar")
+//@UsesNativeLibraries(v7aLibraries = "libjingle_peerconnection_so.so-v7a",
+//  v8aLibraries = "libjingle_peerconnection_so.so-v8a")
 public class PhoneStatus extends AndroidNonvisibleComponent implements Component {
 
   private static Activity activity;
@@ -90,10 +97,12 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     "rendezvous server.")
   public String setHmacSeedReturnCode(String seed) {
 
-    if (form instanceof ReplForm) {
-      Log.d(LOG_TAG, "Calling ReplForm.SetupWebView(" + seed + ")");
-      ((ReplForm)form).SetupWebView(seed);
-    }
+    // if (form instanceof ReplForm) {
+    //   Log.d(LOG_TAG, "Calling ReplForm.SetupWebView(" + seed + ")");
+    //   ((ReplForm)form).SetupWebView(seed);
+    // }
+
+    (new WebRTCNativeMgr()).test1((Context)activity);    // Let's just see if this has a prayer!
 
     AppInvHTTPD.setHmacKey(seed);
     MessageDigest Sha1;
