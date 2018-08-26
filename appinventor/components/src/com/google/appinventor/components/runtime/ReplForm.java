@@ -453,7 +453,7 @@ public class ReplForm extends Form {
     form.androidUIHandler.post(new Runnable() {
         @Override
         public void run() {
-          form.webview.loadUrl("javascript:retvals('" + retvals + "');");
+          //          form.webview.loadUrl("javascript:retvals('" + retvals + "');");
         }
       });
   }

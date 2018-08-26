@@ -697,8 +697,8 @@ public final class Compiler {
       // testing their packaged apps.  Maybe we should make that an option, somehow.
       // TODONE(jis): Turned off debuggable. No one really uses it and it represents a security
       // risk for App Inventor App end-users.
-      out.write("android:debuggable=\"false\" ");
-      // out.write("android:debuggable=\"true\" "); // DEBUGGING
+      // out.write("android:debuggable=\"false\" ");
+      out.write("android:debuggable=\"true\" "); // DEBUGGING
       if (aName.equals("")) {
         out.write("android:label=\"" + projectName + "\" ");
       } else {
@@ -961,7 +961,7 @@ public final class Compiler {
         project.getProjectName() + ".ap_";
     File srcJavaDir = createDir(buildDir, "generated/src");
     File rJavaDir = createDir(buildDir, "generated/symbols");
-    if (!compiler.runAaptPackage(manifestFile, resDir, tmpPackageName, srcJavaDir, rJavaDir)) {
+    if (!compiler.runAaptPackage(manifestFile, resDir, tmpPackageName, srcJavaDir, rJavaDir, buildDir)) {
       return false;
     }
     if (reporter != null) {
@@ -1014,6 +1014,7 @@ public final class Compiler {
     if (!compiler.runApkBuilder(apkAbsolutePath, tmpPackageName, dexedClassesDir)) {
       return false;
     }
+
     if (reporter != null) {
       reporter.report(95);
     }
@@ -1100,6 +1101,9 @@ public final class Compiler {
       if (hasSecondDex) {
         apkBuilder.addFile(new File(dexedClassesDir + File.separator + "classes2.dex"),
           "classes2.dex");
+      }
+      if (nativeLibsNeeded.size() != 0) { // Need to add native libraries...
+        apkBuilder.addNativeLibraries(libsDir);
       }
       apkBuilder.sealApk();
       return true;
@@ -1552,7 +1556,8 @@ public final class Compiler {
     return true;
   }
 
-  private boolean runAaptPackage(File manifestFile, File resDir, String tmpPackageName, File sourceOutputDir, File symbolOutputDir) {
+  private boolean runAaptPackage(File manifestFile, File resDir, String tmpPackageName, File sourceOutputDir,
+    File symbolOutputDir, File buildDir) {
     // Need to make sure assets directory exists otherwise aapt will fail.
     final File mergedAssetsDir = createDir(project.getBuildDirectory(), ASSET_DIR_NAME);
     String aaptTool;
@@ -1590,6 +1595,8 @@ public final class Compiler {
     aaptPackageCommandLineArgs.add(getResource(ANDROID_RUNTIME));
     aaptPackageCommandLineArgs.add("-F");
     aaptPackageCommandLineArgs.add(tmpPackageName);
+    aaptPackageCommandLineArgs.add("-0");
+    aaptPackageCommandLineArgs.add("so");
     if (explodedAarLibs.size() > 0) {
       // If AARs are used, generate R.txt for later processing
       String packageName = Signatures.getPackageName(project.getMainClass());
@@ -1604,13 +1611,12 @@ public final class Compiler {
       appRJava = new File(sourceOutputDir, packageName.replaceAll("\\.", "/") + "/R.java");
       appRTxt = new File(symbolOutputDir, "R.txt");
     }
-    aaptPackageCommandLineArgs.add(libsDir.getAbsolutePath());
     String[] aaptPackageCommandLine = aaptPackageCommandLineArgs.toArray(new String[aaptPackageCommandLineArgs.size()]);
     libSetup();                 // Setup /tmp/lib64 on Linux
     long startAapt = System.currentTimeMillis();
     // Using System.err and System.out on purpose. Don't want to pollute build messages with
     // tools output
-    if (!Execution.execute(null, aaptPackageCommandLine, System.out, System.err)) {
+    if (!Execution.execute(buildDir, aaptPackageCommandLine, System.out, System.err)) {
       LOG.warning("YAIL compiler - AAPT execution failed.");
       err.println("YAIL compiler - AAPT execution failed.");
       userErrors.print(String.format(ERROR_IN_STAGE, "AAPT"));

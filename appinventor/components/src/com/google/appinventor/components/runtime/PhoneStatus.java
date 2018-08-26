@@ -48,6 +48,7 @@ import com.google.appinventor.components.runtime.ReplForm;
                    nonVisible = true,
                    iconName = "images/phoneip.png")
 @SimpleObject
+@UsesLibraries(libraries = "webrtc.jar")
 @UsesNativeLibraries(v7aLibraries = "libjingle_peerconnection_so.so",
   v8aLibraries = "libjingle_peerconnection_so.so")
 public class PhoneStatus extends AndroidNonvisibleComponent implements Component {
