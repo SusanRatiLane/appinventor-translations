@@ -11,6 +11,7 @@ import java.util.Collections;
 
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
+import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
@@ -96,10 +97,10 @@ public class WebRTCNativeMgr {
       };
 
 
-    PeerConnection peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer), null,
+    PeerConnection peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer), new MediaConstraints(),
                                                                  observer);
 
-    peerConnection.createOffer(sdpObserver, null); // Let's see what happens :-)
+    peerConnection.createOffer(sdpObserver, new MediaConstraints()); // Let's see what happens :-)
 
 
     // /* Initialize WebRTC globally */
