@@ -26,6 +26,7 @@ import org.webrtc.RtpReceiver;
 public class WebRTCNativeMgr {
 
   private static final String LOG_TAG = "AppInvWebRTC";
+  private PeerConnection peerConnection;
 
   public WebRTCNativeMgr() {
   }
@@ -52,6 +53,8 @@ public class WebRTCNativeMgr {
         public void onCreateSuccess(SessionDescription sessionDescription) {
           Log.d(LOG_TAG, "sdp.type = " + sessionDescription.type.canonicalForm());
           Log.d(LOG_TAG, "sdp.description = " + sessionDescription.description);
+          DataChannel.Init init = new DataChannel.Init();
+          peerConnection.createDataChannel("data", init);
         }
 
         public void onSetFailure(String str) {
@@ -72,6 +75,7 @@ public class WebRTCNativeMgr {
         }
 
         public void onIceCandidate(IceCandidate iceCandidate) {
+          Log.d(LOG_TAG, "IceCandidate = " + iceCandidate.toString());
         }
 
         public void onIceCandidatesRemoved(IceCandidate[] iceCandidateArr) {
@@ -97,7 +101,7 @@ public class WebRTCNativeMgr {
       };
 
 
-    PeerConnection peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer), new MediaConstraints(),
+    peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer), new MediaConstraints(),
                                                                  observer);
 
     peerConnection.createOffer(sdpObserver, new MediaConstraints()); // Let's see what happens :-)
