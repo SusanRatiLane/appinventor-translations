@@ -48,7 +48,10 @@ import com.google.appinventor.components.runtime.ReplForm;
                    nonVisible = true,
                    iconName = "images/phoneip.png")
 @SimpleObject
-@UsesLibraries(libraries = "webrtc.jar")
+@UsesLibraries(libraries = "webrtc.jar," +
+    "google-http-client-beta.jar," +
+    "google-http-client-android2-beta.jar," +
+    "google-http-client-android3-beta.jar")
 @UsesNativeLibraries(v7aLibraries = "libjingle_peerconnection_so.so",
   v8aLibraries = "libjingle_peerconnection_so.so")
 public class PhoneStatus extends AndroidNonvisibleComponent implements Component {
@@ -102,26 +105,28 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     //   ((ReplForm)form).SetupWebView(seed);
     // }
 
-    (new WebRTCNativeMgr()).test1((Context)activity);    // Let's just see if this has a prayer!
+    /* Setup communications via WebRTC */
+    (new WebRTCNativeMgr()).initiate((Context)activity, seed);
 
-    AppInvHTTPD.setHmacKey(seed);
-    MessageDigest Sha1;
-    try {
-      Sha1 = MessageDigest.getInstance("SHA1");
-    } catch (Exception e) {
-      Log.e(LOG_TAG, "Exception getting SHA1 Instance", e);
-      return "";
-    }
-    Sha1.update(seed.getBytes());
-    byte [] result = Sha1.digest();
-    StringBuffer sb = new StringBuffer(result.length * 2);
-    Formatter formatter = new Formatter(sb);
-    for (byte b : result) {
-      formatter.format("%02x", b);
-    }
-    Log.d(LOG_TAG, "Seed = " + seed);
-    Log.d(LOG_TAG, "Code = " + sb.toString());
-    return sb.toString();
+    // AppInvHTTPD.setHmacKey(seed);
+    // MessageDigest Sha1;
+    // try {
+    //   Sha1 = MessageDigest.getInstance("SHA1");
+    // } catch (Exception e) {
+    //   Log.e(LOG_TAG, "Exception getting SHA1 Instance", e);
+    //   return "";
+    // }
+    // Sha1.update(seed.getBytes());
+    // byte [] result = Sha1.digest();
+    // StringBuffer sb = new StringBuffer(result.length * 2);
+    // Formatter formatter = new Formatter(sb);
+    // for (byte b : result) {
+    //   formatter.format("%02x", b);
+    // }
+    // Log.d(LOG_TAG, "Seed = " + seed);
+    // Log.d(LOG_TAG, "Code = " + sb.toString());
+    // return sb.toString();
+    return ("");
   }
 
   @SimpleFunction(description = "Returns true if we are running in the emulator or USB Connection")
