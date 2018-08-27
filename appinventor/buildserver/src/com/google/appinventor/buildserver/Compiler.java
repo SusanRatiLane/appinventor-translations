@@ -961,7 +961,7 @@ public final class Compiler {
         project.getProjectName() + ".ap_";
     File srcJavaDir = createDir(buildDir, "generated/src");
     File rJavaDir = createDir(buildDir, "generated/symbols");
-    if (!compiler.runAaptPackage(manifestFile, resDir, tmpPackageName, srcJavaDir, rJavaDir, buildDir)) {
+    if (!compiler.runAaptPackage(manifestFile, resDir, tmpPackageName, srcJavaDir, rJavaDir)) {
       return false;
     }
     if (reporter != null) {
@@ -1014,7 +1014,6 @@ public final class Compiler {
     if (!compiler.runApkBuilder(apkAbsolutePath, tmpPackageName, dexedClassesDir)) {
       return false;
     }
-
     if (reporter != null) {
       reporter.report(95);
     }
@@ -1556,8 +1555,7 @@ public final class Compiler {
     return true;
   }
 
-  private boolean runAaptPackage(File manifestFile, File resDir, String tmpPackageName, File sourceOutputDir,
-    File symbolOutputDir, File buildDir) {
+  private boolean runAaptPackage(File manifestFile, File resDir, String tmpPackageName, File sourceOutputDir, File symbolOutputDir) {
     // Need to make sure assets directory exists otherwise aapt will fail.
     final File mergedAssetsDir = createDir(project.getBuildDirectory(), ASSET_DIR_NAME);
     String aaptTool;
@@ -1595,8 +1593,6 @@ public final class Compiler {
     aaptPackageCommandLineArgs.add(getResource(ANDROID_RUNTIME));
     aaptPackageCommandLineArgs.add("-F");
     aaptPackageCommandLineArgs.add(tmpPackageName);
-    aaptPackageCommandLineArgs.add("-0");
-    aaptPackageCommandLineArgs.add("so");
     if (explodedAarLibs.size() > 0) {
       // If AARs are used, generate R.txt for later processing
       String packageName = Signatures.getPackageName(project.getMainClass());
@@ -1616,7 +1612,7 @@ public final class Compiler {
     long startAapt = System.currentTimeMillis();
     // Using System.err and System.out on purpose. Don't want to pollute build messages with
     // tools output
-    if (!Execution.execute(buildDir, aaptPackageCommandLine, System.out, System.err)) {
+    if (!Execution.execute(null, aaptPackageCommandLine, System.out, System.err)) {
       LOG.warning("YAIL compiler - AAPT execution failed.");
       err.println("YAIL compiler - AAPT execution failed.");
       userErrors.print(String.format(ERROR_IN_STAGE, "AAPT"));
@@ -1830,7 +1826,6 @@ public final class Compiler {
         file.setExecutable(true);
         file.deleteOnExit();
         file.getParentFile().mkdirs();
-        System.err.println("Compiler(1827): resourcePath = " + resourcePath);
         Files.copy(Resources.newInputStreamSupplier(Compiler.class.getResource(resourcePath)),
             file);
         resources.put(resourcePath, file);

@@ -103,66 +103,7 @@ public class WebRTCNativeMgr {
 
     peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer), new MediaConstraints(),
                                                                  observer);
-
     peerConnection.createOffer(sdpObserver, new MediaConstraints()); // Let's see what happens :-)
-
-
-    // /* Initialize WebRTC globally */
-    // PeerConnectionFactory.InitializationOptions initializationOptions =
-    //   PeerConnectionFactory.InitializationOptions.builder(context).createInitializationOptions();
-    // PeerConnectionFactory.initialize(initializationOptions);
-    // /* Setup factory options */
-    // PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
-    // /* Create the factory */
-    // PeerConnectionFactory factory = PeerConnectionFactory.builder()
-    //   .setOptions(options).createPeerConnectionFactory();
-    // /* Create out list of iceServers (only one for now, note this information is secret!) */
-    // PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("turn:turn.appinventor.mit.edu:3478")
-    //   .setUsername("oh")
-    //   .setPassword("boy")
-    //   .createIceServer();
-    // /* Create the Observer which will be called when events heppen */
-    // Observer observer = new Observer() {
-
-    //         public void onAddStream(MediaStream mediaStream) {
-    //         }
-
-    //         public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreamArr) {
-    //         }
-
-    //         public void onDataChannel(DataChannel dataChannel) {
-    //         }
-
-    //         public void onIceCandidate(IceCandidate iceCandidate) {
-    //         }
-
-    //         public void onIceCandidatesRemoved(IceCandidate[] iceCandidateArr) {
-    //         }
-
-    //         public void onIceConnectionChange(IceConnectionState iceConnectionState) {
-    //         }
-
-    //         public void onIceConnectionReceivingChange(boolean z) {
-    //         }
-
-    //         public void onIceGatheringChange(IceGatheringState iceGatheringState) {
-    //         }
-
-    //         public void onRemoveStream(MediaStream mediaStream) {
-    //         }
-
-    //         public void onRenegotiationNeeded() {
-    //         }
-
-    //         public void onSignalingChange(SignalingState signalingState) {
-    //         }
-
-    //         public void onTrack(RtpTransceiver transceiver) {
-    //         }
-    //     };
-
-    // PeerConnection peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer),
-    //   observer);
 
   }
 
