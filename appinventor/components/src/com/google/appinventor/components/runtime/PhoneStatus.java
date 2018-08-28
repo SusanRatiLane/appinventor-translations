@@ -106,7 +106,9 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     // }
 
     /* Setup communications via WebRTC */
-    (new WebRTCNativeMgr()).initiate((Context)activity, seed);
+    WebRTCNativeMgr webRTCNativeMgr = new WebRTCNativeMgr();
+    webRTCNativeMgr.initiate((ReplForm) form, (Context)activity, seed);
+    ((ReplForm)form).setWebRTCMgr(webRTCNativeMgr);
 
     // AppInvHTTPD.setHmacKey(seed);
     // MessageDigest Sha1;

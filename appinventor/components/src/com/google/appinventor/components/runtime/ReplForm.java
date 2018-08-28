@@ -53,6 +53,7 @@ import com.google.appinventor.components.runtime.util.AppInvHTTPD;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.ImageViewUtil;
 import com.google.appinventor.components.runtime.util.RetValManager;
+import com.google.appinventor.components.runtime.util.WebRTCNativeMgr;
 
 import dalvik.system.DexClassLoader;
 
@@ -98,9 +99,12 @@ public class ReplForm extends Form {
   private String replResultFormName = null;
   private List<String> loadedExternalDexs; // keep a track of loaded dexs to prevent reloading and causing crash in older APIs
   private String currentTheme = ComponentConstants.DEFAULT_THEME;
+  private WebRTCNativeMgr webRTCNativeMgr;
 
   WebView webview;
   Language scheme;
+
+  SchemeInterface schemeInterface = new SchemeInterface();
 
   private static final String SPLASH_ACTIVITY_CLASS = SplashActivity.class
       .getName();
@@ -108,6 +112,35 @@ public class ReplForm extends Form {
   public ReplForm() {
     super();
     topform = this;
+  }
+
+  public class SchemeInterface {
+    Language scheme = Scheme.getInstance("scheme");
+
+    public SchemeInterface() {
+      gnu.expr.ModuleExp.mustNeverCompile();
+    }
+
+    private void adoptMainThreadClassLoader() {
+      ClassLoader mainClassLoader = Looper.getMainLooper().getThread().getContextClassLoader();
+      Thread myThread = Thread.currentThread();
+      if (myThread.getContextClassLoader() != mainClassLoader) {
+        myThread.setContextClassLoader(mainClassLoader);
+      }
+    }
+
+    public void eval(final String sexp) {
+      runOnUiThread(new Runnable() {
+          @Override public void run() {
+            try {
+              adoptMainThreadClassLoader();
+              scheme.eval(sexp);
+            } catch (Throwable e) {
+              Log.e(LOG_TAG, "Exception in scheme processing", e);
+            }
+          }
+        });
+    }
   }
 
   public class WebViewJavaInterface {
@@ -450,12 +483,30 @@ public class ReplForm extends Form {
   public static void ReturnRetvals(final String retvals) {
     final ReplForm form = (ReplForm)activeForm;
     Log.d(LOG_TAG, "ReturnRetvals: " + retvals);
-    form.androidUIHandler.post(new Runnable() {
-        @Override
-        public void run() {
-          //          form.webview.loadUrl("javascript:retvals('" + retvals + "');");
-        }
-      });
+    form.sendToCompanion(retvals);
+
+    // form.androidUIHandler.post(new Runnable() {
+    //     @Override
+    //     public void run() {
+    //       //          form.webview.loadUrl("javascript:retvals('" + retvals + "');");
+    //     }
+    //   });
+  }
+
+  public void sendToCompanion(String data) {
+    if (webRTCNativeMgr == null) {
+      Log.i(LOG_TAG, "No WebRTCNativeMgr!");
+      return;
+    }
+    webRTCNativeMgr.send(data);
+  }
+
+  public void setWebRTCMgr(WebRTCNativeMgr mgr) {
+    webRTCNativeMgr = mgr;
+  }
+
+  public void evalScheme(String sexp) {
+    schemeInterface.eval(sexp);
   }
 
   @Override

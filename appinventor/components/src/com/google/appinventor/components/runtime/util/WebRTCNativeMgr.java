@@ -5,12 +5,16 @@
 package com.google.appinventor.components.runtime.util;
 
 import android.content.Context;
+import com.google.appinventor.components.runtime.ReplForm;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 import java.util.Collections;
 import java.util.Random;
@@ -36,6 +40,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.webrtc.DataChannel;
+import org.webrtc.DataChannel.Buffer;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
@@ -52,6 +57,8 @@ import org.webrtc.SessionDescription;
 public class WebRTCNativeMgr {
 
   private static final String LOG_TAG = "AppInvWebRTC";
+  private ReplForm form;
+
   private PeerConnection peerConnection;
   /* We use a single threaded executor to read from the rendezvous server */
   private volatile ExecutorService background = Executors.newSingleThreadExecutor();
@@ -63,9 +70,11 @@ public class WebRTCNativeMgr {
   private boolean keepPolling = true;
   private boolean first = true; // This is used for logging in the Rendezvous server
   private Random random = new Random();
+  private DataChannel dataChannel = null;
 
   Timer timer = new Timer();
 
+  /* Callback that handles sdp offer/answers */
   SdpObserver sdpObserver = new SdpObserver() {
       public void onCreateFailure(String str) {
       }
@@ -102,6 +111,7 @@ public class WebRTCNativeMgr {
       }
     };
 
+  /* callback that handles iceCandidate negotiation */
   Observer observer = new Observer() {
       public void onAddStream(MediaStream mediaStream) {
       }
@@ -111,6 +121,9 @@ public class WebRTCNativeMgr {
 
       public void onDataChannel(DataChannel dataChannel) {
         Log.d(LOG_TAG, "Have Data Channel!");
+        Log.d(LOG_TAG, "v4");
+        WebRTCNativeMgr.this.dataChannel = dataChannel;
+        dataChannel.registerObserver(dataObserver);
         keepPolling = false;    // Turn off talking to the rendezvous server
       }
 
@@ -153,11 +166,27 @@ public class WebRTCNativeMgr {
       }
     };
 
+  /* Callback to process incoming data from the browser */
+  DataChannel.Observer dataObserver = new DataChannel.Observer() {
+      public void onBufferedAmountChange(long j) {
+      }
+
+      public void onMessage(Buffer buffer) {
+        String input = StandardCharsets.UTF_8.decode(buffer.data).toString();
+        Log.d(LOG_TAG, "onMessage: received: " + input);
+        form.evalScheme(input);
+      }
+
+      public void onStateChange() {
+      }
+    };
+
   public WebRTCNativeMgr() {
   }
 
-  public void initiate(Context context, String code) {
+  public void initiate(ReplForm form, Context context, String code) {
 
+    this.form = form;
     rCode = code;
     /* Initialize WebRTC globally */
     PeerConnectionFactory.initializeAndroidGlobals(context, false);
@@ -199,6 +228,10 @@ public class WebRTCNativeMgr {
             String line = "";
             while ((line = rd.readLine()) != null) {
               sb.append(line);
+            }
+            if (!keepPolling) {
+              Log.d(LOG_TAG, "keepPolling is false, we're done!");
+              return;
             }
             Log.d(LOG_TAG, "response = " + sb.toString());
             JSONArray jsonArray = new JSONArray(sb.toString());
@@ -291,5 +324,18 @@ public class WebRTCNativeMgr {
     }
   }
 
-}
+  public void send(String output) {
+    try {
+      if (dataChannel == null) {
+        Log.w(LOG_TAG, "No Data Channel in Send");
+        return;
+      }
+      ByteBuffer bbuffer = ByteBuffer.wrap(output.getBytes("UTF-8"));
+      Buffer buffer = new Buffer(bbuffer, false); // false = not binary
+      dataChannel.send(buffer);
+    } catch (UnsupportedEncodingException e) {
+      Log.e(LOG_TAG, "While encoding data to send to companion", e);
+    }
+  }
 
+}
