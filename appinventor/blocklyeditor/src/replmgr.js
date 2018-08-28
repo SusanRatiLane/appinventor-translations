@@ -258,6 +258,8 @@ Blockly.ReplMgr.putYail = (function() {
     var phonereceiving = false;
     var webrtcstarting = false;
     var webrtcrunning = false;
+    var webrtcisopen = false;
+    var webrtcforcestop = false;
     // var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
     var iceservers = { 'iceServers' : [ { 'url' : 'turn:turn.appinventor.mit.edu:3478',
                                           'username' : 'oh',
@@ -330,7 +332,8 @@ Blockly.ReplMgr.putYail = (function() {
             var offer;
             var key = rs.replcode;
             var haveoffer = false;
-            var isopen = false;
+            webrtcisopen = false;
+            webrtcforcestop = false;
             var poll = function() {
                 xhr = new XMLHttpRequest();
                 xhr.open('GET', webrtcrendezvous + key + '-r', true);
@@ -359,7 +362,7 @@ Blockly.ReplMgr.putYail = (function() {
                                 }
                             }
                         }
-                        if (!isopen) {
+                        if (!webrtcisopen && !webrtcforcestop) {
                             setTimeout(poll, 1000); // Try again in one second
                         }
                     }
@@ -379,7 +382,7 @@ Blockly.ReplMgr.putYail = (function() {
             }
             webrtcdata = peer.createDataChannel('data');
             webrtcdata.onopen = function() {
-                isopen = true;
+                webrtcisopen = true;
                 console.log('webrtc data connection open!');
                 webrtcdata.onmessage = function(ev) {
                     console.log("webrtc(onmessage): " + ev.data);
@@ -649,6 +652,8 @@ Blockly.ReplMgr.putYail = (function() {
                 if (webrtcdata) {
                     webrtcdata.close();
                 }
+                webrtcforcestop = true;
+                webrtcisopen = false;
                 webrtcrunning = false;
                 webrtcstarting = false;
             }
@@ -1193,10 +1198,12 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
         if (top.usewebrtc) {    // We don't use the original rendezvous servers if using webrtc
             rs.state = this.rsState.ASSET;
             rs.replcode = this.genCode();
+            var me = this;
             rs.dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_CONNECT_TO_COMPANION, this.makeDialogMessage(rs.replcode), Blockly.Msg.REPL_CANCEL, false, null, 1, function() {
                 rs.dialog.hide();
                 rs.state = Blockly.ReplMgr.rsState.IDLE; // We're punting
                 rs.connection = null;
+                me.putYail.reset(true); // Shutdown any polling
                 top.BlocklyPanel_indicateDisconnect();
             });
             this.putYail();     // This initializes the putYail state engine
@@ -1239,7 +1246,6 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
         }
         this.resetYail(false);
         top.ReplState.state = this.rsState.IDLE;
-        this.putYail.reset(true);      // This will kill a webrtc connection
         this.hardreset(this.formName);       // Tell aiStarter to kill off adb
     }
 };

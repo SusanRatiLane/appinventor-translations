@@ -134,6 +134,10 @@ public class ReplForm extends Form {
           @Override public void run() {
             try {
               adoptMainThreadClassLoader();
+              if (sexp.equals("#DONE#")) {
+                ReplForm.this.finish();
+                return;
+              }
               scheme.eval(sexp);
             } catch (Throwable e) {
               Log.e(LOG_TAG, "Exception in scheme processing", e);
