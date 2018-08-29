@@ -258,6 +258,7 @@ Blockly.ReplMgr.putYail = (function() {
     var phonereceiving = false;
     var webrtcstarting = false;
     var webrtcrunning = false;
+    var webrtcpeer;
     var webrtcisopen = false;
     var webrtcforcestop = false;
     // var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
@@ -349,7 +350,7 @@ Blockly.ReplMgr.putYail = (function() {
                                     var nonce = hunk['nonce'];
                                     if (!seennonce[nonce]) {
                                         seennonce[nonce] = true;
-                                        peer.addIceCandidate(candidate);
+                                        webrtcpeer.addIceCandidate(candidate);
                                     } else {
                                         console.log("Seen nonce " + nonce);
                                     }
@@ -357,7 +358,7 @@ Blockly.ReplMgr.putYail = (function() {
                                     if (!haveoffer) {
                                         haveoffer = true;
                                         i = 0; // Start loop over (I hope)
-                                        peer.setRemoteDescription(offer);
+                                        webrtcpeer.setRemoteDescription(offer);
                                     }
                                 }
                             }
@@ -369,8 +370,8 @@ Blockly.ReplMgr.putYail = (function() {
                 }
                 xhr.send();
             };
-            peer = new RTCPeerConnection(iceservers);
-            peer.onicecandidate = function(evt) {
+            webrtcpeer = new RTCPeerConnection(iceservers);
+            webrtcpeer.onicecandidate = function(evt) {
                 if (evt.type == 'icecandidate') {
                     xhr = new XMLHttpRequest();
                     xhr.open('POST', webrtcrendezvous, true);
@@ -380,7 +381,7 @@ Blockly.ReplMgr.putYail = (function() {
                                              'candidate' : evt.candidate}));
                 }
             }
-            webrtcdata = peer.createDataChannel('data');
+            webrtcdata = webrtcpeer.createDataChannel('data');
             webrtcdata.onopen = function() {
                 webrtcisopen = true;
                 console.log('webrtc data connection open!');
@@ -411,14 +412,14 @@ Blockly.ReplMgr.putYail = (function() {
                 webrtcstarting = false;
                 webrtcrunning = false;
             };
-            peer.createOffer().then(function(desc) {
+            webrtcpeer.createOffer().then(function(desc) {
                 offer = desc;
                 xhr = new XMLHttpRequest();
                 xhr.open('POST', webrtcrendezvous, true);
                 xhr.send(JSON.stringify({'key' : key + '-s',
                                          'webrtc' : true,
                                          'offer' : desc}));
-                peer.setLocalDescription(desc);
+                webrtcpeer.setLocalDescription(desc);
             });
             poll();
 
@@ -651,6 +652,7 @@ Blockly.ReplMgr.putYail = (function() {
             if (top.usewebrtc && hard) {
                 if (webrtcdata) {
                     webrtcdata.close();
+                    webrtcpeer.close();
                 }
                 webrtcforcestop = true;
                 webrtcisopen = false;

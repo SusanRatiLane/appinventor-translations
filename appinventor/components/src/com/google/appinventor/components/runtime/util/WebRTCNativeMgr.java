@@ -96,9 +96,9 @@ public class WebRTCNativeMgr {
             response.put("offer", offer);
             sendRendezvous(response);
           }
-          Log.d(LOG_TAG, "About to call create data connection");
-          peerConnection.createDataChannel("data", init);
-          Log.d(LOG_TAG, "createDataChannel returned");
+          // Log.d(LOG_TAG, "About to call create data connection");
+          // peerConnection.createDataChannel("data", init);
+          // Log.d(LOG_TAG, "createDataChannel returned");
         } catch (Exception e) {
           Log.e(LOG_TAG, "Exception during onCreateSuccess", e);
         }
@@ -121,7 +121,7 @@ public class WebRTCNativeMgr {
 
       public void onDataChannel(DataChannel dataChannel) {
         Log.d(LOG_TAG, "Have Data Channel!");
-        Log.d(LOG_TAG, "v4");
+        Log.d(LOG_TAG, "v5");
         WebRTCNativeMgr.this.dataChannel = dataChannel;
         dataChannel.registerObserver(dataObserver);
         keepPolling = false;    // Turn off talking to the rendezvous server
