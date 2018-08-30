@@ -232,8 +232,8 @@ Blockly.ReplMgr.pollYail = function(workspace) {
 
 Blockly.ReplMgr.resetYail = function(partial) {
     top.ReplState.phoneState.initialized = false; // so running io stops
-    this.putYail.reset();
     if (!partial) {
+        this.putYail.reset();
         top.ReplState.phoneState = { "phoneQueue" : [], "assetQueue" : []};
     }
 };
@@ -648,8 +648,8 @@ Blockly.ReplMgr.putYail = (function() {
             };
             rxhr.send("IGNORED=STUFF");
         },
-        "reset" : function(hard) {
-            if (top.usewebrtc && hard) {
+        "reset" : function() {
+            if (top.usewebrtc) {
                 if (webrtcdata) {
                     webrtcdata.close();
                     webrtcpeer.close();
@@ -1247,6 +1247,7 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
             console.log("webrtcdata: Error: " + err);
         }
         this.resetYail(false);
+        this.putYail.reset();
         top.ReplState.state = this.rsState.IDLE;
         this.hardreset(this.formName);       // Tell aiStarter to kill off adb
     }

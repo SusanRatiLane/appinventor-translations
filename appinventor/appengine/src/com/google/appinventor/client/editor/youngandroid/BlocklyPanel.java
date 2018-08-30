@@ -798,7 +798,7 @@ public class BlocklyPanel extends HTMLPanel {
   }-*/;
 
   public native void doResetYail() /*-{
-    Blockly.ReplMgr.resetYail();
+    Blockly.ReplMgr.resetYail(true);
   }-*/;
 
   public native void doPollYail() /*-{

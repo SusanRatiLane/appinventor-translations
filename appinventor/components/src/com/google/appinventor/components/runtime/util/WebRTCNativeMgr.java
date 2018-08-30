@@ -5,16 +5,18 @@
 package com.google.appinventor.components.runtime.util;
 
 import android.content.Context;
-import com.google.appinventor.components.runtime.ReplForm;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 import android.util.Log;
+
+import com.google.appinventor.components.runtime.ReplForm;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import java.util.Collections;
 import java.util.Random;
@@ -26,7 +28,6 @@ import java.util.concurrent.Executors;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
@@ -39,8 +40,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.webrtc.DataChannel;
 import org.webrtc.DataChannel.Buffer;
+import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
@@ -53,6 +54,7 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RtpReceiver;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
+
 
 public class WebRTCNativeMgr {
 
@@ -309,6 +311,7 @@ public class WebRTCNativeMgr {
       data.put("key", rCode + "-r");
       if (first) {
         first = false;
+        data.put("apiversion", SdkLevel.getLevel());
       }
       HttpClient client = new DefaultHttpClient();
       HttpPost post = new HttpPost("http://r2.appinventor.mit.edu/rendezvous2/");
