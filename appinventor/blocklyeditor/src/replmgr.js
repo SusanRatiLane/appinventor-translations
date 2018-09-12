@@ -367,10 +367,24 @@ Blockly.ReplMgr.putYail = (function() {
                             setTimeout(poll, 1000); // Try again in one second
                         }
                     }
-                }
+                };
                 xhr.send();
             };
             webrtcpeer = new RTCPeerConnection(iceservers);
+            webrtcpeer.oniceconnectionstatechange = function(evt) {
+                console.log("oniceconnectionstatechange: evt.type = " + evt.type);
+                if (this.iceConnectionState == "disconnected" ||
+                    this.iceConnectionState == "failed") {
+                    webrtcdata = null;
+                    webrtcstarting = false;
+                    webrtcrunning = false;
+                    top.BlocklyPanel_indicateDisconnect();
+                    webrtcpeer.close();
+                }
+            };
+            webrtcpeer.onsignalingstatechange = function(evt) {
+                console.log("onsignalingstatechange: evt.type = " + evt.type);
+            };
             webrtcpeer.onicecandidate = function(evt) {
                 if (evt.type == 'icecandidate') {
                     xhr = new XMLHttpRequest();
@@ -380,7 +394,7 @@ Blockly.ReplMgr.putYail = (function() {
                                              'nonce' : Math.floor(Math.random() * 10000) + 1,
                                              'candidate' : evt.candidate}));
                 }
-            }
+            };
             webrtcdata = webrtcpeer.createDataChannel('data');
             webrtcdata.onopen = function() {
                 webrtcisopen = true;
@@ -405,6 +419,8 @@ Blockly.ReplMgr.putYail = (function() {
                 webrtcdata = null;
                 webrtcstarting = false;
                 webrtcrunning = false;
+                webrtcpeer.close();
+                top.BlocklyPanel_indicateDisconnect();
             };
             webrtcdata.onerror = function(err) {
                 console.log("webrtc data error: " + err);
