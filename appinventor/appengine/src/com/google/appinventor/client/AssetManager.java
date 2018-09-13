@@ -62,8 +62,6 @@ public final class AssetManager implements ProjectChangeListener {
   private static final String ASSETS_FOLDER = "assets";
   private static final String EXTERNAL_COMPS_FOLDER = "external_comps";
 
-  private static final boolean webRTC = true;
-
   private AssetManager() {
     exportMethodsToJavascript();
   }
@@ -232,7 +230,7 @@ public final class AssetManager implements ProjectChangeListener {
           progress.show();
           progress.center();
         }
-        if (a.fileContent == null && !webRTC) { // Need to fetch it from the server
+        if (a.fileContent == null && !useWebRTC()) { // Need to fetch it from the server
           retryCount = 3;
           if (progress != null) {
             progress.setProgress(100 * assetTransferProgress / (2 * assets.size()),
@@ -369,6 +367,10 @@ public final class AssetManager implements ProjectChangeListener {
 
   private static native void doCallBack(JavaScriptObject callback) /*-{
     if (typeof callback === 'function') callback.call(null);
+  }-*/;
+
+  private static native boolean useWebRTC() /*-{
+    return top.usewebrtc;
   }-*/;
 
 }
