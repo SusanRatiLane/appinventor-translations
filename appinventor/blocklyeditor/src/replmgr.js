@@ -32,8 +32,9 @@ goog.require('AI.Events');
 if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {}
 Blockly.ReplMgr.yail = null;
 
-top.usewebrtc = true;           // True if we are going to use webRTC instead
-                                // of our builtin webserver
+top.usewebrtc = false;           // True if we are going to use webRTC instead
+                                 // of our builtin webserver. This is now set when
+                                 // we hear from the Rendezvous server that we are playing the webrtc game!
 
 top.loadAll = true;             // Use "Chunked" loading for initial form load
                                 // or any case where we have more then one "chunk"
@@ -1213,20 +1214,6 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
     if (!already) {
         if (top.ReplState.state != this.rsState.IDLE) // If we are not idle, we don't do anything!
             return;
-        if (top.usewebrtc) {    // We don't use the original rendezvous servers if using webrtc
-            rs.state = this.rsState.ASSET;
-            rs.replcode = this.genCode();
-            var me = this;
-            rs.dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_CONNECT_TO_COMPANION, this.makeDialogMessage(rs.replcode), Blockly.Msg.REPL_CANCEL, false, null, 1, function() {
-                rs.dialog.hide();
-                rs.state = Blockly.ReplMgr.rsState.IDLE; // We're punting
-                rs.connection = null;
-                me.putYail.reset(true); // Shutdown any polling
-                top.BlocklyPanel_indicateDisconnect();
-            });
-            this.putYail();     // This initializes the putYail state engine
-            return;
-        }
         if (emulator || usb) {         // If we are talking to the emulator, don't use rendezvou server
             this.startAdbDevice(rs, usb);
             rs.state = this.rsState.WAITING; // Wait for the emulator to start
@@ -1250,6 +1237,7 @@ Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
             rs.dialog.hide();
             rs.state = Blockly.ReplMgr.rsState.IDLE; // We're punting
             rs.connection = null;
+            me.putYail.reset(true); // Shutdown any polling
             top.BlocklyPanel_indicateDisconnect();
         });
         this.getFromRendezvous();
@@ -1279,6 +1267,7 @@ Blockly.ReplMgr.genCode = function() {
 
 // Request ipAddress information from the Rendezvous Server
 Blockly.ReplMgr.getFromRendezvous = function() {
+    var me = this;
     var xmlhttp = goog.net.XmlHttp();
     if (top.ReplState === undefined || top.ReplState === null) {
         console.log('getFromRendezvous: replState not set yet.');
@@ -1305,6 +1294,12 @@ Blockly.ReplMgr.getFromRendezvous = function() {
                 rs.versionurl = 'http://' + json.ipaddr + ':8001/_getversion';
                 rs.baseurl = 'http://' + json.ipaddr + ':8001/';
                 rs.extensionurl = rs.baseurl + '_extensions';
+                if (json.webrtc && json.webrtc == "true") { // We are the webRTC Companion
+                    top.usewebrtc = true;
+                    rs.state = me.rsState.ASSET;
+                    me.putYail(); // This starts the whole negotiation process!
+                    return;         // And we are done here.
+                }
                 rs.state = Blockly.ReplMgr.rsState.CONNECTED;
                 Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect()); // TEMP
 //                rs.state = Blockly.ReplMgr.rsState.ASSET;
@@ -1441,8 +1436,9 @@ Blockly.ReplMgr.putAsset = function(projectid, filename, blob, success, fail, fo
         // instead just call makeAssetTransferred ourselves
         var uri = window.location.origin;
         var regex = /AppInventor *=([^;]+)/;
+        var cookie;
         if (regex.test(document.cookie)) {
-            var cookie = regex.exec(document.cookie)[1];
+            cookie = regex.exec(document.cookie)[1];
         } else {
             console.log("Cannot obtain cookie for putAsset!");
             return;

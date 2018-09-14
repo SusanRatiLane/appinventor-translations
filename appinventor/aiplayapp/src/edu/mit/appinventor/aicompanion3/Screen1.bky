@@ -1,6 +1,5 @@
-<xml>
+<xml xmlns="http://www.w3.org/1999/xhtml">
   <block type="procedures_defnoreturn" id="1" x="732" y="1997">
-    <mutation></mutation>
     <field name="NAME">badversion</field>
     <statement name="STACK">
       <block type="component_set_get" id="2" inline="false">
@@ -25,6 +24,9 @@
         <field name="PROP">Text</field>
         <value name="VALUE">
           <block type="lexical_variable_get" id="6">
+            <mutation>
+              <eventparam name="result"></eventparam>
+            </mutation>
             <field name="VAR">result</field>
           </block>
         </value>
@@ -36,6 +38,9 @@
             <field name="PROCNAME">processcode</field>
             <value name="ARG0">
               <block type="lexical_variable_get" id="8">
+                <mutation>
+                  <eventparam name="result"></eventparam>
+                </mutation>
                 <field name="VAR">result</field>
               </block>
             </value>
@@ -85,7 +90,7 @@
                 <field name="COMPONENT_SELECTOR">Web1</field>
                 <value name="ARG0">
                   <block type="lists_create_with" id="17" inline="false">
-                    <mutation items="3"></mutation>
+                    <mutation items="4"></mutation>
                     <value name="ADD0">
                       <block type="lists_create_with" id="18" inline="false">
                         <mutation items="2"></mutation>
@@ -128,6 +133,23 @@
                         <value name="ADD1">
                           <block type="text" id="26">
                             <field name="TEXT">9987</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="ADD3">
+                      <block type="lists_create_with" id="9,YdOZ:@gq@ci2!vb)2#">
+                        <mutation items="2"></mutation>
+                        <value name="ADD0">
+                          <block type="text" id="zp,i*goyBtX/F{;$Ea|b">
+                            <field name="TEXT">webrtc</field>
+                          </block>
+                        </value>
+                        <value name="ADD1">
+                          <block type="component_set_get" id="qg:T=8o)HNv%C|gUA(Bs">
+                            <mutation component_type="CheckBox" set_or_get="get" property_name="Checked" is_generic="false" instance_name="CheckBox1"></mutation>
+                            <field name="COMPONENT_SELECTOR">CheckBox1</field>
+                            <field name="PROP">Checked</field>
                           </block>
                         </value>
                       </block>
@@ -183,12 +205,11 @@
     </statement>
   </block>
   <block type="procedures_defnoreturn" id="34" x="732" y="2511">
-    <mutation></mutation>
     <field name="NAME">checkWiFi</field>
     <statement name="STACK">
       <block type="controls_if" id="35" inline="false">
         <value name="IF0">
-          <block type="math_compare" id="36" inline="true">
+          <block type="math_compare" id="36">
             <field name="OP">EQ</field>
             <value name="A">
               <block type="math_number" id="37">
@@ -196,7 +217,7 @@
               </block>
             </value>
             <value name="B">
-              <block type="text_starts_at" id="38" inline="false">
+              <block type="text_starts_at" id="38">
                 <value name="TEXT">
                   <block type="component_method" id="39">
                     <mutation component_type="PhoneStatus" method_name="GetWifiIpAddress" is_generic="false" instance_name="PhoneStatus1"></mutation>
@@ -272,7 +293,6 @@
     </statement>
   </block>
   <block type="procedures_defreturn" id="51" inline="false" x="732" y="2806">
-    <mutation></mutation>
     <field name="NAME">getRendezvousServer</field>
     <value name="RETURN">
       <block type="component_method" id="52" inline="false">
@@ -298,10 +318,10 @@
     <field name="NAME">isAPK</field>
     <field name="VAR0">input</field>
     <value name="RETURN">
-      <block type="math_compare" id="56" inline="true">
+      <block type="math_compare" id="56">
         <field name="OP">EQ</field>
         <value name="A">
-          <block type="text_starts_at" id="57" inline="false">
+          <block type="text_starts_at" id="57">
             <value name="TEXT">
               <block type="lexical_variable_get" id="58">
                 <field name="VAR">input</field>
@@ -328,10 +348,13 @@
     <statement name="DO">
       <block type="controls_if" id="62" inline="false">
         <value name="IF0">
-          <block type="logic_compare" id="63" inline="true">
+          <block type="logic_compare" id="63">
             <field name="OP">EQ</field>
             <value name="A">
               <block type="lexical_variable_get" id="64">
+                <mutation>
+                  <eventparam name="choice"></eventparam>
+                </mutation>
                 <field name="VAR">choice</field>
               </block>
             </value>
@@ -425,6 +448,24 @@
       </block>
     </statement>
   </block>
+  <block type="component_event" id="S~hQs_KH8?5y90Ie^-Ok" x="1668" y="2952">
+    <mutation component_type="CheckBox" instance_name="CheckBox1" event_name="Changed"></mutation>
+    <field name="COMPONENT_SELECTOR">CheckBox1</field>
+    <statement name="DO">
+      <block type="component_set_get" id="|6eRa(NKdy44ozm2s[6k">
+        <mutation component_type="PhoneStatus" set_or_get="set" property_name="WebRTC" is_generic="false" instance_name="PhoneStatus1"></mutation>
+        <field name="COMPONENT_SELECTOR">PhoneStatus1</field>
+        <field name="PROP">WebRTC</field>
+        <value name="VALUE">
+          <block type="component_set_get" id="+V0Q5A-ibC}3yuK0EwrR">
+            <mutation component_type="CheckBox" set_or_get="get" property_name="Checked" is_generic="false" instance_name="CheckBox1"></mutation>
+            <field name="COMPONENT_SELECTOR">CheckBox1</field>
+            <field name="PROP">Checked</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
   <block type="procedures_defreturn" id="79" inline="false" x="2089" y="3042">
     <mutation>
       <arg name="code"></arg>
@@ -434,7 +475,7 @@
     <value name="RETURN">
       <block type="controls_choose" id="80" inline="false">
         <value name="TEST">
-          <block type="text_contains" id="81" inline="false">
+          <block type="text_contains" id="81">
             <value name="TEXT">
               <block type="lexical_variable_get" id="82">
                 <field name="VAR">code</field>
@@ -479,7 +520,7 @@
                     </mutation>
                     <field name="PROCNAME">setRendezvousServer</field>
                     <value name="ARG0">
-                      <block type="lists_select_item" id="90" inline="false">
+                      <block type="lists_select_item" id="90">
                         <value name="LIST">
                           <block type="lexical_variable_get" id="91">
                             <field name="VAR">codes</field>
@@ -500,7 +541,7 @@
                   </block>
                 </statement>
                 <value name="VALUE">
-                  <block type="lists_select_item" id="94" inline="false">
+                  <block type="lists_select_item" id="94">
                     <value name="LIST">
                       <block type="lexical_variable_get" id="95">
                         <field name="VAR">codes</field>
@@ -526,7 +567,6 @@
     </value>
   </block>
   <block type="procedures_defnoreturn" id="98" x="732" y="3262">
-    <mutation></mutation>
     <field name="NAME">resetRendezvousServer</field>
     <statement name="STACK">
       <block type="lexical_variable_set" id="99" inline="false">
@@ -860,7 +900,6 @@
     </statement>
   </block>
   <block type="procedures_defnoreturn" id="156" x="1229" y="3860">
-    <mutation></mutation>
     <field name="NAME">startdirectconnect</field>
     <statement name="STACK">
       <block type="local_declaration_statement" id="157" inline="false">
@@ -911,5 +950,5 @@
       </block>
     </value>
   </block>
-  <yacodeblocks ya-version="101" language-version="17"></yacodeblocks>
+  <yacodeblocks ya-version="172" language-version="22"></yacodeblocks>
 </xml>

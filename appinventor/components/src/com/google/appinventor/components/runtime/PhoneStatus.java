@@ -6,33 +6,45 @@
 
 package com.google.appinventor.components.runtime;
 
-import java.util.Formatter;
-import java.security.MessageDigest;
-
 import android.app.Activity;
+
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+
 import android.os.Build;
+
 import android.util.Log;
 
 import com.google.appinventor.components.annotations.DesignerComponent;
+import com.google.appinventor.components.annotations.DesignerProperty;
+import com.google.appinventor.components.annotations.PropertyCategory;
 import com.google.appinventor.components.annotations.SimpleEvent;
 import com.google.appinventor.components.annotations.SimpleFunction;
 import com.google.appinventor.components.annotations.SimpleObject;
+import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.annotations.UsesLibraries;
 import com.google.appinventor.components.annotations.UsesNativeLibraries;
+
 import com.google.appinventor.components.common.ComponentCategory;
+import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+
+import com.google.appinventor.components.runtime.Form;
+import com.google.appinventor.components.runtime.ReplForm;
 import com.google.appinventor.components.runtime.util.AppInvHTTPD;
 import com.google.appinventor.components.runtime.util.PackageInstaller;
 import com.google.appinventor.components.runtime.util.WebRTCNativeMgr;
-import com.google.appinventor.components.runtime.Form;
-import com.google.appinventor.components.runtime.ReplForm;
+
+import java.security.MessageDigest;
+
+import java.util.Formatter;
+
 
 /**
  * Component for obtaining Phone Information. Currently supports
@@ -60,6 +72,7 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
   private static final String LOG_TAG = "PhoneStatus";
   private final Form form;
   private static PhoneStatus mainInstance = null;
+  private static boolean useWebRTC = false;
 
   public PhoneStatus(ComponentContainer container) {
     super(container.$form());
@@ -97,38 +110,42 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
 
   @SimpleFunction(description = "Establish the secret seed for HOTP generation. " +
     "Return the SHA1 of the provided seed, this will be used to contact the " +
-    "rendezvous server.")
+    "rendezvous server. Note: This code also starts the connection negotiation " +
+    "process if we are using WebRTC. This is a bit of a kludge...")
   public String setHmacSeedReturnCode(String seed) {
 
+    // Commented out code is for using a WebView for WebRTC communications.
+    // We no longer do that, but use the Native Library instead
     // if (form instanceof ReplForm) {
     //   Log.d(LOG_TAG, "Calling ReplForm.SetupWebView(" + seed + ")");
     //   ((ReplForm)form).SetupWebView(seed);
     // }
 
     /* Setup communications via WebRTC */
-    WebRTCNativeMgr webRTCNativeMgr = new WebRTCNativeMgr();
-    webRTCNativeMgr.initiate((ReplForm) form, (Context)activity, seed);
-    ((ReplForm)form).setWebRTCMgr(webRTCNativeMgr);
-
-    // AppInvHTTPD.setHmacKey(seed);
-    // MessageDigest Sha1;
-    // try {
-    //   Sha1 = MessageDigest.getInstance("SHA1");
-    // } catch (Exception e) {
-    //   Log.e(LOG_TAG, "Exception getting SHA1 Instance", e);
-    //   return "";
-    // }
-    // Sha1.update(seed.getBytes());
-    // byte [] result = Sha1.digest();
-    // StringBuffer sb = new StringBuffer(result.length * 2);
-    // Formatter formatter = new Formatter(sb);
-    // for (byte b : result) {
-    //   formatter.format("%02x", b);
-    // }
-    // Log.d(LOG_TAG, "Seed = " + seed);
-    // Log.d(LOG_TAG, "Code = " + sb.toString());
-    // return sb.toString();
-    return ("");
+    if (useWebRTC) {
+      WebRTCNativeMgr webRTCNativeMgr = new WebRTCNativeMgr();
+      webRTCNativeMgr.initiate((ReplForm) form, (Context)activity, seed);
+      ((ReplForm)form).setWebRTCMgr(webRTCNativeMgr);
+    } else {
+      AppInvHTTPD.setHmacKey(seed);
+    }
+    MessageDigest Sha1;
+    try {
+      Sha1 = MessageDigest.getInstance("SHA1");
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Exception getting SHA1 Instance", e);
+      return "";
+    }
+    Sha1.update(seed.getBytes());
+    byte [] result = Sha1.digest();
+    StringBuffer sb = new StringBuffer(result.length * 2);
+    Formatter formatter = new Formatter(sb);
+    for (byte b : result) {
+      formatter.format("%02x", b);
+    }
+    Log.d(LOG_TAG, "Seed = " + seed);
+    Log.d(LOG_TAG, "Code = " + sb.toString());
+    return sb.toString();
   }
 
   @SimpleFunction(description = "Returns true if we are running in the emulator or USB Connection")
@@ -198,6 +215,28 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
   @SimpleEvent
   public void OnSettings() {
     EventDispatcher.dispatchEvent(this, "OnSettings");
+  }
+
+  /**
+   * Set whether or not we will use WebRTC to communicate with the server
+   *
+   * @param useWebRTC  Set True to use WebRTC
+   *
+   */
+  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN, defaultValue = "False")
+  @SimpleProperty()
+  public void WebRTC(boolean useWebRTC) {
+    this.useWebRTC = useWebRTC;
+  }
+
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR, description = "If True we are using WebRTC to talk to the server.")
+  public boolean WebRTC() {
+    return useWebRTC;
+  }
+
+  /* Static context way to get the useWebRTC flag */
+  public static boolean getUseWebRTC() {
+    return useWebRTC;
   }
 
   /**

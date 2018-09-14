@@ -7035,4 +7035,9 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Rotation")
   @Description("")
   String RotationProperties();
+
+  @DefaultMessage("WebRTC")     // Note: This is INTERNAL so doesn't need translation
+  @Description("")
+  String WebRTCProperties();
+
 }

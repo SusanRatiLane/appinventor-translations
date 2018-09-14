@@ -6,15 +6,17 @@
 // This work is licensed under a Creative Commons Attribution 3.0 Unported License.
 
 package com.google.appinventor.components.runtime.util;
+import android.util.Log;
+
+import com.google.appinventor.components.runtime.PhoneStatus;
+import com.google.appinventor.components.runtime.ReplForm;
+
 import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 
-import com.google.appinventor.components.runtime.ReplForm;
-
-import android.util.Log;
 
 /*
  * A Class for managing return values from evaluating Repl Forms and
@@ -27,8 +29,6 @@ public class RetValManager {
   private static final String LOG_TAG = "RetValManager";
   private static final Object semaphore = new Object();
   private static final long TENSECONDS = 10000; // Ten Seconds (in milliseconds)
-
-  private static final boolean usingWebRTC = true;
 
   // There can be only one!
   private static ArrayList<JSONObject> currentArray = new ArrayList<JSONObject>(10);
@@ -62,7 +62,7 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (usingWebRTC) {
+      if (PhoneStatus.getUseWebRTC()) {
         try {
           JSONObject output = new JSONObject();
           output.put("status", "OK");
@@ -92,7 +92,7 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (usingWebRTC) {
+      if (PhoneStatus.getUseWebRTC()) {
         try {
           JSONObject output = new JSONObject();
           output.put("status", "OK");
@@ -130,7 +130,7 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (usingWebRTC) {
+      if (PhoneStatus.getUseWebRTC()) {
         try {
           JSONObject output = new JSONObject();
           output.put("status", "OK");
@@ -167,7 +167,7 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (usingWebRTC) {
+      if (PhoneStatus.getUseWebRTC()) {
         try {
           JSONObject output = new JSONObject();
           output.put("status", "OK");
@@ -203,7 +203,7 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (usingWebRTC) {
+      if (PhoneStatus.getUseWebRTC()) {
         try {
           JSONObject output = new JSONObject();
           output.put("status", "OK");
@@ -236,7 +236,7 @@ public class RetValManager {
       }
       boolean sendNotify = currentArray.isEmpty();
       currentArray.add(retval);
-      if (usingWebRTC) {
+      if (PhoneStatus.getUseWebRTC()) {
         try {
           JSONObject output = new JSONObject();
           output.put("status", "OK");
