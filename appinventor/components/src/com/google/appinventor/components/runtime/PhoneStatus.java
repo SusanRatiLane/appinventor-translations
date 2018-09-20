@@ -39,6 +39,7 @@ import com.google.appinventor.components.runtime.Form;
 import com.google.appinventor.components.runtime.ReplForm;
 import com.google.appinventor.components.runtime.util.AppInvHTTPD;
 import com.google.appinventor.components.runtime.util.PackageInstaller;
+import com.google.appinventor.components.runtime.util.SdkLevel;
 import com.google.appinventor.components.runtime.util.WebRTCNativeMgr;
 
 import java.security.MessageDigest;
@@ -232,6 +233,47 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
   @SimpleProperty(category = PropertyCategory.BEHAVIOR, description = "If True we are using WebRTC to talk to the server.")
   public boolean WebRTC() {
     return useWebRTC;
+  }
+
+  /**
+   * SdkLevel -- Return the current Android SDK Level
+   *
+   * We use this to send the Rendezvous server our API leve which it
+   * can then log for statistics (so we know when we can deprecate an
+   * older version of Android because usage is low enough).
+   *
+   * @return SdkLevel
+   */
+
+  @SimpleFunction(description = "Get the current Android SDK Level")
+  public int SdkLevel() {
+    return SdkLevel.getLevel();
+  }
+
+  /**
+   * GetVersionName -- Return the package versionName
+   *
+   * We use this to determine whether or not the Companion is compatible
+   * with the current version of App Inventor. We provide this to the
+   * Rendezvous server. When in "WebRTC" mode, the MIT App Inventor
+   * client gets this value from the Rendezvous server (the older HTTPD
+   * approach has its own "_getversion" URL which is used to do this, but
+   * we cannot use that approach when using WebRTC, and the Rendezvous server
+   * approach we support here is actually better because it avoid a round
+   * trip between the client and the Companion...
+   *
+   * @return The VersionName as a string
+   */
+
+  @SimpleFunction(description = "Return the our VersionName property")
+  public String GetVersionName() {
+    try {
+      String packageName = form.getPackageName();
+      return form.getPackageManager().getPackageInfo(packageName, 0).versionName;
+    } catch (NameNotFoundException e) {
+      Log.e(LOG_TAG, "Unable to get VersionName", e);
+      return "UNKNOWN";
+    }
   }
 
   /* Static context way to get the useWebRTC flag */

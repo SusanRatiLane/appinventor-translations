@@ -7040,4 +7040,12 @@ public interface OdeMessages extends Messages {
   @Description("")
   String WebRTCProperties();
 
+  @DefaultMessage("GetVersionName")
+  @Description("")
+  String GetVersionNameMethods();
+
+  @DefaultMessage("SdkLevel")
+  @Description("")
+  String SdkLevelMethods();
+
 }

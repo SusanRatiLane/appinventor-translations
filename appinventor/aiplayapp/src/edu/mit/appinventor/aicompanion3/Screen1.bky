@@ -49,7 +49,7 @@
       </block>
     </statement>
   </block>
-  <block type="procedures_defnoreturn" id="9" x="732" y="2163">
+  <block type="procedures_defnoreturn" id="9" x="752" y="2043">
     <mutation>
       <arg name="code"></arg>
     </mutation>
@@ -90,7 +90,7 @@
                 <field name="COMPONENT_SELECTOR">Web1</field>
                 <value name="ARG0">
                   <block type="lists_create_with" id="17" inline="false">
-                    <mutation items="4"></mutation>
+                    <mutation items="6"></mutation>
                     <value name="ADD0">
                       <block type="lists_create_with" id="18" inline="false">
                         <mutation items="2"></mutation>
@@ -154,6 +154,38 @@
                         </value>
                       </block>
                     </value>
+                    <value name="ADD4">
+                      <block type="lists_create_with" id="!EYOGgvQNcW*Gj*y8]#}">
+                        <mutation items="2"></mutation>
+                        <value name="ADD0">
+                          <block type="text" id="ewn2ra6|~iwrmq)%+e4x">
+                            <field name="TEXT">version</field>
+                          </block>
+                        </value>
+                        <value name="ADD1">
+                          <block type="component_method" id="`aL)?L_:[aaKftu6Xk^7">
+                            <mutation component_type="PhoneStatus" method_name="GetVersionName" is_generic="false" instance_name="PhoneStatus1"></mutation>
+                            <field name="COMPONENT_SELECTOR">PhoneStatus1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="ADD5">
+                      <block type="lists_create_with" id="t^@FVOKl1Na%vzfzwh2[">
+                        <mutation items="2"></mutation>
+                        <value name="ADD0">
+                          <block type="text" id="N,,m(+`}dg+Jy5y8q*gs">
+                            <field name="TEXT">api</field>
+                          </block>
+                        </value>
+                        <value name="ADD1">
+                          <block type="component_method" id="@Kh2vH_B7~WrI/!YlTN^">
+                            <mutation component_type="PhoneStatus" method_name="SdkLevel" is_generic="false" instance_name="PhoneStatus1"></mutation>
+                            <field name="COMPONENT_SELECTOR">PhoneStatus1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
                   </block>
                 </value>
               </block>
@@ -204,7 +236,32 @@
       </block>
     </statement>
   </block>
-  <block type="procedures_defnoreturn" id="34" x="732" y="2511">
+  <block type="component_event" id="47" x="1529" y="2511">
+    <mutation component_type="Button" instance_name="ConnectButton" event_name="Click"></mutation>
+    <field name="COMPONENT_SELECTOR">ConnectButton</field>
+    <statement name="DO">
+      <block type="component_method" id="48">
+        <mutation component_type="TextBox" method_name="HideKeyboard" is_generic="false" instance_name="CodeBox"></mutation>
+        <field name="COMPONENT_SELECTOR">CodeBox</field>
+        <next>
+          <block type="procedures_callnoreturn" id="49" inline="false">
+            <mutation name="processcode">
+              <arg name="x"></arg>
+            </mutation>
+            <field name="PROCNAME">processcode</field>
+            <value name="ARG0">
+              <block type="component_set_get" id="50">
+                <mutation component_type="TextBox" set_or_get="get" property_name="Text" is_generic="false" instance_name="CodeBox"></mutation>
+                <field name="COMPONENT_SELECTOR">CodeBox</field>
+                <field name="PROP">Text</field>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="procedures_defnoreturn" id="34" x="799" y="2585">
     <field name="NAME">checkWiFi</field>
     <statement name="STACK">
       <block type="controls_if" id="35" inline="false">
@@ -264,31 +321,6 @@
             </value>
           </block>
         </statement>
-      </block>
-    </statement>
-  </block>
-  <block type="component_event" id="47" x="1529" y="2511">
-    <mutation component_type="Button" instance_name="ConnectButton" event_name="Click"></mutation>
-    <field name="COMPONENT_SELECTOR">ConnectButton</field>
-    <statement name="DO">
-      <block type="component_method" id="48">
-        <mutation component_type="TextBox" method_name="HideKeyboard" is_generic="false" instance_name="CodeBox"></mutation>
-        <field name="COMPONENT_SELECTOR">CodeBox</field>
-        <next>
-          <block type="procedures_callnoreturn" id="49" inline="false">
-            <mutation name="processcode">
-              <arg name="x"></arg>
-            </mutation>
-            <field name="PROCNAME">processcode</field>
-            <value name="ARG0">
-              <block type="component_set_get" id="50">
-                <mutation component_type="TextBox" set_or_get="get" property_name="Text" is_generic="false" instance_name="CodeBox"></mutation>
-                <field name="COMPONENT_SELECTOR">CodeBox</field>
-                <field name="PROP">Text</field>
-              </block>
-            </value>
-          </block>
-        </next>
       </block>
     </statement>
   </block>
