@@ -800,42 +800,51 @@ Blockly.ReplMgr.triggerUpdate = function() {
         return;
     }
 
-    encoder.add('package', 'update.apk');
-    var qs = encoder.toString();
-    fetchconn.open("GET", top.COMPANION_UPDATE_URL, true);
-    fetchconn.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            try {
-                showdialog(Blockly.Msg.REPL_GOT_IT, Blockly.Msg.REPL_UPDATE_INFO);
-                Blockly.ReplMgr.putAsset(0, "update.apk", goog.crypt.base64.decodeStringToByteArray(this.response),
-                                         function() {
-                                             // Trigger Update Here
-                                             console.log("Update: Downloaded");
-                                             var conn = goog.net.XmlHttp();
-                                             conn.open("POST", rs.baseurl + "_package", true);
-                                             conn.onreadystatechange = function() {
-                                                 if (this.readyState == 4 && this.status == 200) {
-                                                     console.log("Update: _package success");
-                                                     reset(); //  New companion, no connection left!
-                                                 } else if (this.readyState == 4) {
-                                                     console.log("Update: _package state = 4 probably ok");
-                                                     reset();
-                                                 }
-                                             };
-                                             conn.send(qs);
-                                         },
-                                         function() {
-                                             fail(Blockly.Msg.REPL_UNABLE_TO_UPDATE);
-                                         }, true);
-            } catch (err) {     // Most likely a decoding error from goog.crypt.base64...
-                fail(Blockly.Msg.REPL_UNABLE_TO_LOAD);
+    if (top.usewebrtc) {        // If we are using webrtc, we just ask the Companion to do the
+                                // work directly.
+        var cookie = this.getCookie();
+        var yail = "(AssetFetcher:upgradeCompanion \"" + cookie + "\" \"" +
+            top.COMPANION_UPDATE_URL + "\")";
+        console.log("CompanionUpgrade Yail = " + yail);
+        this.putYail.putAsset(yail);
+    } else {
+        encoder.add('package', 'update.apk');
+        var qs = encoder.toString();
+        fetchconn.open("GET", top.COMPANION_UPDATE_URL, true);
+        fetchconn.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                try {
+                    showdialog(Blockly.Msg.REPL_GOT_IT, Blockly.Msg.REPL_UPDATE_INFO);
+                    Blockly.ReplMgr.putAsset(0, "update.apk", goog.crypt.base64.decodeStringToByteArray(this.response),
+                                             function() {
+                                                 // Trigger Update Here
+                                                 console.log("Update: Downloaded");
+                                                 var conn = goog.net.XmlHttp();
+                                                 conn.open("POST", rs.baseurl + "_package", true);
+                                                 conn.onreadystatechange = function() {
+                                                     if (this.readyState == 4 && this.status == 200) {
+                                                         console.log("Update: _package success");
+                                                         reset(); //  New companion, no connection left!
+                                                     } else if (this.readyState == 4) {
+                                                         console.log("Update: _package state = 4 probably ok");
+                                                         reset();
+                                                     }
+                                                 };
+                                                 conn.send(qs);
+                                             },
+                                             function() {
+                                                 fail(Blockly.Msg.REPL_UNABLE_TO_UPDATE);
+                                             }, true);
+                } catch (err) {     // Most likely a decoding error from goog.crypt.base64...
+                    fail(Blockly.Msg.REPL_UNABLE_TO_LOAD);
+                }
+            } else if (this.readyState == 4) {
+                fail(Blockly.Msg.REPL_UNABLE_TO_LOAD_NO_RESPOND);
             }
-        } else if (this.readyState == 4) {
-            fail(Blockly.Msg.REPL_UNABLE_TO_LOAD_NO_RESPOND);
-        }
-    };
-    showdialog(false, Blockly.Msg.REPL_NOW_DOWNLOADING);
-    fetchconn.send();
+        };
+        showdialog(false, Blockly.Msg.REPL_NOW_DOWNLOADING);
+        fetchconn.send();
+    }
 };
 
 Blockly.ReplMgr.acceptablePackage = function(comppack) {
@@ -1426,6 +1435,24 @@ Blockly.ReplMgr.bytes_to_hexstring = function(input) {
     return z.join("");
 };
 
+// Extract the AppInventor authentication cookie from the current
+// document. We do this so we can provide it directly to the Companion
+// so the Companion can fetch assets directly from the MIT App
+// Inventor server without having the browser have to get them and
+// "stuff" them to the Companion
+
+Blockly.ReplMgr.getCookie = function() {
+    var regex = /AppInventor *=([^;]+)/;
+    var cookie;
+    if (regex.test(document.cookie)) {
+        cookie = regex.exec(document.cookie)[1];
+    } else {
+        console.log("Cannot obtain cookie for putAsset!");
+        cookie = null;
+    }
+    return cookie;
+};
+
 Blockly.ReplMgr.putAsset = function(projectid, filename, blob, success, fail, force) {
     if (top.ReplState === undefined)
         return false;
@@ -1435,14 +1462,7 @@ Blockly.ReplMgr.putAsset = function(projectid, filename, blob, success, fail, fo
         // Note: if using webrtc we ignore the passed in callback and
         // instead just call makeAssetTransferred ourselves
         var uri = window.location.origin;
-        var regex = /AppInventor *=([^;]+)/;
-        var cookie;
-        if (regex.test(document.cookie)) {
-            cookie = regex.exec(document.cookie)[1];
-        } else {
-            console.log("Cannot obtain cookie for putAsset!");
-            return;
-        }
+        var cookie = this.getCookie();
         console.log("putAsset uri = " + uri + " cookie = " + cookie);
         var yail = "(AssetFetcher:fetchAssets \"" + cookie + "\" \"" + projectid +
             "\" \"" + uri + "\" \"" + filename + "\")";

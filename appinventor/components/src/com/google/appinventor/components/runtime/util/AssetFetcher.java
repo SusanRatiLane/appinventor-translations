@@ -3,7 +3,13 @@
 // This is unreleased code
 
 package com.google.appinventor.components.runtime.util;
+import android.content.Intent;
+
+import android.net.Uri;
+
 import android.os.Environment;
+
+import android.support.v4.content.FileProvider;
 
 import android.util.Log;
 
@@ -26,6 +32,7 @@ import java.util.concurrent.Executors;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+
 
 /**
  * AssetFetcher: This module is used by the MIT AI2 Companion to fetch
@@ -71,41 +78,34 @@ public class AssetFetcher {
     background.submit(new Runnable() {
         @Override
         public void run() {
-          try {
-            String aUri = uri + "/ode/download/file/" + projectId + "/" + asset;
-            URL url = new URL(aUri);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.addRequestProperty("Cookie",  "AppInventor = " + cookieValue);
-            if (connection != null) {
-              int responseCode = connection.getResponseCode();
-              Log.d(LOG_TAG, "asset = " + asset + " responseCode = " + responseCode);
-              File outFile = new File(REPL_ASSET_DIR + asset);
-              File parentOutFile = outFile.getParentFile();
-              if (!parentOutFile.exists()) {
-                parentOutFile.mkdirs();
-              }
-              BufferedInputStream in = new BufferedInputStream(connection.getInputStream(), 0x1000);
-              BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile), 0x1000);
-              try {
-                while (true) {
-                  int b = in.read();
-                  if (b == -1) {
-                    break;
-                  }
-                  out.write(b);
-                }
-                out.flush();
-              } catch (IOException e) {
-                Log.e(LOG_TAG, "copying assets", e);
-              } finally {
-                out.close();
-              }
-            }
-            connection.disconnect();
+          String fileName = uri + "/ode/download/file/" + projectId + "/" + asset;
+          if (getFile(fileName, cookieValue, asset) != null) {
             RetValManager.assetTransferred(asset);
-          } catch (Exception e) {
-            Log.e(LOG_TAG, "Exception", e); // Cop out
+          }
+        }
+      });
+  }
+
+  public static void upgradeCompanion(final String cookieValue, final String inputUri) {
+    background.submit(new Runnable() {
+        @Override
+        public void run() {
+          String [] parts = inputUri.split("/", 0);
+          String asset = parts[parts.length-1];
+          File assetFile = getFile(inputUri, cookieValue, asset);
+          if (assetFile != null) {
+            try {
+              Form form = Form.getActiveForm();
+              Intent intent = new Intent(Intent.ACTION_VIEW);
+              String packageName = form.$context().getPackageName();
+              Uri packageuri = FileProvider.getUriForFile(form.$context(), packageName + ".provider", assetFile);
+              intent.setDataAndType(packageuri, "application/vnd.android.package-archive");
+              intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+              form.startActivity(intent);
+            } catch (Exception e) {
+              Log.e(LOG_TAG, "ERROR_UNABLE_TO_GET", e);
+              RetValManager.sendError("Unable to Install new Companion Package.");
+            }
           }
         }
       });
@@ -140,6 +140,46 @@ public class AssetFetcher {
       }
     } catch (JSONException e) {
       Log.e(LOG_TAG, "JSON Exception parsing extension string", e);
+    }
+  }
+
+  private static File getFile(String fileName, String cookieValue, String asset) {
+    try {
+      File outFile = null;
+      URL url = new URL(fileName);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.addRequestProperty("Cookie",  "AppInventor = " + cookieValue);
+      if (connection != null) {
+        int responseCode = connection.getResponseCode();
+        Log.d(LOG_TAG, "asset = " + asset + " responseCode = " + responseCode);
+        outFile = new File(REPL_ASSET_DIR + asset);
+        File parentOutFile = outFile.getParentFile();
+        if (!parentOutFile.exists()) {
+          parentOutFile.mkdirs();
+        }
+        BufferedInputStream in = new BufferedInputStream(connection.getInputStream(), 0x1000);
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile), 0x1000);
+        try {
+          while (true) {
+            int b = in.read();
+            if (b == -1) {
+              break;
+            }
+            out.write(b);
+          }
+          out.flush();
+        } catch (IOException e) {
+          Log.e(LOG_TAG, "copying assets", e);
+        } finally {
+          out.close();
+        }
+      }
+      connection.disconnect();
+      return outFile;
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Exception while fetching " + fileName);
+      return null;
     }
   }
 }
