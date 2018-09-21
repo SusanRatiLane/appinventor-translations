@@ -605,7 +605,7 @@
         <field name="VAR">global rendezvousServer</field>
         <value name="VALUE">
           <block type="text" id="100">
-            <field name="TEXT">rendezvous.appinventor.mit.edu</field>
+            <field name="TEXT">r2.appinventor.mit.edu</field>
           </block>
         </value>
         <next>
@@ -978,7 +978,7 @@
     <field name="NAME">rendezvousServer</field>
     <value name="VALUE">
       <block type="text" id="165">
-        <field name="TEXT">rendezvous.appinventor.mit.edu</field>
+        <field name="TEXT">r2.appinventor.mit.edu</field>
       </block>
     </value>
   </block>
