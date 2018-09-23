@@ -115,13 +115,6 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     "process if we are using WebRTC. This is a bit of a kludge...")
   public String setHmacSeedReturnCode(String seed) {
 
-    // Commented out code is for using a WebView for WebRTC communications.
-    // We no longer do that, but use the Native Library instead
-    // if (form instanceof ReplForm) {
-    //   Log.d(LOG_TAG, "Calling ReplForm.SetupWebView(" + seed + ")");
-    //   ((ReplForm)form).SetupWebView(seed);
-    // }
-
     /* Setup communications via WebRTC */
     if (useWebRTC) {
       WebRTCNativeMgr webRTCNativeMgr = new WebRTCNativeMgr();

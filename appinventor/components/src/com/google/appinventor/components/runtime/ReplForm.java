@@ -147,54 +147,6 @@ public class ReplForm extends Form {
     }
   }
 
-  public class WebViewJavaInterface {
-    Context mContext;
-    Language scheme;
-    String code;
-
-    public WebViewJavaInterface(Context context, Language scheme, String code) {
-      mContext = context;
-      this.scheme = scheme;
-      this.code = code;
-    }
-
-    // This is for hacking around. Not sure what we will do with it
-    // but you never know :-)
-    @JavascriptInterface
-    public String doScheme(String sexp) {
-      try {
-        adoptMainThreadClassLoader();
-        return (String) scheme.eval(sexp);
-      } catch (Throwable e) {
-        return (e.toString());
-      }
-    }
-
-    private void adoptMainThreadClassLoader() {
-      ClassLoader mainClassLoader = Looper.getMainLooper().getThread().getContextClassLoader();
-      Thread myThread = Thread.currentThread();
-      if (myThread.getContextClassLoader() != mainClassLoader) {
-        myThread.setContextClassLoader(mainClassLoader);
-      }
-    }
-
-    @JavascriptInterface
-    public String getCode() {
-      return code;
-    }
-
-    @JavascriptInterface
-    public void finished() {
-      runOnUiThread(new Runnable() {
-          @Override
-          public void run() {
-            ReplForm.this.webview.destroy();
-            ReplForm.this.finish();
-          }
-        });
-    }
-  }
-
   @Override
   public void onCreate(Bundle icicle) {
     super.onCreate(icicle);
@@ -452,49 +404,10 @@ public class ReplForm extends Form {
     updateTitle();
   }
 
-  /**
-   * Setup an internal use WebView to use for WebRTC Communications with
-   * the user's browser.
-   *
-   * @param code The six digit code entered in the user interface
-   */
-  public void SetupWebView(String code) {
-    Log.d(LOG_TAG, "SetupWebView: Code = " + code);
-    scheme = Scheme.getInstance("scheme");
-    gnu.expr.ModuleExp.mustNeverCompile();
-    WebViewJavaInterface android = new WebViewJavaInterface(this, scheme, code);
-    webview = new WebView(this);
-    WebSettings webSettings = webview.getSettings();
-    webSettings.setJavaScriptEnabled(true);
-    webSettings.setDatabaseEnabled(true);
-    webSettings.setDomStorageEnabled(true);
-    String databasePath = this.getApplicationContext().getDir("database", Context.MODE_PRIVATE).getPath();
-    webSettings.setDatabasePath(databasePath);
-    webview.setWebChromeClient(new WebChromeClient() {
-        @Override
-        public void onExceededDatabaseQuota(String url, String databaseIdentifier,
-          long currentQuota, long estimatedSize, long totalUsedQuota,
-          WebStorage.QuotaUpdater quotaUpdater) {
-          quotaUpdater.updateQuota(5 * 1024 * 1024);
-        }
-      });
-    setContentView(webview);
-    webview.setWebContentsDebuggingEnabled(true); // For DEBUGGING
-    webview.addJavascriptInterface(android, "Android");
-    webview.loadUrl("file:///android_asset/comm.html");
-  }
-
   public static void ReturnRetvals(final String retvals) {
     final ReplForm form = (ReplForm)activeForm;
     Log.d(LOG_TAG, "ReturnRetvals: " + retvals);
     form.sendToCompanion(retvals);
-
-    // form.androidUIHandler.post(new Runnable() {
-    //     @Override
-    //     public void run() {
-    //       //          form.webview.loadUrl("javascript:retvals('" + retvals + "');");
-    //     }
-    //   });
   }
 
   public void sendToCompanion(String data) {
