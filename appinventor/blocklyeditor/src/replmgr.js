@@ -682,6 +682,7 @@ Blockly.ReplMgr.putYail = (function() {
 //            if (conn)  // This seems to cause disconnects on project switch
 //                conn.abort();
 //            conn = null;
+            top.usewebrtc = false;
             phonereceiving = false;
         },
         "resetcompanion" : function() {
