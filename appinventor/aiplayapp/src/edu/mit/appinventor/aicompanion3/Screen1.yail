@@ -12,10 +12,10 @@ $Source $Yail
 (def (p$isAPK $input) (call-yail-primitive yail-equal? (*list-for-runtime* (call-yail-primitive string-starts-at (*list-for-runtime* (lexical-value $input) "http://") '(text text) "starts at") 1) '(any any) "="))
 (def (p$processcode $x)  (if ((get-var p$isAPK) (lexical-value $x)) (begin   (call-component-method 'PhoneStatus1 'installURL (*list-for-runtime* (lexical-value $x)) '(text))) (begin   ((get-var p$callrendezvous) (call-component-method 'PhoneStatus1 'setHmacSeedReturnCode (*list-for-runtime* ((get-var p$extractRendezvousServer) (lexical-value $x))) '(text)))(call-component-method 'PhoneStatus1 'startHTTPD (*list-for-runtime* #f) '(boolean)))))
 (def (p$extractRendezvousServer $code) (if (call-yail-primitive string-contains (*list-for-runtime* (lexical-value $code) ";") '(text text) "contains") (let ( ($codes (call-yail-primitive string-split (*list-for-runtime* (lexical-value $code) ";") '(text text) "split"))  ) (begin   ((get-var p$setRendezvousServer) (call-yail-primitive yail-list-get-item (*list-for-runtime* (lexical-value $codes) 1) '(list number) "select list item") #f) (call-yail-primitive yail-list-get-item (*list-for-runtime* (lexical-value $codes) 2) '(list number) "select list item")) ) (lexical-value $code)))
-(def (p$resetRendezvousServer )  (set-var! g$rendezvousServer "r2.appinventor.mit.edu")(call-component-method 'TinyDB1 'ClearTag (*list-for-runtime* "rendezvousServer") '(text)))
+(def (p$resetRendezvousServer )  (set-var! g$rendezvousServer "rendezvous.appinventor.mit.edu")(call-component-method 'TinyDB1 'ClearTag (*list-for-runtime* "rendezvousServer") '(text)))
 (def (p$setRendezvousServer $value $permanent)  (set-var! g$rendezvousServer (lexical-value $value))(if (lexical-value $permanent) (begin   (call-component-method 'TinyDB1 'StoreValue (*list-for-runtime* "rendezvousServer"  (lexical-value $value)) '(text any)))))
 (def (p$startdirectconnect )  (let ( ($ignore "")  )   (set-lexical! $ignore (call-component-method 'PhoneStatus1 'setHmacSeedReturnCode (*list-for-runtime* "emulator") '(text))) )(call-component-method 'PhoneStatus1 'startHTTPD (*list-for-runtime* #t) '(boolean)))
-(def g$rendezvousServer "r2.appinventor.mit.edu")
+(def g$rendezvousServer "rendezvous.appinventor.mit.edu")
 ;;; Screen1
 
 (do-after-form-creation (set-and-coerce-property! 'Screen1 'AccentColor #xFF128BA8 'number)

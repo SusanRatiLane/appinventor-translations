@@ -1390,7 +1390,7 @@ Blockly.ReplMgr.rendPoll = function() {
 
 Blockly.ReplMgr.makeDialogMessage = function(code) {
     var scancode;
-    if (top.rendezvousServer != 'r2.appinventor.mit.edu') { // Should really get this from YAV
+    if (top.rendezvousServer != 'rendezvous.appinventor.mit.edu') { // Should really get this from YAV
         scancode = top.rendezvousServer + ";" + code;
     } else {
         scancode = code;

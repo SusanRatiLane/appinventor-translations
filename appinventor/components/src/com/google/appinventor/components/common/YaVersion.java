@@ -1158,7 +1158,7 @@ public class YaVersion {
 
   // Rendezvous Server Location
 
-  public static final String RENDEZVOUS_SERVER = "r2.appinventor.mit.edu";
+  public static final String RENDEZVOUS_SERVER = "rendezvous.appinventor.mit.edu";
 
   // Companion Versions and Update Information
 
