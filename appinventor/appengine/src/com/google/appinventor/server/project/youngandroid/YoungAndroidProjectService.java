@@ -710,6 +710,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
         }
 
         return new RpcResult(responseCode, "", StringUtils.escape(error));
+      } else {
+        readContent(connection.getInputStream());
       }
     } catch (MalformedURLException e) {
       CrashReport.createAndLogError(LOG, null,
