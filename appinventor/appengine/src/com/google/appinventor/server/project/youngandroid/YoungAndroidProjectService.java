@@ -672,6 +672,17 @@ public final class YoungAndroidProjectService extends CommonProjectService {
       zipFile = fileExporter.exportProjectSourceZip(userId, projectId, false,
           /* includeAndroidKeystore */ true,
         projectName + ".aia", true, false, true, false);
+      if (zipFile.getContent().length > 10*1024*1024) { // 10 Megabyte size limit...
+        int zipFileLength = zipFile.getContent().length;
+        String lengthMbs = format((zipFileLength * 1.0)/(1024*1024));
+        RuntimeException exception = new RuntimeException(
+            "Sorry, can't package projects larger than 10Mb."
+            + " Yours is " + lengthMbs + "MB.");
+        CrashReport.createAndLogError(LOG, null,
+            buildErrorMsg("RuntimeException", buildServerUrl, userId, projectId),
+            exception);
+        return new RpcResult(false, "", exception.getMessage());
+      }
       bufferedOutputStream.write(zipFile.getContent());
       bufferedOutputStream.flush();
       bufferedOutputStream.close();
