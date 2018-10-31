@@ -1216,6 +1216,7 @@ Blockly.ReplMgr.quoteUnicode = function(input) {
 
 Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
     var rs = top.ReplState;
+    var me = this;
     var RefreshAssets = top.AssetManager_refreshAssets;
     rs.didversioncheck = false; // Re-check
     if (rs.phoneState) {
