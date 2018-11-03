@@ -66,7 +66,8 @@ import java.util.Formatter;
     "google-http-client-android2-beta.jar," +
     "google-http-client-android3-beta.jar")
 @UsesNativeLibraries(v7aLibraries = "libjingle_peerconnection_so.so",
-  v8aLibraries = "libjingle_peerconnection_so.so")
+  v8aLibraries = "libjingle_peerconnection_so.so",
+  x86_64Libraries = "libjingle_peerconnection_so.so")
 public class PhoneStatus extends AndroidNonvisibleComponent implements Component {
 
   private static Activity activity;
