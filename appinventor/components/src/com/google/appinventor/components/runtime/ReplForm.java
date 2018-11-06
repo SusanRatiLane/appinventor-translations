@@ -19,16 +19,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
 
-import android.support.v7.app.ActionBar;
-
-import android.text.Html;
-
 import android.util.Log;
 
 import android.view.Menu;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.MenuItem;
-import android.view.View;
 
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -44,36 +39,22 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 
 import com.google.appinventor.components.common.ComponentConstants;
 
-import com.google.appinventor.components.annotations.UsesActivities;
-import com.google.appinventor.components.annotations.androidmanifest.ActivityElement;
-import com.google.appinventor.components.annotations.androidmanifest.IntentFilterElement;
-import com.google.appinventor.components.annotations.androidmanifest.ActionElement;
-
 import com.google.appinventor.components.runtime.util.AppInvHTTPD;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
-import com.google.appinventor.components.runtime.util.ImageViewUtil;
 import com.google.appinventor.components.runtime.util.RetValManager;
 import com.google.appinventor.components.runtime.util.WebRTCNativeMgr;
 
 import dalvik.system.DexClassLoader;
 
 import java.io.File;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Iterator;
-import java.util.List;
 import java.util.List;
 import java.util.Random;
-import java.util.Random;
-import java.util.Set;
 import java.util.Set;
 
 /**
@@ -154,16 +135,19 @@ public class ReplForm extends Form {
     loadedExternalDexs = new ArrayList<String>();
     Intent intent = getIntent();
     processExtras(intent, false);
-    ActionBar actionBar = getSupportActionBar();
-    if (actionBar != null) {
-      actionBar.setShowHideAnimationEnabled(false);
+    themeHelper.setActionBarAnimation(false);
+  }
+
+  @Override
+  void onCreateFinish() {
+    super.onCreateFinish();
+
+    if (!isEmulator()) {  // Only show REPL splash if not in emulator
+      // Hacking. Show WebView
+      Intent webviewIntent = new Intent(Intent.ACTION_MAIN);
+      webviewIntent.setClassName(activeForm.$context(), SPLASH_ACTIVITY_CLASS);
+      activeForm.$context().startActivity(webviewIntent);
     }
-
-    // Hacking. Show WebView
-    Intent webviewIntent = new Intent(Intent.ACTION_MAIN);
-    webviewIntent.setClassName(activeForm.$context(), SPLASH_ACTIVITY_CLASS);
-    activeForm.$context().startActivity(webviewIntent);
-
   }
 
   @Override
@@ -467,16 +451,7 @@ public class ReplForm extends Form {
 
   @Override
   protected void updateTitle() {
-    final ActionBar actionBar = getSupportActionBar();
-    if (actionBar != null) {
-      if ("AppTheme.Light".equals(currentTheme)) {
-        actionBar.setTitle(Html.fromHtml("<font color=\"black\">" + title + "</font>"));
-        ImageViewUtil.setMenuButtonColor(this, Color.BLACK);
-      } else {
-        actionBar.setTitle(title);
-        ImageViewUtil.setMenuButtonColor(this, Color.WHITE);
-      }
-    }
+    themeHelper.setTitle(title, "AppTheme.Light".equals(currentTheme));
   }
 
   private String genReportId() {
