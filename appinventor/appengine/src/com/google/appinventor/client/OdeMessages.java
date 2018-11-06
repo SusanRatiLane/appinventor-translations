@@ -659,9 +659,17 @@ public interface OdeMessages extends Messages {
   @Description("Label of item for building a project and show barcode")
   String showBarcodeMenuItem();
 
+  @DefaultMessage("App for Google Play ( provide QR code for .apk )")
+  @Description("Label of item for building a project and show barcode")
+  String showBarcodeMenuItem2();
+
   @DefaultMessage("App ( save .apk to my computer )")
   @Description("Label of item for building a project and downloading")
   String downloadToComputerMenuItem();
+
+  @DefaultMessage("App for Google Play ( save .apk to my computer )")
+  @Description("Label of item for building a project and downloading")
+  String downloadToComputerMenuItem2();
 
   @DefaultMessage("Generate YAIL")
   @Description("Label of the cascade item for generating YAIL for a project")
@@ -977,12 +985,15 @@ public interface OdeMessages extends Messages {
   @Description("Error shown when a new component type would be the same as a component instance name")
   String sameAsComponentInstanceNameError();
 
-  @DefaultMessage("Component name cannot be any of the following: CsvUtil, Double, Float, " +
+  @DefaultMessage("Name cannot be any of the following: CsvUtil, Double, Float, " +
       "Integer, JavaCollection, JavaIterator, KawaEnvironment, Long, Short, SimpleForm, String, " +
-      "Pattern, YailList, YailNumberToString, YailRuntimeError")
-  @Description("Error shown when a new component name is a variable name already used in the" +
-      "Yail code")
-  String badComponentNameError();
+      "Pattern, YailList, YailNumberToString, YailRuntimeError, abstract, continue, for, new, " +
+      "switch, assert, default, goto, package, synchronized, boolean, do, if, private, this, break, " +
+      "double, implements, protected, throw, byte, else, import, public, throws, case, enum, instanceof, " +
+      "return, transient, catch, extends, int, short, try, char, final, interface, static, void, class, " +
+      "finally, long, strictfp, volatile, const, float, native, super, while")
+  @Description("Error shown when a new name is a reserved name in Yail or Java code")
+  String reservedNameError();
 
   @DefaultMessage("Deleting this component will delete all blocks associated with it in the " +
       "Blocks Editor. Are you sure you want to delete?")
