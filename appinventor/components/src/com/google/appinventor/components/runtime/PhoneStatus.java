@@ -38,6 +38,7 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.Form;
 import com.google.appinventor.components.runtime.ReplForm;
 import com.google.appinventor.components.runtime.util.AppInvHTTPD;
+import com.google.appinventor.components.runtime.util.EclairUtil;
 import com.google.appinventor.components.runtime.util.PackageInstaller;
 import com.google.appinventor.components.runtime.util.SdkLevel;
 import com.google.appinventor.components.runtime.util.WebRTCNativeMgr;
@@ -181,17 +182,6 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     // t.start();
   }
 
-  @SimpleFunction(description = "Obtain the Android Application Version")
-  public String getVersionName() {
-    try {
-      PackageInfo pInfo = form.getPackageManager().getPackageInfo(form.getPackageName(), 0);
-      return (pInfo.versionName);
-    } catch (NameNotFoundException e) {
-      Log.e(LOG_TAG, "Exception fetching package name.", e);
-      return ("");
-    }
-  }
-
   @SimpleFunction(description = "Downloads the URL and installs it as an Android Package")
   public void installURL(String url) {
     PackageInstaller.doPackageInstall(form, url);
@@ -267,6 +257,20 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
     } catch (NameNotFoundException e) {
       Log.e(LOG_TAG, "Unable to get VersionName", e);
       return "UNKNOWN";
+    }
+  }
+
+  @SimpleFunction(description = "Return the app that installed us")
+  public String GetInstaller() {
+    if (SdkLevel.getLevel() >= SdkLevel.LEVEL_ECLAIR) {
+      String installer = EclairUtil.getInstallerPackageName("edu.mit.appinventor.aicompanion3", form);
+      if (installer == null) {
+        return "sideloaded";
+      } else {
+        return installer;
+      }
+    } else {
+      return "unknown";
     }
   }
 

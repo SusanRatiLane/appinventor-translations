@@ -7048,4 +7048,8 @@ public interface OdeMessages extends Messages {
   @Description("")
   String SdkLevelMethods();
 
+  @DefaultMessage("GetInstaller")
+  @Description("")
+  String GetInstallerMethods();
+
 }
