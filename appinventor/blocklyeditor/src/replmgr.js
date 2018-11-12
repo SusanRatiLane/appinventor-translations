@@ -29,7 +29,7 @@ goog.require('goog.crypt.base64');
 goog.require('AI.Blockly.Util');
 goog.require('AI.Events');
 
-if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {}
+if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {};
 Blockly.ReplMgr.yail = null;
 
 top.usewebrtc = false;           // True if we are going to use webRTC instead
@@ -337,7 +337,7 @@ Blockly.ReplMgr.putYail = (function() {
             webrtcisopen = false;
             webrtcforcestop = false;
             var poll = function() {
-                xhr = new XMLHttpRequest();
+                var xhr = new XMLHttpRequest();
                 xhr.open('GET', webrtcrendezvous + key + '-r', true);
                 xhr.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
@@ -388,7 +388,7 @@ Blockly.ReplMgr.putYail = (function() {
             };
             webrtcpeer.onicecandidate = function(evt) {
                 if (evt.type == 'icecandidate') {
-                    xhr = new XMLHttpRequest();
+                    var xhr = new XMLHttpRequest();
                     xhr.open('POST', webrtcrendezvous, true);
                     xhr.send(JSON.stringify({'key' : key + '-s',
                                              'webrtc' : true,
@@ -431,7 +431,7 @@ Blockly.ReplMgr.putYail = (function() {
             };
             webrtcpeer.createOffer().then(function(desc) {
                 offer = desc;
-                xhr = new XMLHttpRequest();
+                var xhr = new XMLHttpRequest();
                 xhr.open('POST', webrtcrendezvous, true);
                 xhr.send(JSON.stringify({'key' : key + '-s',
                                          'webrtc' : true,
@@ -442,6 +442,8 @@ Blockly.ReplMgr.putYail = (function() {
 
         },
         'pollphone' : function() {
+            var blockid;
+            var sendcode;
             if (!rs.didversioncheck && !top.usewebrtc) { // have to do version check different for webrtc
                 engine.doversioncheck();
                 return;
@@ -469,26 +471,24 @@ Blockly.ReplMgr.putYail = (function() {
                 // OK, let's send with webrtc!
                 // First let's drain the queue of pending asset updates
                 while ((work = rs.phoneState.assetQueue.shift())) {
-                    var blockid;
                     if (!work.block) {
                         blockid = -1;
                     } else {
                         blockid = '"' + work.block.id + '"';
                     }
-                    var sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
+                    sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
                         blockid + " (begin " + work.code + ")))";
                     console.log(sendcode);
                     webrtcdata.send(sendcode); // Send the code!
                 }
                 if (rs.state == Blockly.ReplMgr.rsState.CONNECTED) {
                     while ((work = rs.phoneState.phoneQueue.shift())) {
-                        var blockid;
                         if (!work.block) {
                             blockid = -1;
                         } else {
                             blockid = '"' + work.block.id + '"';
                         }
-                        var sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
+                        sendcode = "(begin (require <com.google.youngandroid.runtime>) (process-repl-input " +
                             blockid + " (begin " + work.code + ")))";
                         console.log(sendcode);
                         webrtcdata.send(sendcode); // Send the code!
@@ -539,7 +539,6 @@ Blockly.ReplMgr.putYail = (function() {
             }
             var encoder = new goog.Uri.QueryData();
             conn = goog.net.XmlHttp();
-            var blockid;
             if (work.block) {
                 // Quote blockId as a string due to non-numeric identifiers generated from
                 // Blockly's soup {@see Blockly.utils.genUid.soup_}
@@ -902,7 +901,7 @@ Blockly.ReplMgr.processRetvals = function(responses) {
       var text = document.createTextNode(str);
       div.appendChild(text);
       return div.innerHTML;
-    }
+    };
 
     for (var i = 0; i < responses.length; i++) {
         var r = responses[i];
@@ -1346,7 +1345,7 @@ Blockly.ReplMgr.loadExtensions = function() {
         extensionJson = extensionJson.replace(/"/g, '\\"');
         var yailstring = "(AssetFetcher:loadExtensions \"" +
             extensionJson +
-            "\")"
+            "\")";
         console.log("Blockly.ReplMgr.loadExtensions(webrtc): Yail = " + yailstring);
         this.putYail.putAsset(yailstring);
     } else {
