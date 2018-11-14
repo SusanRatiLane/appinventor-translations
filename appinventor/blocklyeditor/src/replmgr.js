@@ -77,7 +77,8 @@ Blockly.ReplStateObj.prototype = {
     'replcode' : null,                  // The six digit code used for rendezvous
     'rendezvouscode' : null,            // Code used for Rendezvous (hash of replcode)
     'dialog' : null,                    // The Dialog Box with the code and QR Code
-    'count' : 0                         // Count of number of reads from rendezvous server
+    'count' : 0,                        // Count of number of reads from rendezvous server
+    'didversioncheck' : false
 };
 
 // Blockly is only loaded once now, so we can init this here.
@@ -441,6 +442,10 @@ Blockly.ReplMgr.putYail = (function() {
 
         },
         'pollphone' : function() {
+            if (!rs.didversioncheck) {
+                engine.doversioncheck();
+                return;
+            }
             var blockid;
             var sendcode;
             if (!phonereceiving && !top.usewebrtc) {
@@ -584,6 +589,66 @@ Blockly.ReplMgr.putYail = (function() {
             var stuff = encoder.toString();
             conn.send(stuff);
         },
+        'doversioncheck' : function() {
+            var conn = goog.net.XmlHttp();
+            conn.open('GET', rs.versionurl, true);
+            conn.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    rs.didversioncheck = true;
+                    if (this.response[0] != "{") {
+                        engine.checkversionupgrade(true, "", true); // Old Companion
+                        engine.resetcompanion();
+                        return;
+                    } else {
+                        var json = goog.json.parse(this.response);
+                        // Don't check the package name if we are the emulator
+                        // We cannot check because our distributed setup tools contains
+                        // a Companion older then the version that supplies its package name
+                        if ((rs.replcode != 'emulator') && !Blockly.ReplMgr.acceptablePackage(json["package"])) {
+                            dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
+                                                             Blockly.Msg.REPL_COMPANION_WRONG_PACKAGE,
+                                                             Blockly.Msg.REPL_OK, false, null, 0, function() {
+                                                                 dialog.hide();
+                                                             });
+                            engine.resetcompanion();
+                            return;
+                        }
+                        if (!Blockly.ReplMgr.acceptableVersion(json.version)) {
+                            engine.checkversionupgrade(false, json.installer, false);
+                            return;
+                        }
+                        if (!json.fqcn) {
+                            // Set a compatibility flag to indicate that we
+                            // should trim package names from Component blocks
+                            // because we are talking to an old pre-cdk Companion
+                            rs.phoneState.nofqcn = true;
+                        } else {
+                            rs.phoneState.nofqcn = false;
+                        }
+                    }
+                    // We have to reset the yail state because
+                    // we may have a queue of pending yail, yet we may
+                    // have also just changed the nofqcn flag. So we
+                    // need to force re-generation of the yail. When
+                    // we no longer need to be compatible, we can remove this
+                    // code (the reseting code, LEAVE the pollphone() call
+                    // or visit the land of the lost!
+                    context.resetYail(true); // Reset (partial reset)
+                    rs.phoneState.phoneQueue = []; // But flush the queue of pending code
+                    context.pollYail(Blockly.mainWorkspace);  // Regenerate
+                    engine.pollphone();  // Next...
+                    return;
+                }
+                if (this.readyState == 4) { // Old Companion, doesn't do CORS so we fail to talk to it
+                    var dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_NETWORK_ERROR, Blockly.Msg.REPL_NETWORK_ERROR_RESTART, Blockly.Msg.REPL_OK, false, null, 0, function() {
+                        dialog.hide();
+                    });
+                    engine.resetcompanion();
+                    return;
+                }
+            };
+            conn.send();
+        },
         "receivefromphone" : function() {
             phonereceiving = true;
             console.log("receivefromphone called.");
@@ -630,6 +695,7 @@ Blockly.ReplMgr.putYail = (function() {
 //   hardreset is now done in the handler for the network error dialog OK
 //   button.
 //          context.hardreset(context.formName); // kill adb and emulator
+            rs.didversioncheck = false;
             top.BlocklyPanel_indicateDisconnect();
             engine.reset();
         },
@@ -716,6 +782,7 @@ Blockly.ReplMgr.triggerUpdate = function() {
         // Reset companion state
         rs.state = Blockly.ReplMgr.rsState.IDLE;
         rs.connection = null;
+        rs.didversioncheck = false;
         context.resetYail(false);
         top.BlocklyPanel_indicateDisconnect();
         // End reset companion state
@@ -746,7 +813,7 @@ Blockly.ReplMgr.triggerUpdate = function() {
     } else {
         encoder.add('package', 'update.apk');
         var qs = encoder.toString();
-        fetchconn.open("GET", top.COMPANION_UPDATE_URL, true);
+        fetchconn.open("GET", top.COMPANION_UPDATE_EMULATOR_URL, true);
         fetchconn.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 try {
@@ -1152,6 +1219,7 @@ Blockly.ReplMgr.quoteUnicode = function(input) {
 Blockly.ReplMgr.startRepl = function(already, emulator, usb) {
     var rs = top.ReplState;
     var me = this;
+    rs.didversioncheck = false; // Re-check
     var RefreshAssets = top.AssetManager_refreshAssets;
     if (rs.phoneState) {
         rs.phoneState.initialized = false; // Make sure we re-send the yail to the Companion
@@ -1240,6 +1308,10 @@ Blockly.ReplMgr.getFromRendezvous = function() {
                 rs.versionurl = 'http://' + json.ipaddr + ':8001/_getversion';
                 rs.baseurl = 'http://' + json.ipaddr + ':8001/';
                 rs.extensionurl = rs.baseurl + '_extensions';
+                rs.didversioncheck = true; // We are checking it here, so don't check it later
+                                           // via HTTP because we may be using webrtc and there is no
+                                           // HTTP
+
                 // The code below really gets things going. We will
                 // either call it shortly, if the Companion version is acceptable
                 // or in the dialog response handler below if the Companion
