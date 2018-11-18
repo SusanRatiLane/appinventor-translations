@@ -266,7 +266,7 @@ Blockly.ReplMgr.putYail = (function() {
     var iceservers = { 'iceServers' : [ { 'url' : 'turn:turn.appinventor.mit.edu:3478',
                                           'username' : 'oh',
                                           'credential' : 'boy' }]};
-    var webrtcrendezvous = 'http://r2.appinventor.mit.edu/rendezvous2/';
+    var webrtcrendezvous = 'http://rendezvous.appinventor.mit.edu/rendezvous2/';
     var webrtcdata;
     var seennonce = {};
     var engine = {
