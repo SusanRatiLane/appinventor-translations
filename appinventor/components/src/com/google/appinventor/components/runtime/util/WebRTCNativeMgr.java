@@ -1,6 +1,7 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2018 MIT, All rights reserved
-// THIS IS UNRELEASED CODE WHICH CONTAINS PROPRIETARY SECRETS
+// Released under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 
 package com.google.appinventor.components.runtime.util;
 
