@@ -1365,37 +1365,41 @@ Blockly.ReplMgr.getFromRendezvous = function() {
                 // information. So if it isn't present we will assume it is old and
                 // say that an update is advisable (or needed)
                 var installer = json.installer;
-                if (!json.version || !Blockly.ReplMgr.acceptableVersion(json.version)) {
-                    if (top.COMPANION_UPDATE_URL1) {
-                        var url = top.location.origin + top.COMPANION_UPDATE_URL1;
-                        var dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
-                                                         Blockly.Msg.REPL_COMPANION_OUT_OF_DATE2 + '<br/>' +
-                                                         Blockly.ReplMgr.makeqrcode(url),
-                                                         Blockly.Msg.REPL_OK, false,
-                                                         Blockly.Msg.REPL_NOT_NOW, 0,
-                                                         function(response) {
-                                                             dialog.hide();
-                                                             if (response == Blockly.Msg.REPL_NOT_NOW) {
-                                                                 getstarted();
-                                                             } else {
-                                                                 top.ReplState.state = Blockly.ReplMgr.rsState.IDLE;
-                                                                 top.BlocklyPanel_indicateDisconnect();
-                                                             }
-                                                         });
+                // We have commented out the code below because we do not want to give
+                // a companion out of date warning as we release nb172 on 12/01/2018 (JIS)
+                //
+                // if (!json.version || !Blockly.ReplMgr.acceptableVersion(json.version)) {
+                //     if (top.COMPANION_UPDATE_URL1) {
+                //         var url = top.location.origin + top.COMPANION_UPDATE_URL1;
+                //         var dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
+                //                                          Blockly.Msg.REPL_COMPANION_OUT_OF_DATE2 + '<br/>' +
+                //                                          Blockly.ReplMgr.makeqrcode(url),
+                //                                          Blockly.Msg.REPL_OK, false,
+                //                                          Blockly.Msg.REPL_NOT_NOW, 0,
+                //                                          function(response) {
+                //                                              dialog.hide();
+                //                                              if (response == Blockly.Msg.REPL_NOT_NOW) {
+                //                                                  getstarted();
+                //                                              } else {
+                //                                                  top.ReplState.state = Blockly.ReplMgr.rsState.IDLE;
+                //                                                  top.BlocklyPanel_indicateDisconnect();
+                //                                              }
+                //                                          });
 
-                    } else {
-                        dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
-                                                         Blockly.Msg.REPL_COMPANION_OUT_OF_DATE1 + " " +
-                                                         top.PREFERRED_COMPANION,
-                                                         Blockly.Msg.REPL_OK, false, null, 0,
-                                                         function(response) {
-                                                             dialog.hide();
-                                                             getstarted();
-                                                         });
-                    }
-                } else {
-                        getstarted();
-                }
+                //     } else {
+                //         dialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_COMPANION_VERSION_CHECK,
+                //                                          Blockly.Msg.REPL_COMPANION_OUT_OF_DATE1 + " " +
+                //                                          top.PREFERRED_COMPANION,
+                //                                          Blockly.Msg.REPL_OK, false, null, 0,
+                //                                          function(response) {
+                //                                              dialog.hide();
+                //                                              getstarted();
+                //                                          });
+                //     }
+                // } else {
+                //         getstarted();
+                // }
+                getstarted();   // Remove when lines above are uncommented
             } catch (err) {
                 console.log("getFromRendezvous(): Error: " + err);
                 setTimeout(poller, 2000); // Queue next attempt
