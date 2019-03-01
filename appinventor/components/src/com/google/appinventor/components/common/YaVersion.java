@@ -1212,11 +1212,11 @@ public class YaVersion {
 
   public static final String ACCEPTABLE_COMPANION_PACKAGE = "edu.mit.appinventor.aicompanion3";
 
-  public static final String PREFERRED_COMPANION = "2.51";
+  public static final String PREFERRED_COMPANION = "2.51a or 2.51au";
   public static final String COMPANION_UPDATE_URL = "/companions/MITAI2Companion.asc";
   public static final String COMPANION_UPDATE_URL1 = "/companions/MITAI2Companion.apk";
   public static final String COMPANION_UPDATE_EMULATOR_URL = "/companions/CompanionUpgradeHelper.asc";
-  public static final String [] ACCEPTABLE_COMPANIONS = { "2.47", "2.48", "2.49", "2.50", "2.51", "2.51a", "2.51b", "2.51c", "2.51d" };
+  public static final String [] ACCEPTABLE_COMPANIONS = { "2.47", "2.48", "2.49", "2.50", "2.51", "2.51a", "2.51b", "2.51c", "2.51d", "2.51au" };
 
   // Splash Screen Values
   public static final int SPLASH_SURVEY = 1;
