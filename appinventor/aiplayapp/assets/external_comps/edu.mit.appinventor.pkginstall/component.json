@@ -1,0 +1,26 @@
+{
+ "categoryString": "EXTENSION",
+ "dateBuilt": "2019-04-01T09:58:22-0400",
+ "nonVisible": "true",
+ "iconName": "",
+ "methods": [{
+  "deprecated": "false",
+  "name": "InstallAPK",
+  "description": "Install the specified APK file",
+  "params": [{
+   "name": "urlToApk",
+   "type": "text"
+  }]
+ }],
+ "blockProperties": [],
+ "helpUrl": "",
+ "type": "edu.mit.appinventor.pkginstall.PackageInstaller",
+ "androidMinSdk": 7,
+ "version": "1",
+ "external": "true",
+ "showOnPalette": "true",
+ "name": "PackageInstaller",
+ "helpString": "An extension to replace the package installer functionality.",
+ "properties": [],
+ "events": []
+}
