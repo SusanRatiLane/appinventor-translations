@@ -21,7 +21,8 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -59,6 +60,8 @@ import org.webrtc.SessionDescription;
 
 public class WebRTCNativeMgr {
 
+  private static final boolean DEBUG = true;
+
   private static final String LOG_TAG = "AppInvWebRTC";
   private static final CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder();
 
@@ -75,6 +78,7 @@ public class WebRTCNativeMgr {
   private Random random = new Random();
   private DataChannel dataChannel = null;
   private String rendezvousServer = "rendezvous.appinventor.mit.edu"; // This should always be over-written
+  private List<PeerConnection.IceServer> iceServers = new ArrayList();
 
   Timer timer = new Timer();
 
@@ -85,8 +89,10 @@ public class WebRTCNativeMgr {
 
       public void onCreateSuccess(SessionDescription sessionDescription) {
         try {
-          Log.d(LOG_TAG, "sdp.type = " + sessionDescription.type.canonicalForm());
-          Log.d(LOG_TAG, "sdp.description = " + sessionDescription.description);
+          if (DEBUG) {
+            Log.d(LOG_TAG, "sdp.type = " + sessionDescription.type.canonicalForm());
+            Log.d(LOG_TAG, "sdp.description = " + sessionDescription.description);
+          }
           DataChannel.Init init = new DataChannel.Init();
           if (sessionDescription.type == SessionDescription.Type.OFFER) {
             peerConnection.setRemoteDescription(sdpObserver, sessionDescription);
@@ -100,9 +106,6 @@ public class WebRTCNativeMgr {
             response.put("offer", offer);
             sendRendezvous(response);
           }
-          // Log.d(LOG_TAG, "About to call create data connection");
-          // peerConnection.createDataChannel("data", init);
-          // Log.d(LOG_TAG, "createDataChannel returned");
         } catch (Exception e) {
           Log.e(LOG_TAG, "Exception during onCreateSuccess", e);
         }
@@ -124,19 +127,25 @@ public class WebRTCNativeMgr {
       }
 
       public void onDataChannel(DataChannel dataChannel) {
-        Log.d(LOG_TAG, "Have Data Channel!");
-        Log.d(LOG_TAG, "v5");
+        if (DEBUG) {
+          Log.d(LOG_TAG, "Have Data Channel!");
+          Log.d(LOG_TAG, "v5");
+        }
         WebRTCNativeMgr.this.dataChannel = dataChannel;
         dataChannel.registerObserver(dataObserver);
         keepPolling = false;    // Turn off talking to the rendezvous server
         timer.cancel();
-        Log.d(LOG_TAG, "Poller() Canceled");
+        if (DEBUG) {
+          Log.d(LOG_TAG, "Poller() Canceled");
+        }
         seenNonces.clear();
       }
 
       public void onIceCandidate(IceCandidate iceCandidate) {
         try {
-          Log.d(LOG_TAG, "IceCandidate = " + iceCandidate.toString());
+          if (DEBUG) {
+            Log.d(LOG_TAG, "IceCandidate = " + iceCandidate.toString());
+          }
           /* Send to Peer */
           JSONObject response = new JSONObject();
           response.put("nonce", random.nextInt(100000));
@@ -186,7 +195,9 @@ public class WebRTCNativeMgr {
           Log.e(LOG_TAG, "onMessage decoder error", e);
           return;
         }
-        Log.d(LOG_TAG, "onMessage: received: " + input);
+        if (DEBUG) {
+          Log.d(LOG_TAG, "onMessage: received: " + input);
+        }
         form.evalScheme(input);
       }
 
@@ -194,8 +205,34 @@ public class WebRTCNativeMgr {
       }
     };
 
-  public WebRTCNativeMgr(String rendezvousServer) {
+  public WebRTCNativeMgr(String rendezvousServer, String iceServers) {
     this.rendezvousServer = rendezvousServer;
+    if (iceServers.isEmpty() || iceServers.startsWith("OK")) {
+      /* Provide a default when the rendezvous server doesn't provide one */
+      iceServers = "[{ \"server\" : \"turn:turn.appinventor.mit.edu:3478\"," +
+        "\"username\" : \"oh\"," +
+        "\"password\" : \"boy\"}]";
+    }
+    try {
+      JSONArray iceServerArray = new JSONArray(iceServers);
+      this.iceServers = new ArrayList(iceServerArray.length());
+      for (int i = 0; i < iceServerArray.length(); i++) {
+        JSONObject jsonServer = iceServerArray.getJSONObject(i);
+        PeerConnection.IceServer.Builder builder = PeerConnection.IceServer.builder(jsonServer.getString("server"));
+        if (DEBUG) {
+          Log.d(LOG_TAG, "Adding iceServer = " + jsonServer.getString("server"));
+        }
+        if (jsonServer.has("username")) {
+          builder.setUsername(jsonServer.getString("username"));
+        }
+        if (jsonServer.has("password")) {
+          builder.setPassword(jsonServer.getString("password"));
+        }
+        this.iceServers.add(builder.createIceServer());
+      }
+    } catch (JSONException e) {
+      Log.e(LOG_TAG, "parsing iceServers:", e);
+    }
   }
 
   public void initiate(ReplForm form, Context context, String code) {
@@ -208,16 +245,9 @@ public class WebRTCNativeMgr {
     PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
     /* Create the factory */
     PeerConnectionFactory factory = new PeerConnectionFactory(options);
-    /* Create our list of iceServers (only one for now, note this information is secret!) */
-    PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("turn:turn.appinventor.mit.edu:3478")
-      .setUsername("oh")
-      .setPassword("boy")
-      .createIceServer();
-    /* Create the Observer which will be called when events heppen */
-
-    peerConnection = factory.createPeerConnection(Collections.singletonList(iceServer), new MediaConstraints(),
-                                                                 observer);
-//    peerConnection.createOffer(sdpObserver, new MediaConstraints()); // Let's see what happens :-)
+    /* Create the peer connection using the iceServers we received in the constructor */
+    peerConnection = factory.createPeerConnection(iceServers, new MediaConstraints(),
+      observer);
     timer.scheduleAtFixedRate(new TimerTask() {
         @Override
         public void run() {
@@ -237,7 +267,9 @@ public class WebRTCNativeMgr {
         return;
       }
 
-      Log.d(LOG_TAG, "Poller() Called");
+      if (DEBUG) {
+        Log.d(LOG_TAG, "Poller() Called");
+      }
       HttpClient client = new DefaultHttpClient();
       HttpGet request = new HttpGet("http://" + rendezvousServer + "/rendezvous2/" + rCode + "-s");
       HttpResponse response = client.execute(request);
@@ -259,26 +291,36 @@ public class WebRTCNativeMgr {
       }
 
       if (!keepPolling) {
-        Log.d(LOG_TAG, "keepPolling is false, we're done!");
+        if (DEBUG) {
+          Log.d(LOG_TAG, "keepPolling is false, we're done!");
+        }
         return;
       }
 
       String responseText = sb.toString();
 
-      Log.d(LOG_TAG, "response = " + responseText);
+      if (DEBUG) {
+        Log.d(LOG_TAG, "response = " + responseText);
+      }
 
       if (responseText.equals("")) {
-        Log.d(LOG_TAG, "Received an empty response");
+        if (DEBUG) {
+          Log.d(LOG_TAG, "Received an empty response");
+        }
         // Empty Response
         return;
       }
 
       JSONArray jsonArray = new JSONArray(responseText);
-      Log.d(LOG_TAG, "jsonArray.length() = " + jsonArray.length());
+      if (DEBUG) {
+        Log.d(LOG_TAG, "jsonArray.length() = " + jsonArray.length());
+      }
       int i = 0;
       while (i < jsonArray.length()) {
-        Log.d(LOG_TAG, "i = " + i);
-        Log.d(LOG_TAG, "element = " + jsonArray.optString(i));
+        if (DEBUG) {
+          Log.d(LOG_TAG, "i = " + i);
+          Log.d(LOG_TAG, "element = " + jsonArray.optString(i));
+        }
         JSONObject element = (JSONObject) jsonArray.get(i);
         if (!haveOffer) {
           if (!element.has("offer")) {
@@ -288,18 +330,24 @@ public class WebRTCNativeMgr {
           JSONObject offer = (JSONObject) element.get("offer");
           String sdp = offer.optString("sdp");
           String type = offer.optString("type");
-          Log.d(LOG_TAG, "sdb = " + sdp);
-          Log.d(LOG_TAG, "type = " + type);
           haveOffer = true;
-          Log.d(LOG_TAG, "About to set remote offer");
+          if (DEBUG) {
+            Log.d(LOG_TAG, "sdb = " + sdp);
+            Log.d(LOG_TAG, "type = " + type);
+            Log.d(LOG_TAG, "About to set remote offer");
+          }
           peerConnection.setRemoteDescription(sdpObserver,
             new SessionDescription(SessionDescription.Type.OFFER, sdp));
           peerConnection.createAnswer(sdpObserver, new MediaConstraints());
-          Log.d(LOG_TAG, "createAnswer returned");
+          if (DEBUG) {
+            Log.d(LOG_TAG, "createAnswer returned");
+          }
           i = -1;
         } else if (element.has("nonce")) {
           if (element.isNull("candidate")) {
-            Log.d(LOG_TAG, "Received a null candidate, skipping...");
+            if (DEBUG) {
+              Log.d(LOG_TAG, "Received a null candidate, skipping...");
+            }
             i++;
             continue;
           }
@@ -308,18 +356,26 @@ public class WebRTCNativeMgr {
           String sdpcandidate = candidate.optString("candidate");
           String sdpMid = candidate.optString("sdpMid");
           int sdpMLineIndex = candidate.optInt("sdpMLineIndex");
-          Log.d(LOG_TAG, "candidate = " + sdpcandidate);
+          if (DEBUG) {
+            Log.d(LOG_TAG, "candidate = " + sdpcandidate);
+          }
           if (!seenNonces.contains(nonce)) {
             seenNonces.add(nonce);
-            Log.d(LOG_TAG, "new nonce, about to add candidate!");
+            if (DEBUG) {
+              Log.d(LOG_TAG, "new nonce, about to add candidate!");
+            }
             IceCandidate iceCandidate = new IceCandidate(sdpMid, sdpMLineIndex, sdpcandidate);
             peerConnection.addIceCandidate(iceCandidate);
-            Log.d(LOG_TAG, "addIceCandidate returned");
+            if (DEBUG) {
+              Log.d(LOG_TAG, "addIceCandidate returned");
+            }
           }
         }
         i++;
       }
-      Log.d(LOG_TAG, "exited loop");
+      if (DEBUG) {
+        Log.d(LOG_TAG, "exited loop");
+      }
     } catch (IOException e) {
       Log.e(LOG_TAG, "Caught IOException: " + e.toString(), e);
     } catch (JSONException e) {
@@ -341,11 +397,13 @@ public class WebRTCNativeMgr {
       HttpClient client = new DefaultHttpClient();
       HttpPost post = new HttpPost("http://" + rendezvousServer + "/rendezvous2/");
       try {
-        Log.d(LOG_TAG, "About to send = " + data.toString());
+        if (DEBUG) {
+          Log.d(LOG_TAG, "About to send = " + data.toString());
+        }
         post.setEntity(new StringEntity(data.toString()));
         client.execute(post);
       } catch (IOException e) {
-        Log.d(LOG_TAG, "sendRedezvous IOException = " + e.toString());
+        Log.e(LOG_TAG, "sendRedezvous IOException", e);
       }
     } catch (Exception e) {
       Log.e(LOG_TAG, "Exception in sendRendezvous", e);
