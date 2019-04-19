@@ -78,7 +78,11 @@ Blockly.ReplStateObj.prototype = {
     'rendezvouscode' : null,            // Code used for Rendezvous (hash of replcode)
     'dialog' : null,                    // The Dialog Box with the code and QR Code
     'count' : 0,                        // Count of number of reads from rendezvous server
-    'didversioncheck' : false
+    'didversioncheck' : false,
+    'rendezvous2' : 'http://rendezvous.appinventor.mit.edu/rendezvous2/',
+    'iceservers' : { 'iceServers' : [ { 'urls' : ['turn:turn.appinventor.mit.edu:3478'],
+                                        'username' : 'oh',
+                                        'credential' : 'boy' }]}
 };
 
 // Blockly is only loaded once now, so we can init this here.
@@ -264,10 +268,8 @@ Blockly.ReplMgr.putYail = (function() {
     var webrtcisopen = false;
     var webrtcforcestop = false;
     // var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
-    var iceservers = { 'iceServers' : [ { 'urls' : ['turn:turn.appinventor.mit.edu:3478'],
-                                          'username' : 'oh',
-                                          'credential' : 'boy' }]};
-    var webrtcrendezvous = 'http://rendezvous.appinventor.mit.edu/rendezvous2/';
+    var iceservers = top.ReplState.iceservers;
+    var webrtcrendezvous = top.ReplState.rendezvous2;
     var webrtcdata;
     var seennonce = {};
     var engine = {
@@ -1368,6 +1370,22 @@ Blockly.ReplMgr.getFromRendezvous = function() {
                 rs.didversioncheck = true; // We are checking it here, so don't check it later
                                            // via HTTP because we may be using webrtc and there is no
                                            // HTTP
+
+                // Let's see if the Rendezvous server gave us a second level to contact
+                // as well as a list of ice servers to override our defaults
+
+                if (json.rendezvous2) {
+                  rs.rendezvous2 = json.rendezvous2;
+                }
+                if (json.iceservers) {
+                  var serverlist = [];
+                  for (var i = 0; i < json.iceservers.length; i++) {
+                    serverlist.push({ 'urls' : [json.iceservers[i].server],
+                                      'username' : json.iceservers[i].username,
+                                      'credential' : json.iceservers[i].password });
+                  }
+                  rs.iceservers = { 'iceServers' : serverlist };
+                }
 
                 // The code below really gets things going. We will
                 // either call it shortly, if the Companion version is acceptable

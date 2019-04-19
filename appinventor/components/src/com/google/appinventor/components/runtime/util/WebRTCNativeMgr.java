@@ -77,7 +77,8 @@ public class WebRTCNativeMgr {
   private boolean first = true; // This is used for logging in the Rendezvous server
   private Random random = new Random();
   private DataChannel dataChannel = null;
-  private String rendezvousServer = "rendezvous.appinventor.mit.edu"; // This should always be over-written
+  private String rendezvousServer = null; // Primary (first level) Rendezvous server
+  private String rendezvousServer2 = null; // Second level (webrtc rendezvous) Rendezvous server
   private List<PeerConnection.IceServer> iceServers = new ArrayList();
 
   Timer timer = new Timer();
@@ -205,16 +206,20 @@ public class WebRTCNativeMgr {
       }
     };
 
-  public WebRTCNativeMgr(String rendezvousServer, String iceServers) {
+  public WebRTCNativeMgr(String rendezvousServer, String rendezvousResult) {
     this.rendezvousServer = rendezvousServer;
-    if (iceServers.isEmpty() || iceServers.startsWith("OK")) {
+    if (rendezvousResult.isEmpty() || rendezvousResult.startsWith("OK")) {
       /* Provide a default when the rendezvous server doesn't provide one */
-      iceServers = "[{ \"server\" : \"turn:turn.appinventor.mit.edu:3478\"," +
+      rendezvousResult = "{\"rendezvous2\" : \"rendezvous.appinventor.mit.edu\"," +
+        "\"iceservers\" : " +
+        "[{ \"server\" : \"turn:turn.appinventor.mit.edu:3478\"," +
         "\"username\" : \"oh\"," +
-        "\"password\" : \"boy\"}]";
+        "\"password\" : \"boy\"}]}";
     }
     try {
-      JSONArray iceServerArray = new JSONArray(iceServers);
+      JSONObject resultJson = new JSONObject(rendezvousResult);
+      this.rendezvousServer2 = resultJson.getString("rendezvous2");
+      JSONArray iceServerArray = resultJson.getJSONArray("iceservers");
       this.iceServers = new ArrayList(iceServerArray.length());
       for (int i = 0; i < iceServerArray.length(); i++) {
         JSONObject jsonServer = iceServerArray.getJSONObject(i);
@@ -269,9 +274,10 @@ public class WebRTCNativeMgr {
 
       if (DEBUG) {
         Log.d(LOG_TAG, "Poller() Called");
+        Log.d(LOG_TAG, "Poller: rendezvousServer2 = " + rendezvousServer2);
       }
       HttpClient client = new DefaultHttpClient();
-      HttpGet request = new HttpGet("http://" + rendezvousServer + "/rendezvous2/" + rCode + "-s");
+      HttpGet request = new HttpGet("http://" + rendezvousServer2 + "/rendezvous2/" + rCode + "-s");
       HttpResponse response = client.execute(request);
       StringBuilder sb = new StringBuilder();
 
@@ -395,7 +401,7 @@ public class WebRTCNativeMgr {
         data.put("apiversion", SdkLevel.getLevel());
       }
       HttpClient client = new DefaultHttpClient();
-      HttpPost post = new HttpPost("http://" + rendezvousServer + "/rendezvous2/");
+      HttpPost post = new HttpPost("http://" + rendezvousServer2 + "/rendezvous2/");
       try {
         if (DEBUG) {
           Log.d(LOG_TAG, "About to send = " + data.toString());
