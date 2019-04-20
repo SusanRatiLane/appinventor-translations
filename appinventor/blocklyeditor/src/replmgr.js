@@ -267,9 +267,6 @@ Blockly.ReplMgr.putYail = (function() {
     var webrtcpeer;
     var webrtcisopen = false;
     var webrtcforcestop = false;
-    // var iceservers = { 'iceServers' : [ { 'urls' : ['stun:stun.l.google.com:19302']}]};
-    var iceservers = top.ReplState.iceservers;
-    var webrtcrendezvous = top.ReplState.rendezvous2;
     var webrtcdata;
     var seennonce = {};
     var engine = {
@@ -342,7 +339,7 @@ Blockly.ReplMgr.putYail = (function() {
             top.ConnectProgressBar_setProgress(20, Blockly.Msg.DIALOG_SECURE_ESTABLISHING);
             var poll = function() {
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET', webrtcrendezvous + key + '-r', true);
+                xhr.open('GET', top.ReplState.rendezvous2 + key + '-r', true);
                 xhr.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
                         if (this.response[0] == '[') {
@@ -375,7 +372,7 @@ Blockly.ReplMgr.putYail = (function() {
                 };
                 xhr.send();
             };
-            webrtcpeer = new RTCPeerConnection(iceservers);
+            webrtcpeer = new RTCPeerConnection(top.ReplState.iceservers);
             webrtcpeer.oniceconnectionstatechange = function(evt) {
                 console.log("oniceconnectionstatechange: evt.type = " + evt.type);
                 if (this.iceConnectionState == "disconnected" ||
@@ -393,7 +390,7 @@ Blockly.ReplMgr.putYail = (function() {
             webrtcpeer.onicecandidate = function(evt) {
                 if (evt.type == 'icecandidate') {
                     var xhr = new XMLHttpRequest();
-                    xhr.open('POST', webrtcrendezvous, true);
+                    xhr.open('POST', top.ReplState.rendezvous2, true);
                     xhr.send(JSON.stringify({'key' : key + '-s',
                                              'webrtc' : true,
                                              'nonce' : Math.floor(Math.random() * 10000) + 1,
@@ -437,7 +434,7 @@ Blockly.ReplMgr.putYail = (function() {
             webrtcpeer.createOffer().then(function(desc) {
                 offer = desc;
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', webrtcrendezvous, true);
+                xhr.open('POST', top.ReplState.rendezvous2, true);
                 xhr.send(JSON.stringify({'key' : key + '-s',
                                          'webrtc' : true,
                                          'offer' : desc}));
