@@ -9,6 +9,7 @@ import android.content.Context;
 
 import android.util.Log;
 
+import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.ReplForm;
 
 import java.io.BufferedReader;
@@ -210,7 +211,7 @@ public class WebRTCNativeMgr {
     this.rendezvousServer = rendezvousServer;
     if (rendezvousResult.isEmpty() || rendezvousResult.startsWith("OK")) {
       /* Provide a default when the rendezvous server doesn't provide one */
-      rendezvousResult = "{\"rendezvous2\" : \"rendezvous.appinventor.mit.edu\"," +
+      rendezvousResult = "{\"rendezvous2\" : \"" + YaVersion.RENDEZVOUS_SERVER + "\"," +
         "\"iceservers\" : " +
         "[{ \"server\" : \"turn:turn.appinventor.mit.edu:3478\"," +
         "\"username\" : \"oh\"," +

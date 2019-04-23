@@ -1511,7 +1511,7 @@ Blockly.ReplMgr.rendPoll = function() {
 
 Blockly.ReplMgr.makeDialogMessage = function(code) {
     var scancode;
-    if (top.rendezvousServer != 'rendezvous.appinventor.mit.edu') { // Should really get this from YAV
+    if (top.includereninqrcode) { // Should we include the Rendezvous server name in the QR Code?
         scancode = top.rendezvousServer + ";" + code;
     } else {
         scancode = code;
