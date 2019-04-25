@@ -295,7 +295,7 @@ public class LoginServlet extends HttpServlet {
       }
 //      String uri = "http://" + req.getServerName();
       String uri = "/";
-      if (!locale.equals("en")) {
+      if (locale != null && !locale.equals("en")) {
         uri += "?locale=" + locale;
       }
       resp.sendRedirect(uri);   // This should bring up App Inventor
