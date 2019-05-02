@@ -44,6 +44,8 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.UNDO = 'Undo';
     Blockly.Msg.REDO = 'Redo';
     Blockly.Msg.CLEAN_UP = 'Clean up Blocks';
+    Blockly.Msg.HIDE = 'Hide Workspace Controls';
+    Blockly.Msg.SHOW = 'Show Workspace Controls';
     Blockly.Msg.DUPLICATE_BLOCK = 'Duplicate';
     Blockly.Msg.REMOVE_COMMENT = 'Remove Comment';
     Blockly.Msg.ADD_COMMENT = 'Add Comment';
@@ -1450,6 +1452,7 @@ Blockly.Msg.en.switch_language_to_english = {
 // Blocklyeditor.js
     Blockly.Msg.GENERATE_YAIL = "Generate Yail";
     Blockly.Msg.DO_IT = "Do It";
+    Blockly.Msg.DO_IT_DISCONNECTED = 'Do It (Companion not connected)';
     Blockly.Msg.CLEAR_DO_IT_ERROR = "Clear Error";
     Blockly.Msg.CAN_NOT_DO_IT = "Cannot Do it";
     Blockly.Msg.CONNECT_TO_DO_IT = 'You must be connected to the companion or emulator to use "Do It"';
