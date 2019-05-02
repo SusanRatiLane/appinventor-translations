@@ -3,7 +3,7 @@
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-package edu.mit.appinventor.pkginstall;
+package edu.mit.appinventor.companionextras;
 
 import android.Manifest;
 import android.content.ActivityNotFoundException;
@@ -29,24 +29,30 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+@UsesPermissions(permissionNames = Manifest.permission.REQUEST_INSTALL_PACKAGES)
 @DesignerComponent(version = 1,
   category = ComponentCategory.EXTENSION,
-  description = "An extension to replace the package installer functionality.",
+  description = "An extension to provide additional functionality to non-Play Store Companions",
   nonVisible = true)
-@UsesPermissions(Manifest.permission.REQUEST_INSTALL_PACKAGES)
 @SimpleObject(external = true)
-public class PackageInstaller extends AndroidNonvisibleComponent {
-  private static final String LOG_TAG = PackageInstaller.class.getSimpleName();
+public class CompanionExtras extends AndroidNonvisibleComponent {
+  private static final String LOG_TAG = CompanionExtras.class.getSimpleName();
   private static final String REPL_ASSET_DIR =
       Environment.getExternalStorageDirectory().getAbsolutePath() +
           "/AppInventor/assets/";
 
-  public PackageInstaller(Form form) {
+  public CompanionExtras(Form form) {
     super(form);
   }
 
-  @SimpleFunction(description = "Install the specified APK file")
-  public void InstallAPK(final String urlToApk) {
+  /**
+   * Extra1 -- Extra function to download and install an APK file.
+   *
+   * @param urlToApk url pointing to the APK to download and install
+   */
+
+  @SimpleFunction(description = "")
+  public void Extra1(final String urlToApk) {
     AsynchUtil.runAsynchronously(new Runnable() {
       @Override
       public void run() {
@@ -74,11 +80,11 @@ public class PackageInstaller extends AndroidNonvisibleComponent {
           form.startActivity(intent);
         } catch (ActivityNotFoundException e) {
           Log.e(LOG_TAG, "Unable to install package", e);
-          form.dispatchErrorOccurredEvent(form, "PackageInstaller",
+          form.dispatchErrorOccurredEvent(form, "CompanionExtras",
               ErrorMessages.ERROR_UNABLE_TO_INSTALL_PACKAGE, packageuri);
         } catch (Exception e) {
           Log.e(LOG_TAG, "ERROR_UNABLE_TO_GET", e);
-          form.dispatchErrorOccurredEvent(form, "PackageInstaller",
+          form.dispatchErrorOccurredEvent(form, "CompanionExtras",
               ErrorMessages.ERROR_WEB_UNABLE_TO_GET, urlToApk);
         }
       }

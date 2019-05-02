@@ -232,9 +232,9 @@ public class PhoneStatus extends AndroidNonvisibleComponent implements Component
   @SimpleFunction(description = "Downloads the URL and installs it as an Android Package via the installed browser")
   public void installURL(String url) {
     try {
-      Class<?> clazz = Class.forName("edu.mit.appinventor.pkginstall.PackageInstaller");
+      Class<?> clazz = Class.forName("edu.mit.appinventor.companionextras.CompanionExtras");
       Object o = clazz.getConstructor(Form.class).newInstance(form);
-      Method m = clazz.getMethod("InstallAPK", String.class);
+      Method m = clazz.getMethod("Extra1", String.class);
       m.invoke(o, url);
     } catch (Exception e) {
       // Fall back to using the browser
