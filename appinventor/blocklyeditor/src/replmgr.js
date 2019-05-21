@@ -883,6 +883,11 @@ Blockly.ReplMgr.triggerUpdate = function() {
         return;
     }
 
+    if (top.ReplState.replcode != 'emulator') {
+        showdialog(Blockly.Msg.REPL_OK, Blockly.Msg.REPL_EMULATOR_ONLY);
+        return;
+    }
+
     if (top.usewebrtc) {        // If we are using webrtc, we just ask the Companion to do the
                                 // work directly.
         var cookie = this.getCookie();
