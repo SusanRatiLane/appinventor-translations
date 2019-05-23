@@ -508,7 +508,7 @@
       <jvmarg value="-Dfile.encoding=UTF-8" />
       <arg line="-war"/>
       <arg value="${build.war.dir}"/>
-      <arg line="-logLevel INFO -extra ${build.extra.dir} -localWorkers 4 -optimize 9"/>
+      <arg line="-logLevel INFO -extra ${build.extra.dir} -localWorkers 16 -optimize 9"/>
       <arg value="com.google.appinventor.YaClient"/>
     </java>
   </target>
