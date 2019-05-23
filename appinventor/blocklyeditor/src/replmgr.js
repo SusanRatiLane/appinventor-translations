@@ -366,7 +366,7 @@ Blockly.ReplMgr.putYail = (function() {
                                 var hunk = json[i];
                                 var candidate = hunk['candidate'];
                                 offer = hunk['offer'];
-                                if (candidate && haveoffer && connectionstate != "none") {
+                                if (candidate && haveoffer) {
                                     var nonce = hunk['nonce'];
                                     if (!seennonce[nonce]) {
                                         seennonce[nonce] = true;
@@ -880,6 +880,11 @@ Blockly.ReplMgr.triggerUpdate = function() {
 
     if (top.ReplState.state != Blockly.ReplMgr.rsState.CONNECTED) {
         showdialog(Blockly.Msg.REPL_OK, Blockly.Msg.REPL_UPDATE_NO_CONNECTION);
+        return;
+    }
+
+    if (top.ReplState.replcode != 'emulator') {
+        showdialog(Blockly.Msg.REPL_OK, Blockly.Msg.REPL_EMULATOR_ONLY);
         return;
     }
 

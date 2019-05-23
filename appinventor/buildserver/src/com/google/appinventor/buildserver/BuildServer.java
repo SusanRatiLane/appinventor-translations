@@ -708,7 +708,7 @@ public class BuildServer {
             int tasks = buildExecutor.getActiveTaskCount();
             if (tasks <= 0) {
               try {
-                Thread.sleep(10000); // One final wait so people can get
+                Thread.sleep(0); // One final wait so people can get
                                      // their barcode
               } catch (InterruptedException e) {
               }
