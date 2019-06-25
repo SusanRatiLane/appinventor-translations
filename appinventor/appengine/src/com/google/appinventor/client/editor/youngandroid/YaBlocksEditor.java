@@ -38,6 +38,10 @@ import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.xml.client.Document;
+import com.google.gwt.xml.client.Element;
+import com.google.gwt.xml.client.NodeList;
+import com.google.gwt.xml.client.XMLParser;
 
 import java.util.HashSet;
 import java.util.List;
@@ -317,7 +321,7 @@ public final class YaBlocksEditor extends FileEditor
 
   private void updateBlocksTree(MockForm form, SourceStructureExplorerItem itemToSelect) {
     TreeItem items[] = new TreeItem[3];
-    items[0] = BlockSelectorBox.getBlockSelectorBox().getBuiltInBlocksTree();
+    items[0] = BlockSelectorBox.getBlockSelectorBox().getBuiltInBlocksTree(form);
     items[1] = form.buildComponentsTree();
     items[2] = BlockSelectorBox.getBlockSelectorBox().getGenericComponentsTree(form);
     sourceStructureExplorer.updateTree(items, itemToSelect);
@@ -334,6 +338,18 @@ public final class YaBlocksEditor extends FileEditor
   @Override
   public String getRawFileContent() {
     return blocksArea.getBlocksContent();
+  }
+
+  public Set<String> getBlockTypeSet() {
+    Set<String> blockTypes = new HashSet<String>();
+    String xmlString = blocksArea.getBlocksContent();
+    Document blockDoc = XMLParser.parse(xmlString);
+    NodeList blockElements = blockDoc.getElementsByTagName("block");
+    for (int i = 0; i < blockElements.getLength(); ++i) {
+      Element blockElem = (Element) blockElements.item(i);
+      blockTypes.add(blockElem.getAttribute("type"));
+    }
+    return blockTypes;
   }
 
   public FileDescriptorWithContent getYail() throws YailGenerationException {
@@ -376,6 +392,17 @@ public final class YaBlocksEditor extends FileEditor
       YaBlocksEditor blocksEditor = formToBlocksEditor.get(formName);
       //get type name from form editor
       return blocksEditor.myFormEditor.getComponentInstanceTypeName(instanceName);
+  }
+
+  public static String getComponentInstancePropertyValue(String formName, String instanceName, String propertyName){
+      //use form name to get blocks editor
+      YaBlocksEditor blocksEditor = formToBlocksEditor.get(formName);
+      Map<String, MockComponent> componentMap = blocksEditor.myFormEditor.getComponents();
+      for (String key : componentMap.keySet()) {
+        OdeLog.log(key);
+      }
+      MockComponent mockComponent = componentMap.get(instanceName);
+      return mockComponent.getPropertyValue(propertyName);
   }
 
   public void addComponent(String typeName, String instanceName, String uuid) {
@@ -642,4 +669,5 @@ public final class YaBlocksEditor extends FileEditor
       Blockly.ReplMgr.loadExtensions();
     }
   }-*/;
+
 }
