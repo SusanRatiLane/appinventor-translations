@@ -100,7 +100,7 @@ public final class AppInventorFeatures {
    * @return true to display the survey splash screen
    */
   public static boolean showSurveySplashScreen() {
-    return true;
+    return false;
   }
 
   /**
