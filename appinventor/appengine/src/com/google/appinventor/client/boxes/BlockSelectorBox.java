@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.TreeItem;
@@ -222,7 +223,7 @@ public final class BlockSelectorBox extends Box {
     for (final String typeName : typeList) {
       TreeItem itemNode = new TreeItem(new HTML("<span>" + typesAndIcons.get(typeName)
           + MESSAGES.textAnyComponentLabel()
-          + ComponentsTranslation.getComponentName(typeName) + "</span>"));
+          + SafeHtmlUtils.fromString(ComponentsTranslation.getComponentName(typeName)) + "</span>"));
       SourceStructureExplorerItem sourceItem = new BlockSelectorItem() {
         @Override
         public void onSelected() {
