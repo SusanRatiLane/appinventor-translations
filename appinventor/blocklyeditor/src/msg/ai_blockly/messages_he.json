@@ -155,7 +155,7 @@
     "Blockly.Msg.BACKPACK_DOC_TITLE": "הצג מידע על התרמיל",
     "Blockly.Msg.BACKPACK_CONFIRM_EMPTY": "האם אתה בטוח שברצונך לרוקן את התרמיל?",
     "Blockly.Msg.BACKPACK_EMPTY": "רוקן את התרמיל",
-    "Blockly.Msg.BACKPACK_GET": "העתק את כל הבלוקים מהתרמיל",
+    "Blockly.Msg.BACKPACK_GET": "הסר מתרמיל",
     "Blockly.Msg.COPY_ALLBLOCKS": "העתק את כל הבלוקים לתרמיל",
     "Blockly.Msg.REMOVE_FROM_BACKPACK": "הסר מהתרמיל",
     "Blockly.Msg.COPY_TO_BACKPACK": "הוסף לתרמיל",
@@ -715,5 +715,6 @@
     "Blockly.Msg.LANG_DICTIONARIES_WALK_TREE_TOOLTIP": "מתחיל מהמילון הנתון ועוקב אחרי המפתחות שלו ושל הילדים שלו בהתבסס על השביל הנתון, ומחזיר רשימת צמתים שנמצאו בסוף המעבר",
     "Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TITLE": "קבלת ערך לנתיב המפתח שבתיקייה",
     "Blockly.Msg.LANG_NO_ASSETS": "אין משאבים זמינים",
-    "Blockly.Msg.LANG_SCREENS_TITLE": "שם המסך: "
+    "Blockly.Msg.LANG_SCREENS_TITLE": "שם המסך: ",
+    "Blockly.Msg.REMOVE_UNUSED_BLOCKS": "הסר בלוקים לא בשימוש"
 }
