@@ -12,7 +12,7 @@
     "Blockly.Msg.HORIZONTAL_PARAMETERS": "அளவுருக்களை கிடைமட்டமாக அமைக்கவும்",
     "Blockly.Msg.INLINE_INPUTS": "கோட்டில் உள்ளீடுகள்",
     "Blockly.Msg.EXTERNAL_INPUTS": "வெளிப்புற உள்ளீடுகள்",
-    "Blockly.Msg.UNDO": "பின்னே சேல்",
+    "Blockly.Msg.UNDO": "செயல்தவிர்",
     "Blockly.Msg.LANG_CATEGORY_LOGIC": "தர்க்கம்",
     "Blockly.Msg.DISABLE_ALL_BLOCKS": "அனைத்து தொகுதிகளையும் முடக்கு",
     "Blockly.Msg.ENABLE_ALL_BLOCKS": "அனைத்து தொகுதிகளையும் இயக்கவும்",
