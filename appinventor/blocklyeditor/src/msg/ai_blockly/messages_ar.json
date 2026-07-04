@@ -546,7 +546,7 @@
     "Blockly.Msg.LANG_COMPONENT_BLOCK_GENERIC_METHOD_TITLE_FOR_COMPONENT": "للمكوّن",
     "Blockly.Msg.REPL_NOT_NOW": "ليس الآن",
     "Blockly.Msg.LANG_TEXT_COMPARE_LT": " <",
-    "Blockly.Msg.LANG_MATH_COMPARE_TOOLTIP_LT": "يعيد صحيح إذا كان العدد الأول أصغر من العدد الثاني.",
+    "Blockly.Msg.LANG_MATH_COMPARE_TOOLTIP_LT": "إرجاع صحيح إذا كان الرقم الأول أصغر من الرقم الثاني.\n\n\n\n\n\n",
     "Blockly.Msg.LANG_MATH_ARITHMETIC_TOOLTIP_MINUS": "يعيد الفرق بين العددين.",
     "Blockly.Msg.LANG_MATH_ARITHMETIC_TOOLTIP_ADD": "يعيد مجموع العددين.",
     "Blockly.Msg.LANG_MATH_COMPARE_TOOLTIP_GTE": "يعيد صحيح إذا كان العدد الأول أكبر من العدد الثاني أو مساويًا له.",
