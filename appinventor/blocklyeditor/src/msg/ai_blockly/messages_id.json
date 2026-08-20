@@ -722,5 +722,18 @@
     "Blockly.Msg.LANG_TEXT_JOIN_ITEM_TOOLTIP": " ",
     "Blockly.Msg.LANG_CONTROLS_CHOOSE_INPUT_TEST": " ",
     "Blockly.Msg.LANG_VARIABLES_LOCAL_MUTATOR_CONTAINER_TOOLTIP": " ",
-    "Blockly.Msg.LANG_PROCEDURES_HIGHLIGHT_DEF": "Sorot Prosedur"
+    "Blockly.Msg.LANG_PROCEDURES_HIGHLIGHT_DEF": "Sorot Prosedur",
+    "Blockly.Msg.LANG_MATH_ONLIST_OPERATOR_SE": "galat standar",
+    "Blockly.Msg.LANG_MATH_ONLIST_OPERATOR_SD": "deviasi standar",
+    "Blockly.Msg.LANG_MATH_ONLIST_OPERATOR_GM": "rerata geometri",
+    "Blockly.Msg.LANG_MATH_ONLIST_OPERATOR_MAX_LIST": "tertinggi dalam daftar",
+    "Blockly.Msg.LANG_MATH_ONLIST_OPERATOR_MIN_LIST": "terendah dalam daftar",
+    "Blockly.Msg.LANG_MATH_ONLIST_OPERATOR_AVG": "rerata aritmatika (rata-rata)",
+    "Blockly.Msg.LANG_CONTROLS_FOREACH_NUMBER_TYPEBLOCK": "untuk setiap angka dari",
+    "Blockly.Msg.LANG_CONTROLS_FOREACH_ITEM_TYPEBLOCK": "untuk setiap item pada daftar",
+    "Blockly.Msg.EXTENSIONS_iOS": "Ekstensi tidak didukung oleh perangkat iOS.",
+    "Blockly.Msg.EXTENSIONS": "Ekstensi",
+    "Blockly.Msg.ERROR_PROPERTY_SETTER_NEEDS_VALUE": "Balok ini butuh balok nilai tersambung pada soketnya.",
+    "Blockly.Msg.ERROR_GENERIC_NEEDS_COMPONENT": "Anda harus menyediakan komponen yang valid ke soket balok ini \"%1\".",
+    "Blockly.Msg.REMOVE_UNUSED_BLOCKS": "Buang Balok Tak Terpakai"
 }
